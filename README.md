@@ -1,7 +1,7 @@
 # MeltR
 ## Automated fitting of RNA/DNA absorbance melting curves and fluorescence binding isotherms in R
 
-## Installation
+## Installation from your R console
 
 ### install.packages("devtools")
 ### devtools::install_github("JPSieg/MeltR")
