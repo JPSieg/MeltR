@@ -1,6 +1,11 @@
 #'Fit fluorescence binding isotherms to obtain thermodynamic parameters
 #'
-#'Description
+#'Automates the trivial but time-consuming tasks associated with non-linear regression.
+#'Uses two non-linear regression methods to calculate thermodynamic parameters. Method 1
+#'fits each isotherm individually then calculates thermodynamic parameters with a Van't Hoff
+#'plot. Method 2 calculates thermodynamic parameters with a global fit, where H and S are constant
+#'between isotherms and the Fmax and Fmin are allowed to float. Also includes an algorithm that
+#'optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
 #'
 #'@param data_frame data_frame containing fluorescence binding data
 #'@param Tmodel The thermodynamic model you want to fit the data to
@@ -133,9 +138,10 @@ meltR.F = function(data_frame,
 
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_1_VH_plot.pdf", sep = ""),
-        width = 4, height = 4, pointsize = 3)
+        width = 3, height = 3, pointsize = 0.25)
     plot(indvfits$invT, indvfits$lnK,
-         xlab = "1/Temperature" ~ (degree ~ C), ylab = "ln[ K ]")
+         xlab = "1/Temperature" ~ (degree ~ C), ylab = "ln[ K ]",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     for(i in c(1:length(indvfits$Temperature))){
       arrows(y0 = indvfits$lnK[i] - indvfits$SE.lnK[i], y1 = indvfits$lnK[i] + indvfits$SE.lnK[i],
              x0 = indvfits$invT[i], x1 = indvfits$invT[i],
@@ -169,15 +175,16 @@ meltR.F = function(data_frame,
               data = gfit_data)
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_2_Gfit_plot.pdf", sep = ""),
-        width = 4, height = 4, pointsize = 3)
+        width = 3, height = 3, pointsize = 0.25)
     plot(gfit_data$B, gfit_data$Emission,
-         xlab = "[Quencher] (nM)", ylab = "Emission")
+         xlab = "[Quencher] (nM)", ylab = "Emission",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     for (i in c(1:length(unique(gfit_data$Reading)))){
       a <- subset(gfit_data, Reading == unique(gfit_data$Reading)[i])
       lines(c(1:ceiling(max(a$B))), Global(H = coef(gfit)[1],
                                            S = coef(gfit)[2],
                                            Fmax = coef(gfit)[i + 2],
-                                           Fmin = coef(gfit)[i + 24],
+                                           Fmin = coef(gfit)[i + 2 + length(unique(gfit_data$Reading))],
                                            A = a$A[1],
                                            B = c(1:ceiling(max(a$B))),
                                            Temperature = a$Temperature[1]),
@@ -194,6 +201,7 @@ meltR.F = function(data_frame,
   output <- rbind(VH_plot_summary, Gfit_summary)
   row.names(output) <- c(1:2)
   output <- cbind(data.frame("Method" =c("1 VH plot", "2 Global fit")), output)
+  print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error),]$SE.lnK), sep = ""))
   print(output)
   if (Save_results != "none"){
     write.table(output, paste(file_path, "/", file_prefix, "_summary.csv", sep = ""), sep = ",", row.names = FALSE)

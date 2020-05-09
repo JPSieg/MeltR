@@ -55,5 +55,10 @@ meltR.F(
 
 }
 \description{
-Description
+Automates the trivial but time-consuming tasks associated with non-linear regression.
+Uses two non-linear regression methods to calculate thermodynamic parameters. Method 1
+fits each isotherm individually then calculates thermodynamic parameters with a Van't Hoff
+plot. Method 2 calculates thermodynamic parameters with a global fit, where H and S are constant
+between isotherms and the Fmax and Fmin are allowed to float. Also includes an algorithm that
+optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
 }

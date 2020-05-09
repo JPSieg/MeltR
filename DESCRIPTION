@@ -1,15 +1,19 @@
 Package: MeltR
-Title: What the Package Does (One Line, Title Case)
+Title: Automated fitting of RNA/DNA absorbance melting curves and fluorescence binding isotherms in R 
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Jacob",
+           family = "Sieg",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+           email = "jus841@psu.edu",
+           comment = c())
+    person(given = "Philip",
+           family = "Bevilacqua",
+           role = c("aut", "cre"),
+           email = "pcb5@psu.edu",
+           comment = c())
+Description: MeltR is a R package that fits nucleic acids folding data to molecular models to obtain thermodynamic parameters. MeltR automates the trivial but time-consuming tasks associated with non-linear regression, and uses “nls” to fit the data to molecular models, leading facile conversion of raw data into useful thermodynamic parameters. Moreover, the “nls” function, included in base R, consists of a R interface with a C++ core for numerically solving non-linear regression problems, making fitting with MeltR fast and robust.
+License:
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)

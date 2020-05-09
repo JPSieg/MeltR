@@ -39,5 +39,13 @@ meltR.A(
 A list of data frames containing parameters from the fits and data for ploting the results with ggplot2.
 }
 \description{
-Description
+Automates the trivial but time-consuming tasks associated with non-linear regression.
+Calculates extinction coefficients, subtracts out the baseline buffer readings, and
+calculates the strand concentration, Ct, in each sample. Then uses three non-linear regression
+methods to calculate thermodynamic parameters. Method 1 fits each melting curve individually
+then reports the average H and S from all of the curves. Method 2 calculates the Tm for each
+melting curve, and calculates thermodynamic parameters by fitting the relationship between Tm
+and Ct. Method 3 calculates thermodynamic parameters with a global fit, where H and S are constant
+between isotherms and the baslines are allowed to float. Also includes an algorithm that
+optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
 }

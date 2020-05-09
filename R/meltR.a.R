@@ -1,6 +1,14 @@
 #'Fit absorbance melting curves to obtain thermodynamic parameters
 #'
-#'Description
+#'Automates the trivial but time-consuming tasks associated with non-linear regression.
+#'Calculates extinction coefficients, subtracts out the baseline buffer readings, and
+#'calculates the strand concentration, Ct, in each sample. Then uses three non-linear regression
+#'methods to calculate thermodynamic parameters. Method 1 fits each melting curve individually
+#'then reports the average H and S from all of the curves. Method 2 calculates the Tm for each
+#'melting curve, and calculates thermodynamic parameters by fitting the relationship between Tm
+#'and Ct. Method 3 calculates thermodynamic parameters with a global fit, where H and S are constant
+#'between isotherms and the baslines are allowed to float. Also includes an algorithm that
+#'optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
 #'
 #'@param data_frame data_frame containing absorbance melting data
 #'@param blank the blank sample
@@ -348,17 +356,19 @@ meltR.A = function(data_frame,
   no.background$Ext <- no.background$Absorbance/(no.background$Pathlength*no.background$Ct)
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_1_raw_fit_plot.pdf", sep = ""),
-        width = 4, height = 4, pointsize = 3)
+        width = 3, height = 3, pointsize = 0.25)
     plot(no.background$Temperature, no.background$Absorbance,
-         xlab = Temperature ~ (degree ~ C), ylab = "Absorbance")
+         xlab = Temperature ~ (degree ~ C), ylab = "Absorbance",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     for (i in c(1:length(a))){
       lines(a[[i]]$Temperature, predict(fit[[i]]), col = "red")
     }
     dev.off()
     pdf(paste(file_path, "/", file_prefix, "_method_1_normalized_fit_plot.pdf", sep = ""),
-        width = 4, height = 4, pointsize = 3)
+        width = 3, height = 3, pointsize = 0.25)
     plot(no.background$Temperature, no.background$Ext,
-         xlab = Temperature ~ (degree ~ C), ylab = "Absorbtivity (1/M*cm)")
+         xlab = Temperature ~ (degree ~ C), ylab = "Absorbtivity (1/M*cm)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     for (i in c(1:length(a))){
       lines(a[[i]]$Temperature, (predict(fit[[i]])/(a[[i]]$Ct[1]*a[[i]]$Pathlength[1])), col = "red")
     }
@@ -396,9 +406,10 @@ meltR.A = function(data_frame,
       Tm_vs_lnCt <- data.frame(Tm_vs_lnCt)
       if (Save_results == "all"){
         pdf(paste(file_path, "/", file_prefix, "_method_2_plot.pdf", sep = ""),
-            width = 4, height = 4, pointsize = 3)
+            width = 3, height = 3, pointsize = 0.25)
         plot(x = Tm_data$lnCt, y = Tm_data$invT,
-             xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]")
+             xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]",
+             cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
         lines(x = Tm_data$lnCt, predict(Tm_vs_lnCt_fit), col = "red")
         dev.off()
       }
@@ -408,9 +419,10 @@ meltR.A = function(data_frame,
     if (Mmodel == "Monomolecular.3State"){
       if (Save_results == "all"){
         pdf(paste(file_path, "/", file_prefix, "_method_2_plot.pdf", sep = ""),
-            width = 4, height = 4, pointsize = 3)
+            width = 3, height = 3, pointsize = 0.25)
         plot(x = Tm_data$lnCt, y = Tm_data$invT,
-             xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]")
+             xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]",
+             cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
         lines(Tm_data$lnCt, predict(lm(Tm_data$invT ~ Tm_data$lnCt)), col = "red")
         dev.off()
       }
@@ -445,9 +457,10 @@ meltR.A = function(data_frame,
   }
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_3_Gfit_raw_plot.pdf", sep = ""),
-        width = 4, height = 4, pointsize = 3)
+        width = 3, height = 3, pointsize = 0.25)
     plot(gfit_data$Temperature, gfit_data$Absorbance,
-         xlab = Temperature ~ (degree ~ C), ylab = "Absorbance")
+         xlab = Temperature ~ (degree ~ C), ylab = "Absorbance",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     for (i in c(1:length(unique(gfit_data$Sample)))){
       a <- subset(gfit_data, Sample == unique(gfit_data$Sample)[i])
       if (Mmodel == "Monomolecular.2State"){
@@ -485,9 +498,10 @@ meltR.A = function(data_frame,
     }
     dev.off()
     pdf(paste(file_path, "/", file_prefix, "_method_3_Gfit_normalized_plot.pdf", sep = ""),
-        width = 4, height = 4, pointsize = 3)
+        width = 3, height = 3, pointsize = 0.25)
     plot(gfit_data$Temperature, gfit_data$Ext,
-         xlab = Temperature ~ (degree ~ C), ylab = "Absorbtivity (1/M*cm)")
+         xlab = Temperature ~ (degree ~ C), ylab = "Absorbtivity (1/M*cm)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     for (i in c(1:length(unique(gfit_data$Sample)))){
       a <- subset(gfit_data, Sample == unique(gfit_data$Sample)[i])
       if (Mmodel == "Monomolecular.2State"){
