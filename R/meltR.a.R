@@ -300,31 +300,32 @@ meltR.A = function(data_frame,
   bSS <- c()
   mSS <- c()
   for (i in c(1:length(unique(no.background$Sample)))){
-    a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-    fitstart <- list(H = startH[i], Tm = T0.5[i],
-                     mED = lowbl_fit[[i]]$coefficients[2], bED = lowbl_fit[[i]]$coefficients[1],
-                     mESS = uppbl_fit[[i]]$coefficients[2], bESS = uppbl_fit[[i]]$coefficients[1])
-    if (Mmodel == "Monomolecular.2State"){
-      fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature),
-                      data = a[[i]],
-                      start = fitstart,
-                      trace = FALSE,
-                      nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
-    }
-    if (Mmodel == "Heteroduplex.2State"){
-      fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature, Ct),
-                      data = a[[i]],
-                      start = fitstart,
-                      trace = FALSE,
-                      nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
-    }
-    if (Mmodel == "Homoduplex.2State"){
-      fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature, Ct),
-                      data = a[[i]],
-                      start = fitstart,
-                      trace = FALSE,
-                      nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
-    }
+    tryCatch({
+      a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
+      fitstart <- list(H = startH[i], Tm = T0.5[i],
+                       mED = lowbl_fit[[i]]$coefficients[2], bED = lowbl_fit[[i]]$coefficients[1],
+                       mESS = uppbl_fit[[i]]$coefficients[2], bESS = uppbl_fit[[i]]$coefficients[1])
+      if (Mmodel == "Monomolecular.2State"){
+        fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature),
+                        data = a[[i]],
+                        start = fitstart,
+                        trace = FALSE,
+                        nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+      }
+      if (Mmodel == "Heteroduplex.2State"){
+        fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature, Ct),
+                        data = a[[i]],
+                        start = fitstart,
+                        trace = FALSE,
+                        nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+      }
+      if (Mmodel == "Homoduplex.2State"){
+        fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature, Ct),
+                        data = a[[i]],
+                        start = fitstart,
+                        trace = FALSE,
+                        nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+      }
       mED[i] <- coef(fit[[i]])[3]
       bED[i] <- coef(fit[[i]])[4]
       mSS[i] <- coef(fit[[i]])[5]
@@ -343,6 +344,7 @@ meltR.A = function(data_frame,
         indvfits.G[i] <- calcG(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
       }
       indvfits.Tm[i] <- coef(fit[[i]])[2]
+    }, error = function(e){print(a[[i]]$Sample[1])})
   }
   indvfits <- data.frame("Sample" = unique(no.background$Sample),
                          "Ct" = unique(no.background$Ct),
@@ -573,4 +575,9 @@ meltR.A = function(data_frame,
   print(comparison)
   output <- list("Summary" = comparison,
                  "Method.1.indvfits" = indvfits)
+  if (Mmodel != "Monomolecular.2State"){
+    output$Method.2.fit <- Tm_vs_lnCt_fit
+  }
+  output$Method.3.fit <- gfit
+  output <- output
 }
