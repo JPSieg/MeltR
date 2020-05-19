@@ -3,3 +3,5 @@
 export(calc.extcoeff)
 export(meltR.A)
 export(meltR.F)
+export(o3a.to.MeltR.csv)
+export(read.o3a)
