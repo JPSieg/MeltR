@@ -7,7 +7,7 @@
 meltR.F(
   data_frame,
   Tmodel = "VantHoff",
-  K_error = 0.25,
+  K_error = c(0.25, 0.25),
   Start_K = 0.1,
   Optimize_B_conc = TRUE,
   Low_reading = "auto",
@@ -25,9 +25,9 @@ meltR.F(
 \arguments{
 \item{data_frame}{data_frame containing fluorescence binding data}
 
-\item{Tmodel}{The thermodynamic model you want to fit the data to}
+\item{Tmodel}{The thermodynamic model you want to fit the data to. Options are "VantHoff" and "Kirchoff".}
 
-\item{K_error}{Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = 0.25.}
+\item{K_error}{Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = c(0.25, 0.25).}
 
 \item{Start_K}{A K value to start non-linear regression. Default = 0.1.}
 
