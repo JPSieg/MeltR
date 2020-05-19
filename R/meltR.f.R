@@ -8,8 +8,8 @@
 #'optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
 #'
 #'@param data_frame data_frame containing fluorescence binding data
-#'@param Tmodel The thermodynamic model you want to fit the data to
-#'@param K_error Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = 0.25.
+#'@param Tmodel The thermodynamic model you want to fit the data to. Options are "VantHoff" and "Kirchoff".
+#'@param K_error Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = c(0.25, 0.25).
 #'@param Start_K A K value to start non-linear regression. Default = 0.1.
 #'@param Optomize_B_conc Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the quencher labeled strand based on the shape of low temperature isotherms with K values < 0.1.
 #'@param Low_reading Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optomize the concentration. Default = "auto" will use the lowest temperature reading.
@@ -25,7 +25,7 @@
 #' @export
 meltR.F = function(data_frame,
                    Tmodel = "VantHoff",
-                   K_error = 0.25,
+                   K_error = c(0.25, 0.25),
                    Start_K = 0.1,
                    Optimize_B_conc = TRUE,
                    Low_reading = "auto",
@@ -40,8 +40,10 @@ meltR.F = function(data_frame,
   ####List of molecular models to fit####
   Mmodel <- function(K, A, B){ ((K+A+B)-(((K+A+B)^2)-(4*A*B))^(1/2))/(2*A) }
   ####List of thermodynamics models to fit to####
-  Tmodel_names <- c("VantHoff")
-  Tmodels <- list(function(H, S, Temperature){((1/((Temperature + 273.15)*0.0019872))*H) - (S/0.0019872)})
+  Tmodel_names <- c("VantHoff", "Kirchoff")
+  Tmodels <- list(
+    function(H, S, Temperature){((1/((Temperature + 273.15)*0.0019872))*H) - (S/0.0019872)},
+    function(H, S, C, Temperature){((1/((Temperature + 273.15)*0.0019872))*H) - (S/0.0019872) - ((C/0.0019872)*((310.15/(Temperature + 273.15)) - 1 + log((Temperature + 273.15)/310.15)))})
   names(Tmodels) <- Tmodel_names
   ####Assemble the models####
   Optimize = function(R, K, A, B, Fmax, Fmin){
@@ -49,7 +51,6 @@ meltR.F = function(data_frame,
     model <- Fmax + (Fmin-Fmax)*f
     return(model)
   }
-  if (Tmodel == "VantHoff"){
     Individual = Global = function(K, Fmax, Fmin, A, B){
       f <- Mmodel(K = K, A = A, B = B)
       model <- Fmax + (Fmin-Fmax)*f
@@ -63,7 +64,6 @@ meltR.F = function(data_frame,
     }
     calcG = function(H, S){H - (310.15*S)}
     calcG.SE = function(SE.H, SE.S, covar){ sqrt((SE.H)^2 + (310.15*SE.S)^2 - 2*310.15*SE.H*SE.S*covar) }
-  }
   ####Find starting Fmax and Fmin and optimize B conc####
   a <- {}
   Fmax.start <- c()
@@ -132,10 +132,12 @@ meltR.F = function(data_frame,
   indvfits$lnK <- log((10^-9)*indvfits$K)
   indvfits$SE.lnK <- indvfits$SE.K/indvfits$K
   vh_start = list(H = -70, S = -0.180)
+  if (length(which(indvfits$SE.lnK <= K_error[1])) <= 5){
+    print(paste("Only ", length(which(indvfits$SE.lnK <= K_error[1])), " isotherms have an acceptable K error. Try increasing the tolerance threshold.", sep = ""))
+  }
   vh_plot_fit <- nls(lnK~Tmodels$VantHoff(H, S, Temperature),
                      start = vh_start,
-                     data = indvfits[which(indvfits$SE.lnK <= K_error),])
-
+                     data = indvfits[which(indvfits$SE.lnK <= K_error[1]),])
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_1_VH_plot.pdf", sep = ""),
         width = 3, height = 3, pointsize = 0.25)
@@ -158,7 +160,7 @@ meltR.F = function(data_frame,
   ####Method 2 Global fit####
   gfit_data <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
                           "Temperature" = c(), "B" = c(), "A" = c(), "Emission" = c())
-  for (i in which(indvfits$SE.lnK <= K_error)){
+  for (i in which(indvfits$SE.lnK <= K_error[1])){
     gfit_data <- rbind(gfit_data, subset(data_frame, Reading == i))
   }
   b <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
@@ -169,7 +171,7 @@ meltR.F = function(data_frame,
     b <- rbind(b, a)
   }
   gfit_data <- b
-  gfit_start = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, Fmax = Fmax[which(indvfits$SE.lnK <= K_error)], Fmin = Fmin[which(indvfits$SE.lnK <= K_error)])
+  gfit_start = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, Fmax = Fmax[which(indvfits$SE.lnK <= K_error[1])], Fmin = Fmin[which(indvfits$SE.lnK <= K_error[1])])
   gfit <- nls(Emission ~ Global(H, S, Fmax, Fmin, Reading, A, B, Temperature),
               start = gfit_start,
               data = gfit_data)
@@ -197,14 +199,120 @@ meltR.F = function(data_frame,
                        round(calcG(coef(gfit)[1], coef(gfit)[2]), 1), round(calcG.SE(summary(gfit)$coefficients[1,2], summary(gfit)$coefficients[2,2], summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)), 1))
   names(Gfit_summary) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
   Gfit_summary <- data.frame(Gfit_summary)
+  ####Fit to a Kirchoff thermodynamic model Method 1####
+  if (Tmodel == "Kirchoff"){
+    KC_start = list(H = Gfit_summary$H, S = Gfit_summary$S/1000, C = 0)
+    KC_plot_fit <- nls(lnK ~ Tmodels$Kirchoff(H, S, C, Temperature),
+                       start = KC_start,
+                       data = indvfits[which(indvfits$SE.lnK <= K_error[1]),])
+    summary(KC_plot_fit)
+    if (Save_results == "all"){
+      pdf(paste(file_path, "/", file_prefix, "_method_2_KC_plot.pdf", sep = ""),
+          width = 3, height = 3, pointsize = 0.25)
+      plot(indvfits$invT, indvfits$lnK,
+           xlab = "1/Temperature" ~ (degree ~ C), ylab = "ln[ K ]",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+      for(i in c(1:length(indvfits$Temperature))){
+        arrows(y0 = indvfits$lnK[i] - indvfits$SE.lnK[i], y1 = indvfits$lnK[i] + indvfits$SE.lnK[i],
+               x0 = indvfits$invT[i], x1 = indvfits$invT[i],
+               length=0.02, angle=90, code = 3)
+      }
+      lines(indvfits$invT, Tmodels$Kirchoff(H = coef(KC_plot_fit)[1], S = coef(KC_plot_fit)[2], C = coef(KC_plot_fit)[3], Temperature = indvfits$Temperature), col = "blue")
+      lines(indvfits$invT, Tmodels$VantHoff(H = coef(vh_plot_fit)[1], S = coef(vh_plot_fit)[2], Temperature = indvfits$Temperature), col = "red")
+      dev.off()
+    }
+    KC_plot_summary <- list(round(coef(KC_plot_fit)[1], 1), round(summary(KC_plot_fit)$coefficients[1,2], 1),
+                            round(1000*coef(KC_plot_fit)[2], 1), round(1000*summary(KC_plot_fit)$coefficients[2,2], 1),
+                            round(1000*coef(KC_plot_fit)[3], 1), round(1000*summary(KC_plot_fit)$coefficients[3,2], 1),
+                            round(calcG(coef(KC_plot_fit)[1], coef(KC_plot_fit)[2]), 1), round(calcG.SE(summary(KC_plot_fit)$coefficients[1,2], summary(KC_plot_fit)$coefficients[2,2], summary(KC_plot_fit)$cov.unscaled[1,2]*(summary(KC_plot_fit)$sigma^2)), 1))
+    names(KC_plot_summary) <- c("H", "SE.H", "S", "SE.S", "C", "SE.C", "G", "SE.G")
+    KC_plot_summary <- data.frame(KC_plot_summary)
+  }
+  ####Fit to a Kirchoff thermodynamic model Method 2####
+  if (Tmodel == "Kirchoff"){
+    Global.KC = function(H, S, C, Fmax, Fmin, Reading, A, B, Temperature){
+      K <- (10^9)*exp(Tmodels$Kirchoff(H = H, S = S, C = C, Temperature = Temperature))
+      f <- Mmodel(K = K, A = A, B = B)
+      model <- Fmax[Reading] + (Fmin[Reading] - Fmax[Reading])*f
+      return(model)
+    }
+    gfit_data <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
+                            "Temperature" = c(), "B" = c(), "A" = c(), "Emission" = c())
+    for (i in which(indvfits$SE.lnK <= K_error[2])){
+      gfit_data <- rbind(gfit_data, subset(data_frame, Reading == i))
+    }
+    b <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
+                    "Temperature" = c(), "B" = c(), "A" = c(), "Emission" = c())
+    for (i in c(1:length(unique(gfit_data$Reading)))){
+      a <- subset(gfit_data, Reading == unique(gfit_data$Reading)[i])
+      a$Reading <- i
+      b <- rbind(b, a)
+    }
+    gfit_data <- b
+    gfit_start.KC = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, C = 0, Fmax = Fmax[which(indvfits$SE.lnK <= K_error[2])], Fmin = Fmin[which(indvfits$SE.lnK <= K_error[2])])
+    gfit.KC <- nls(Emission ~ Global.KC(H, S, C, Fmax, Fmin, Reading, A, B, Temperature),
+                   start = gfit_start.KC,
+                   data = gfit_data)
+    summary(gfit.KC)
+    if (Save_results == "all"){
+      pdf(paste(file_path, "/", file_prefix, "_KC_method_2_Gfit_plot.pdf", sep = ""),
+          width = 3, height = 3, pointsize = 0.25)
+      plot(gfit_data$B, gfit_data$Emission,
+           xlab = "[Quencher] (nM)", ylab = "Emission",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+      for (i in c(1:length(unique(gfit_data$Reading)))){
+        a <- subset(gfit_data, Reading == unique(gfit_data$Reading)[i])
+        lines(c(1:ceiling(max(a$B))), Global.KC(H = coef(gfit.KC)[1],
+                                                S = coef(gfit.KC)[2],
+                                                C = coef(gfit.KC)[3],
+                                                Fmax = coef(gfit.KC)[i + 3],
+                                                Fmin = coef(gfit.KC)[i + 3 + length(unique(gfit_data$Reading))],
+                                                A = a$A[1],
+                                                B = c(1:ceiling(max(a$B))),
+                                                Temperature = a$Temperature[1]),
+              col = "red")
+      }
+      dev.off()
+    }
+    Gfit.KC_summary <- list(round(coef(gfit.KC)[1], 1), round(summary(gfit.KC)$coefficients[1,2], 1),
+                         round(1000*coef(gfit.KC)[2], 1), round(1000*summary(gfit.KC)$coefficients[2,2], 1),
+                         round(1000*coef(gfit.KC)[3], 1), round(1000*summary(gfit)$coefficients[3,2], 1),
+                         round(calcG(coef(gfit.KC)[1], coef(gfit.KC)[2]), 1), 1) #round(calcG.SE(summary(gfit.KC)$coefficients[1,2], summary(gfit.KC)$coefficients[2,2], summary(gfit.KC)$cov.unscaled[1,2]*(summary(gfit.KC)$sigma^2)), 1))
+    names(Gfit.KC_summary) <- c("H", "SE.H", "S", "SE.S", "C", "SE.C", "G", "SE.G")
+    Gfit.KC_summary <- data.frame(Gfit.KC_summary)
+  }
   ####Save results####
-  output <- rbind(VH_plot_summary, Gfit_summary)
-  row.names(output) <- c(1:2)
-  output <- cbind(data.frame("Method" =c("1 VH plot", "2 Global fit")), output)
-  print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error),]$SE.lnK), sep = ""))
-  print(output)
+  output <- {}
+  output[[1]] <- rbind(VH_plot_summary, Gfit_summary)
+  row.names(output[[1]]) <- c(1:2)
+  output[[1]] <- cbind(data.frame("Method" =c("1 VH plot", "2 Global fit")), output)
+  print("Van't Hoff")
+  print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error[1]),]$SE.lnK), sep = ""))
+  print(output[[1]])
   if (Save_results != "none"){
-    write.table(output, paste(file_path, "/", file_prefix, "_summary.csv", sep = ""), sep = ",", row.names = FALSE)
+    write.table(output, paste(file_path, "/", file_prefix, "_VH_summary.csv", sep = ""), sep = ",", row.names = FALSE)
+  }
+  output[[2]] <- data.frame("Temperature" = indvfits$Temperature,
+                            "K" = 1/((10^-9)*indvfits$K),
+                            "SE.K" = ((10^9)*indvfits$SE.K)/(indvfits$K^2),
+                            "Fmax" = indvfits$Fmax,
+                            "Fmin" = indvfits$Fmin)
+  output[[3]] <- vh_plot_fit
+  output[[4]] <- gfit
+  output[[5]] <- data_frame
+  output[[6]] <- R
+  names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R")
+  if (Tmodel == "Kirchoff"){
+    output[[7]] <- rbind(KC_plot_summary, Gfit.KC_summary)
+    row.names(output[[7]]) <- c(1:2)
+    output[[7]] <- cbind(data.frame("Method" =c("1 KC plot", "2 Global fit")), output[[5]])
+    print("Kirchoff")
+    print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error[2]),]$SE.lnK), sep = ""))
+    print(output[[7]])
+    output[[8]] <- KC_plot_fit
+    output[[9]] <- gfit.KC
+    names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R", "Kirchoff", "KC_method_1_fit", "KC_method_2_fit")
   }
   output <- output
+
 }
