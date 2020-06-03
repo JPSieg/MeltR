@@ -15,7 +15,9 @@
 #'@param NucAcid A vector containing the Nucleic acid type and the sequences you are fitting.
 #'@param Mmodel The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".
 #'@param Tmodel The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".
-#'@param concT the temperature used to calculate the NucAcid concentration. Default = 90.
+#'@param concT The temperature used to calculate the NucAcid concentration. Default = 90.
+#'@param fitTs Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit.
+#'@param methods what methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Can be true or false. Note, method 1 must be set to TRUE or the subsequent steps will not work.
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
@@ -25,6 +27,8 @@ meltR.A = function(data_frame,
                    blank,
                    NucAcid,
                    concT = 90,
+                   fitTs = NULL,
+                   methods = c(TRUE, TRUE, TRUE),
                    Mmodel,
                    Tmodel = "VantHoff",
                    Save_results = "none",
@@ -214,6 +218,26 @@ meltR.A = function(data_frame,
     }
     names(extcoef) <- c("Total", NucAcid[c(2:length(NucAcid))])
   }
+  ####Remove values not in fitTs####
+  if (is.null(fitTs) == FALSE){
+    if (length(list(fitTs)) == 1){
+      ranges <- rep(list(fitTs), length(unique(no.background$Sample)))
+    }
+    if (length(list(fitTs)) != 1){
+      ranges <- fitTs
+    }
+    a <- {}
+    for (i in c(1:length(unique(no.background$Sample)))){
+      a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
+      a[[i]] <- a[[i]][ -which(a[[i]]$Temperature > ranges[[i]][2]) ,]
+      a[[i]] <- a[[i]][ -which(a[[i]]$Temperature < ranges[[i]][1]) ,]
+    }
+    b <- a[[1]]
+    for (i in c(2:length(unique(no.background$Sample)))){
+      b <- rbind(b, a[[i]])
+    }
+    no.background <- b
+  }
   ####Calculate Ct for each curve####
   samples <- {}
   if (length(extcoef) == 3){
@@ -295,264 +319,295 @@ meltR.A = function(data_frame,
     lowbl_fit[[i]] <- lm(Absorbance ~ Temperature, data = lowbl)
   }
   ####Method 1 fit each curve individually####
-  a <-{}
-  fit <- {}
-  indvfits.H <- c()
-  indvfits.S <- c()
-  indvfits.G <- c()
-  indvfits.Tm <- c()
-  bED <- c()
-  mED <- c()
-  bSS <- c()
-  mSS <- c()
-  for (i in c(1:length(unique(no.background$Sample)))){
-    tryCatch({
-      a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-      fitstart <- list(H = startH[i], Tm = T0.5[i],
-                       mED = lowbl_fit[[i]]$coefficients[2], bED = lowbl_fit[[i]]$coefficients[1],
-                       mESS = uppbl_fit[[i]]$coefficients[2], bESS = uppbl_fit[[i]]$coefficients[1])
-      if (Mmodel == "Monomolecular.2State"){
-        fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature),
-                        data = a[[i]],
-                        start = fitstart,
-                        trace = FALSE,
-                        nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+  if (methods[1] == TRUE){
+    a <-{}
+    fit <- {}
+    indvfits.H <- c()
+    indvfits.S <- c()
+    indvfits.G <- c()
+    indvfits.Tm <- c()
+    bED <- c()
+    mED <- c()
+    bSS <- c()
+    mSS <- c()
+    for (i in c(1:length(unique(no.background$Sample)))){
+      tryCatch({
+        a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
+        fitstart <- list(H = startH[i], Tm = T0.5[i],
+                         mED = lowbl_fit[[i]]$coefficients[2], bED = lowbl_fit[[i]]$coefficients[1],
+                         mESS = uppbl_fit[[i]]$coefficients[2], bESS = uppbl_fit[[i]]$coefficients[1])
+        if (Mmodel == "Monomolecular.2State"){
+          fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature),
+                          data = a[[i]],
+                          start = fitstart,
+                          trace = FALSE,
+                          nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+        }
+        if (Mmodel == "Heteroduplex.2State"){
+          fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature, Ct),
+                          data = a[[i]],
+                          start = fitstart,
+                          trace = FALSE,
+                          nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+        }
+        if (Mmodel == "Homoduplex.2State"){
+          fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature, Ct),
+                          data = a[[i]],
+                          start = fitstart,
+                          trace = FALSE,
+                          nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+        }
+        mED[i] <- coef(fit[[i]])[3]
+        bED[i] <- coef(fit[[i]])[4]
+        mSS[i] <- coef(fit[[i]])[5]
+        bSS[i] <- coef(fit[[i]])[6]
+        indvfits.H[i] <- coef(fit[[i]])[1]
+        if (Mmodel == "Monomolecular.2State"){
+          indvfits.S[i] <- calcS(coef(fit[[i]])[1], coef(fit[[i]])[2])
+          indvfits.G[i] <- calcG(coef(fit[[i]])[1], coef(fit[[i]])[2])
+        }
+        if (Mmodel == "Heteroduplex.2State"){
+          indvfits.S[i] <- calcS(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
+          indvfits.G[i] <- calcG(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
+        }
+        if (Mmodel == "Homoduplex.2State"){
+          indvfits.S[i] <- calcS(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
+          indvfits.G[i] <- calcG(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
+        }
+        indvfits.Tm[i] <- coef(fit[[i]])[2]
+      }, error = function(e){print(a[[i]]$Sample[1])})
+    }
+    indvfits <- data.frame("Sample" = unique(no.background$Sample),
+                           "Ct" = unique(no.background$Ct),
+                           "H" = round(indvfits.H, 1),
+                           "S" = round(indvfits.S, 4),
+                           "G" = round(indvfits.G, 1),
+                           "Tm" = round(indvfits.Tm, 1))
+    indvfits.mean <- list(round(mean(indvfits$H), 1), round(sd(indvfits$H), 1), round(1000*mean(indvfits$S), 1), round(1000*sd(indvfits$S), 1), round(mean(indvfits.G), 1), round(sd(indvfits.G), 1))
+    names(indvfits.mean) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
+    indvfits.mean <- data.frame(indvfits.mean)
+    no.background$Ext <- no.background$Absorbance/(no.background$Pathlength*no.background$Ct)
+    if (Save_results == "all"){
+      pdf(paste(file_path, "/", file_prefix, "_method_1_raw_fit_plot.pdf", sep = ""),
+          width = 3, height = 3, pointsize = 0.25)
+      plot(no.background$Temperature, no.background$Absorbance,
+           xlab = Temperature ~ (degree ~ C), ylab = "Absorbance",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+      for (i in c(1:length(a))){
+        lines(a[[i]]$Temperature, predict(fit[[i]]), col = "red")
       }
-      if (Mmodel == "Heteroduplex.2State"){
-        fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature, Ct),
-                        data = a[[i]],
-                        start = fitstart,
-                        trace = FALSE,
-                        nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+      dev.off()
+      pdf(paste(file_path, "/", file_prefix, "_method_1_normalized_fit_plot.pdf", sep = ""),
+          width = 3, height = 3, pointsize = 0.25)
+      plot(no.background$Temperature, no.background$Ext,
+           xlab = Temperature ~ (degree ~ C), ylab = "Absorbtivity (1/M*cm)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+      for (i in c(1:length(a))){
+        lines(a[[i]]$Temperature, (predict(fit[[i]])/(a[[i]]$Ct[1]*a[[i]]$Pathlength[1])), col = "red")
       }
-      if (Mmodel == "Homoduplex.2State"){
-        fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature, Ct),
-                        data = a[[i]],
-                        start = fitstart,
-                        trace = FALSE,
-                        nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
-      }
-      mED[i] <- coef(fit[[i]])[3]
-      bED[i] <- coef(fit[[i]])[4]
-      mSS[i] <- coef(fit[[i]])[5]
-      bSS[i] <- coef(fit[[i]])[6]
-      indvfits.H[i] <- coef(fit[[i]])[1]
-      if (Mmodel == "Monomolecular.2State"){
-        indvfits.S[i] <- calcS(coef(fit[[i]])[1], coef(fit[[i]])[2])
-        indvfits.G[i] <- calcG(coef(fit[[i]])[1], coef(fit[[i]])[2])
-      }
-      if (Mmodel == "Heteroduplex.2State"){
-        indvfits.S[i] <- calcS(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
-        indvfits.G[i] <- calcG(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
-      }
-      if (Mmodel == "Homoduplex.2State"){
-        indvfits.S[i] <- calcS(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
-        indvfits.G[i] <- calcG(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
-      }
-      indvfits.Tm[i] <- coef(fit[[i]])[2]
-    }, error = function(e){print(a[[i]]$Sample[1])})
+      dev.off()
+    }
   }
-  indvfits <- data.frame("Sample" = unique(no.background$Sample),
-                         "Ct" = unique(no.background$Ct),
-                         "H" = round(indvfits.H, 1),
-                         "S" = round(indvfits.S, 4),
-                         "G" = round(indvfits.G, 1),
-                         "Tm" = round(indvfits.Tm, 1))
-  indvfits.mean <- list(round(mean(indvfits$H), 1), round(sd(indvfits$H), 1), round(1000*mean(indvfits$S), 1), round(1000*sd(indvfits$S), 1), round(mean(indvfits.G), 1), round(sd(indvfits.G), 1))
-  names(indvfits.mean) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
-  indvfits.mean <- data.frame(indvfits.mean)
-  no.background$Ext <- no.background$Absorbance/(no.background$Pathlength*no.background$Ct)
-  if (Save_results == "all"){
-    pdf(paste(file_path, "/", file_prefix, "_method_1_raw_fit_plot.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    plot(no.background$Temperature, no.background$Absorbance,
-         xlab = Temperature ~ (degree ~ C), ylab = "Absorbance",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-    for (i in c(1:length(a))){
-      lines(a[[i]]$Temperature, predict(fit[[i]]), col = "red")
-    }
-    dev.off()
-    pdf(paste(file_path, "/", file_prefix, "_method_1_normalized_fit_plot.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    plot(no.background$Temperature, no.background$Ext,
-         xlab = Temperature ~ (degree ~ C), ylab = "Absorbtivity (1/M*cm)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-    for (i in c(1:length(a))){
-      lines(a[[i]]$Temperature, (predict(fit[[i]])/(a[[i]]$Ct[1]*a[[i]]$Pathlength[1])), col = "red")
-    }
-    dev.off()
+  if (methods[1] == FALSE){
+    indvfits <- data.frame("Sample" = NA,
+                           "Ct" = NA,
+                           "H" = NA,
+                           "S" = NA,
+                           "G" = NA,
+                           "Tm" = NA)
+    indvfits.mean <- list(NA, NA, NA, NA, NA, NA)
+    names(indvfits.mean) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
+    indvfits.mean <- data.frame(indvfits.mean)
   }
   ####Method 2 Tm vs Ct####
-  a <- {}
-  Tm_range <- {}
-  Tm_fit <- {}
-  Tm <- c()
-  lnCt <- c()
-  for (i in c(1:length(unique(no.background$Sample)))){
-    a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i]) #Pull out data
-    #calculate f at each temp
-    a[[i]]$f <- (a[[i]]$Absorbance - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))/((coef(fit[[i]])[3]*a[[i]]$Temperature + coef(fit[[i]])[4]) - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))
-    Tm_range[[i]] <- data.frame( #Pull out data where f >= 0.4 and f <= 0.6
-      "Temperature" = a[[i]]$Temperature[which(a[[i]]$f >= 0.4)][which(a[[i]]$f[which(a[[i]]$f >= 0.4)] <= 0.6)],
-      "f" = a[[i]]$f[which(a[[i]]$f >= 0.4)][which(a[[i]]$f[which(a[[i]]$f >= 0.4)] <= 0.6)]
-    )
-    Tm_fit[[i]] <- lm(f~Temperature, data = Tm_range[[i]]) #fit data where f >= 0.4 and f <= 0.6
-    Tm[i] <- (0.5 - coef(Tm_fit[[i]])[1])/coef(Tm_fit[[i]])[2]
-    lnCt[i] <- log(a[[i]]$Ct[1])
-  }
-  Tm_data <- data.frame("lnCt" = lnCt, "Tm" = Tm)
-  Tm_data$invT <- 1/(Tm_data$Tm + 273.15)
-  if (Mmodel != "Monomolecular.2State"){
-    if (Mmodel != "Monomolecular.3State"){
-      Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
-                            data = Tm_data,
-                            start = list(H = -70, S = -0.17))
-      Tm_vs_lnCt <- list(round(coef(Tm_vs_lnCt_fit)[1], 1), round(summary(Tm_vs_lnCt_fit)$coefficients[1,2], 1),
-                         round(1000*coef(Tm_vs_lnCt_fit)[2], 1), round(1000*summary(Tm_vs_lnCt_fit)$coefficients[2,2], 1),
-                         round(coef(Tm_vs_lnCt_fit)[1] - (310.15*coef(Tm_vs_lnCt_fit)[2]), 1), round(sqrt((summary(Tm_vs_lnCt_fit)$coefficients[1,2])^2 + (310*summary(Tm_vs_lnCt_fit)$coefficients[2,2])^2 - 2*310*summary(Tm_vs_lnCt_fit)$cov.unscaled[1,2]*(summary(Tm_vs_lnCt_fit)$sigma^2)),1))
-      names(Tm_vs_lnCt) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
-      Tm_vs_lnCt <- data.frame(Tm_vs_lnCt)
-      if (Save_results == "all"){
-        pdf(paste(file_path, "/", file_prefix, "_method_2_plot.pdf", sep = ""),
-            width = 3, height = 3, pointsize = 0.25)
-        plot(x = Tm_data$lnCt, y = Tm_data$invT,
-             xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]",
-             cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-        lines(x = Tm_data$lnCt, predict(Tm_vs_lnCt_fit), col = "red")
-        dev.off()
+  if (methods[2] == TRUE){
+    a <- {}
+    Tm_range <- {}
+    Tm_fit <- {}
+    Tm <- c()
+    lnCt <- c()
+    for (i in c(1:length(unique(no.background$Sample)))){
+      a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i]) #Pull out data
+      #calculate f at each temp
+      a[[i]]$f <- (a[[i]]$Absorbance - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))/((coef(fit[[i]])[3]*a[[i]]$Temperature + coef(fit[[i]])[4]) - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))
+      Tm_range[[i]] <- data.frame( #Pull out data where f >= 0.4 and f <= 0.6
+        "Temperature" = a[[i]]$Temperature[which(a[[i]]$f >= 0.4)][which(a[[i]]$f[which(a[[i]]$f >= 0.4)] <= 0.6)],
+        "f" = a[[i]]$f[which(a[[i]]$f >= 0.4)][which(a[[i]]$f[which(a[[i]]$f >= 0.4)] <= 0.6)]
+      )
+      Tm_fit[[i]] <- lm(f~Temperature, data = Tm_range[[i]]) #fit data where f >= 0.4 and f <= 0.6
+      Tm[i] <- (0.5 - coef(Tm_fit[[i]])[1])/coef(Tm_fit[[i]])[2]
+      lnCt[i] <- log(a[[i]]$Ct[1])
+    }
+    Tm_data <- data.frame("lnCt" = lnCt, "Tm" = Tm)
+    Tm_data$invT <- 1/(Tm_data$Tm + 273.15)
+    if (Mmodel != "Monomolecular.2State"){
+      if (Mmodel != "Monomolecular.3State"){
+        Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
+                              data = Tm_data,
+                              start = list(H = -70, S = -0.17))
+        Tm_vs_lnCt <- list(round(coef(Tm_vs_lnCt_fit)[1], 1), round(summary(Tm_vs_lnCt_fit)$coefficients[1,2], 1),
+                           round(1000*coef(Tm_vs_lnCt_fit)[2], 1), round(1000*summary(Tm_vs_lnCt_fit)$coefficients[2,2], 1),
+                           round(coef(Tm_vs_lnCt_fit)[1] - (310.15*coef(Tm_vs_lnCt_fit)[2]), 1), round(sqrt((summary(Tm_vs_lnCt_fit)$coefficients[1,2])^2 + (310*summary(Tm_vs_lnCt_fit)$coefficients[2,2])^2 - 2*310*summary(Tm_vs_lnCt_fit)$cov.unscaled[1,2]*(summary(Tm_vs_lnCt_fit)$sigma^2)),1))
+        names(Tm_vs_lnCt) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
+        Tm_vs_lnCt <- data.frame(Tm_vs_lnCt)
+        if (Save_results == "all"){
+          pdf(paste(file_path, "/", file_prefix, "_method_2_plot.pdf", sep = ""),
+              width = 3, height = 3, pointsize = 0.25)
+          plot(x = Tm_data$lnCt, y = Tm_data$invT,
+               xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]",
+               cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+          lines(x = Tm_data$lnCt, predict(Tm_vs_lnCt_fit), col = "red")
+          dev.off()
+        }
       }
     }
+    if (Mmodel == "Monomolecular.2State"){
+      if (Mmodel == "Monomolecular.3State"){
+        if (Save_results == "all"){
+          pdf(paste(file_path, "/", file_prefix, "_method_2_plot.pdf", sep = ""),
+              width = 3, height = 3, pointsize = 0.25)
+          plot(x = Tm_data$lnCt, y = Tm_data$invT,
+               xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]",
+               cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+          lines(Tm_data$lnCt, predict(lm(Tm_data$invT ~ Tm_data$lnCt)), col = "red")
+          dev.off()
+        }
+      }}
   }
-  if (Mmodel == "Monomolecular.2State"){
-    if (Mmodel == "Monomolecular.3State"){
-      if (Save_results == "all"){
-        pdf(paste(file_path, "/", file_prefix, "_method_2_plot.pdf", sep = ""),
-            width = 3, height = 3, pointsize = 0.25)
-        plot(x = Tm_data$lnCt, y = Tm_data$invT,
-             xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]",
-             cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-        lines(Tm_data$lnCt, predict(lm(Tm_data$invT ~ Tm_data$lnCt)), col = "red")
-        dev.off()
-      }
-    }}
+  if (methods[2] == FALSE){
+    Tm_vs_lnCt <- list(NA, NA,
+                       NA, NA,
+                       NA, NA)
+    names(Tm_vs_lnCt) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
+    Tm_vs_lnCt <- data.frame(Tm_vs_lnCt)
+  }
   ####Method 3 Global fitting####
-  b <- data.frame("Sample" = c(), "Pathlength" = c(), "Temperature" = c(),
-                  "Absorbance" = c(), "Ct" = c(), "Ext" = c())
-  for (i in c(1:length(unique(no.background$Sample)))){
-    a <- subset(no.background, Sample == unique(no.background$Sample)[i])
-    a$Sample <- i
-    b <- rbind(b, a)
-  }
-  gfit_data <- b
-  gfit_start = list(H = mean(indvfits$H), S = mean(indvfits$S), mED = mED, bED = bED, mESS = mSS, bESS = bSS)
-  if (Mmodel == "Monomolecular.2State"){
-    gfit <- nls(Absorbance ~ GModel(H, S, mED, bED, mESS, bESS, Sample, Temperature),
-                start = gfit_start,
-                data = gfit_data,
-                nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
-  }
-  if (Mmodel == "Heteroduplex.2State"){
-    gfit <- nls(Absorbance ~ GModel(H, S, mED, bED, mESS, bESS, Sample, Temperature, Ct),
-                start = gfit_start,
-                data = gfit_data,
-                nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
-  }
-  if (Mmodel == "Homoduplex.2State"){
-    gfit <- nls(Absorbance ~ GModel(H, S, mED, bED, mESS, bESS, Sample, Temperature, Ct),
-                start = gfit_start,
-                data = gfit_data,
-                nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
-  }
-  if (Save_results == "all"){
-    pdf(paste(file_path, "/", file_prefix, "_method_3_Gfit_raw_plot.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    plot(gfit_data$Temperature, gfit_data$Absorbance,
-         xlab = Temperature ~ (degree ~ C), ylab = "Absorbance",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-    for (i in c(1:length(unique(gfit_data$Sample)))){
-      a <- subset(gfit_data, Sample == unique(gfit_data$Sample)[i])
-      if (Mmodel == "Monomolecular.2State"){
-        lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
-                                                       S = coef(gfit)[2],
-                                                       mED = coef(gfit)[i + 2],
-                                                       bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
-                                                       mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
-                                                       bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                       Temperature = c(5:ceiling(max(a$Temperature)))),
-              col = "red")
-      }
-      if (Mmodel == "Heteroduplex.2State"){
-        lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
-                                                       S = coef(gfit)[2],
-                                                       mED = coef(gfit)[i + 2],
-                                                       bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
-                                                       mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
-                                                       bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                       Temperature = c(5:ceiling(max(a$Temperature))),
-                                                       Ct = a$Ct[1]),
-              col = "red")
-      }
-      if (Mmodel == "Homoduplex.2State"){
-        lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
-                                                       S = coef(gfit)[2],
-                                                       mED = coef(gfit)[i + 2],
-                                                       bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
-                                                       mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
-                                                       bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                       Temperature = c(5:ceiling(max(a$Temperature))),
-                                                       Ct = a$Ct[1]),
-              col = "red")
-      }
+  if (methods[3] == TRUE){
+    b <- data.frame("Sample" = c(), "Pathlength" = c(), "Temperature" = c(),
+                    "Absorbance" = c(), "Ct" = c(), "Ext" = c())
+    for (i in c(1:length(unique(no.background$Sample)))){
+      a <- subset(no.background, Sample == unique(no.background$Sample)[i])
+      a$Sample <- i
+      b <- rbind(b, a)
     }
-    dev.off()
-    pdf(paste(file_path, "/", file_prefix, "_method_3_Gfit_normalized_plot.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    plot(gfit_data$Temperature, gfit_data$Ext,
-         xlab = Temperature ~ (degree ~ C), ylab = "Absorbtivity (1/M*cm)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-    for (i in c(1:length(unique(gfit_data$Sample)))){
-      a <- subset(gfit_data, Sample == unique(gfit_data$Sample)[i])
-      if (Mmodel == "Monomolecular.2State"){
-        lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
-                                                       S = coef(gfit)[2],
-                                                       mED = coef(gfit)[i + 2],
-                                                       bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
-                                                       mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
-                                                       bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                       Temperature = c(5:ceiling(max(a$Temperature))))/(a$Pathlength[1]*a$Ct[1]),
-              col = "red")
+    gfit_data <- b
+    gfit_start = list(H = mean(indvfits$H), S = mean(indvfits$S), mED = mED, bED = bED, mESS = mSS, bESS = bSS)
+    if (Mmodel == "Monomolecular.2State"){
+      gfit <- nls(Absorbance ~ GModel(H, S, mED, bED, mESS, bESS, Sample, Temperature),
+                  start = gfit_start,
+                  data = gfit_data,
+                  nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+    }
+    if (Mmodel == "Heteroduplex.2State"){
+      gfit <- nls(Absorbance ~ GModel(H, S, mED, bED, mESS, bESS, Sample, Temperature, Ct),
+                  start = gfit_start,
+                  data = gfit_data,
+                  nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+    }
+    if (Mmodel == "Homoduplex.2State"){
+      gfit <- nls(Absorbance ~ GModel(H, S, mED, bED, mESS, bESS, Sample, Temperature, Ct),
+                  start = gfit_start,
+                  data = gfit_data,
+                  nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
+    }
+    if (Save_results == "all"){
+      pdf(paste(file_path, "/", file_prefix, "_method_3_Gfit_raw_plot.pdf", sep = ""),
+          width = 3, height = 3, pointsize = 0.25)
+      plot(gfit_data$Temperature, gfit_data$Absorbance,
+           xlab = Temperature ~ (degree ~ C), ylab = "Absorbance",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+      for (i in c(1:length(unique(gfit_data$Sample)))){
+        a <- subset(gfit_data, Sample == unique(gfit_data$Sample)[i])
+        if (Mmodel == "Monomolecular.2State"){
+          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+                                                         S = coef(gfit)[2],
+                                                         mED = coef(gfit)[i + 2],
+                                                         bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
+                                                         mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
+                                                         bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
+                                                         Temperature = c(5:ceiling(max(a$Temperature)))),
+                col = "red")
+        }
+        if (Mmodel == "Heteroduplex.2State"){
+          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+                                                         S = coef(gfit)[2],
+                                                         mED = coef(gfit)[i + 2],
+                                                         bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
+                                                         mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
+                                                         bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
+                                                         Temperature = c(5:ceiling(max(a$Temperature))),
+                                                         Ct = a$Ct[1]),
+                col = "red")
+        }
+        if (Mmodel == "Homoduplex.2State"){
+          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+                                                         S = coef(gfit)[2],
+                                                         mED = coef(gfit)[i + 2],
+                                                         bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
+                                                         mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
+                                                         bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
+                                                         Temperature = c(5:ceiling(max(a$Temperature))),
+                                                         Ct = a$Ct[1]),
+                col = "red")
+        }
       }
-      if (Mmodel == "Heteroduplex.2State"){
-        lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
-                                                       S = coef(gfit)[2],
-                                                       mED = coef(gfit)[i + 2],
-                                                       bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
-                                                       mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
-                                                       bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                       Temperature = c(5:ceiling(max(a$Temperature))),
-                                                       Ct = a$Ct[1])/(a$Pathlength[1]*a$Ct[1]),
-              col = "red")
-      }
-      if (Mmodel == "Homoduplex.2State"){
-        lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
-                                                       S = coef(gfit)[2],
-                                                       mED = coef(gfit)[i + 2],
-                                                       bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
-                                                       mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
-                                                       bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                       Temperature = c(5:ceiling(max(a$Temperature))),
-                                                       Ct = a$Ct[1])/(a$Pathlength[1]*a$Ct[1]),
-              col = "red")
-      }
+      dev.off()
+      pdf(paste(file_path, "/", file_prefix, "_method_3_Gfit_normalized_plot.pdf", sep = ""),
+          width = 3, height = 3, pointsize = 0.25)
+      plot(gfit_data$Temperature, gfit_data$Ext,
+           xlab = Temperature ~ (degree ~ C), ylab = "Absorbtivity (1/M*cm)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+      for (i in c(1:length(unique(gfit_data$Sample)))){
+        a <- subset(gfit_data, Sample == unique(gfit_data$Sample)[i])
+        if (Mmodel == "Monomolecular.2State"){
+          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+                                                         S = coef(gfit)[2],
+                                                         mED = coef(gfit)[i + 2],
+                                                         bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
+                                                         mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
+                                                         bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
+                                                         Temperature = c(5:ceiling(max(a$Temperature))))/(a$Pathlength[1]*a$Ct[1]),
+                col = "red")
+        }
+        if (Mmodel == "Heteroduplex.2State"){
+          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+                                                         S = coef(gfit)[2],
+                                                         mED = coef(gfit)[i + 2],
+                                                         bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
+                                                         mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
+                                                         bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
+                                                         Temperature = c(5:ceiling(max(a$Temperature))),
+                                                         Ct = a$Ct[1])/(a$Pathlength[1]*a$Ct[1]),
+                col = "red")
+        }
+        if (Mmodel == "Homoduplex.2State"){
+          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+                                                         S = coef(gfit)[2],
+                                                         mED = coef(gfit)[i + 2],
+                                                         bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
+                                                         mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
+                                                         bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
+                                                         Temperature = c(5:ceiling(max(a$Temperature))),
+                                                         Ct = a$Ct[1])/(a$Pathlength[1]*a$Ct[1]),
+                col = "red")
+        }
 
+      }
+      dev.off()
     }
-    dev.off()
+    Gfit_summary <- list(round(coef(gfit)[1], 1), round(summary(gfit)$coefficients[1,2], 1),
+                         round(1000*coef(gfit)[2], 1), round(1000*summary(gfit)$coefficients[2,2], 1),
+                         round(coef(gfit)[1] - (310.15)*coef(gfit)[2], 1), round(sqrt((summary(gfit)$coefficients[1,2])^2 + (310.15*summary(gfit)$coefficients[2,2])^2 - 2*310.15*summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)), 1))
+    names(Gfit_summary) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
+    Gfit_summary <- data.frame(Gfit_summary)
   }
-  Gfit_summary <- list(round(coef(gfit)[1], 1), round(summary(gfit)$coefficients[1,2], 1),
-                       round(1000*coef(gfit)[2], 1), round(1000*summary(gfit)$coefficients[2,2], 1),
-                       round(coef(gfit)[1] - (310.15)*coef(gfit)[2], 1), round(sqrt((summary(gfit)$coefficients[1,2])^2 + (310.15*summary(gfit)$coefficients[2,2])^2 - 2*310.15*summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)), 1))
-  names(Gfit_summary) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
-  Gfit_summary <- data.frame(Gfit_summary)
+  if (methods[3] == FALSE){
+    Gfit_summary <- list(NA, NA,
+                       NA, NA,
+                       NA, NA)
+    names(Gfit_summary) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
+    Tm_vs_lnCt <- data.frame(Gfit_summary)
+  }
   ####Assemble Results####
   if (Mmodel == "Monomolecular.2State"){
     comparison <- rbind(indvfits.mean, Gfit_summary)
@@ -582,8 +637,12 @@ meltR.A = function(data_frame,
   output <- list("Summary" = comparison,
                  "Method.1.indvfits" = indvfits)
   if (Mmodel != "Monomolecular.2State"){
-    output$Method.2.fit <- Tm_vs_lnCt_fit
+    if (methods[2] == TRUE){
+      output$Method.2.fit <- Tm_vs_lnCt_fit
+    }
   }
-  output$Method.3.fit <- gfit
+  if (methods[3] == TRUE){
+    output$Method.3.fit <- gfit
+  }
   output <- output
 }

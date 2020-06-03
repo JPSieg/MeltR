@@ -9,6 +9,8 @@ meltR.A(
   blank,
   NucAcid,
   concT = 90,
+  fitTs = NULL,
+  methods = c(TRUE, TRUE, TRUE),
   Mmodel,
   Tmodel = "VantHoff",
   Save_results = "none",
@@ -23,7 +25,11 @@ meltR.A(
 
 \item{NucAcid}{A vector containing the Nucleic acid type and the sequences you are fitting.}
 
-\item{concT}{the temperature used to calculate the NucAcid concentration. Default = 90.}
+\item{concT}{The temperature used to calculate the NucAcid concentration. Default = 90.}
+
+\item{fitTs}{Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit.}
+
+\item{methods}{what methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Can be true or false. Note, method 1 must be set to TRUE or the subsequent steps will not work.}
 
 \item{Mmodel}{The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".}
 
