@@ -252,11 +252,17 @@ meltR.A = function(data_frame,
   startH <- c()
   for (i in c(1:length(unique(no.background$Sample)))){
     first.derive[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
+    y <- c()
+    x <- c()
+    for (j in c(10:length(first.derive[[i]]$Temperature))){
+      y[j] <- mean(first.derive[[i]]$Absorbance[j:(j-9)])
+      x[j] <- mean(first.derive[[i]]$Temperature[j:(j-9)])
+    }
     a <- c()
     b <- c()
     for (j in c(8:length(first.derive[[i]]$Temperature))){
-      a[j] <- (first.derive[[i]]$Absorbance[j] - first.derive[[i]]$Absorbance[j-7])/(first.derive[[i]]$Temperature[j] - first.derive[[i]]$Temperature[j-7])
-      b[j] <- (first.derive[[i]]$Temperature[j] + first.derive[[i]]$Temperature[j-7])/2
+      a[j] <- (y[j] - y[j-7])/(x[j] - x[j-7])
+      b[j] <- (x[j] + x[j-7])/2
     }
     T0.5[i] <- b[which.max(a)]
     T0.75[i] <- min(b[which(a <= 0.5*max(a, na.rm = TRUE))][which(b[which(a <= 0.5*max(a, na.rm = TRUE))] > b[which.max(a)])], na.rm = TRUE)
