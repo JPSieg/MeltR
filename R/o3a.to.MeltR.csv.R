@@ -38,7 +38,8 @@ o3a.to.MeltR.csv = function(file,
     a <- data.frame("Sample" = c(Sample_names[i]),
                     "Pathlength" = c(Pathlength[i]),
                     "Temperature" = c(data[[i]]$Temperature)[-Remove_readings],
-                    "Absorbance" = c(data[[i]][ , which(colnames(data[[i]]) == paste("X", Wavelength, sep = "")) ]))[-Remove_readings]
+                    "Absorbance" = c(data[[i]][ , which(colnames(data[[i]]) == paste("X", Wavelength, sep = "")) ])[-Remove_readings]
+    )
     if (Norm_reading != FALSE){
       a$Absorbance <- a$Absorbance/a$Absorbance[Norm_reading]
     }
