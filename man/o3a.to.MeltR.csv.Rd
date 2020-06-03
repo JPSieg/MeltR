@@ -8,6 +8,7 @@ o3a.to.MeltR.csv(
   file,
   write = FALSE,
   Wavelength = "260",
+  Remove_readings = c(),
   Pathlength = rep(1, 1000),
   Sample_names = "NULL",
   Norm_reading = FALSE
@@ -19,6 +20,8 @@ o3a.to.MeltR.csv(
 \item{write}{Optional prefix for the ".csv" formatted file you want to write. Example is "Name". Default = FALSE to not write a file.}
 
 \item{Wavelength}{Wavelength in nm that you want to pull out of the ".o3a" files. Default = "260".}
+
+\item{Remove_readings}{Optional reading to remove from the data set.}
 
 \item{Pathlength}{Pathlength in cm use to collect the data in the ".o3a" files, formatted into a vector. Example: Pathlength = c(1, 1, 0.5, 0.5, 0.1). Default = 1 cm.}
 
