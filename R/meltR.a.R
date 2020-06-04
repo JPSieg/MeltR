@@ -637,11 +637,11 @@ meltR.A = function(data_frame,
   range <- data.frame("H" = abs((range(comparison$H)[1]-range(comparison$H)[2])/mean(comparison$H)),
                       "S" = abs((range(comparison$S)[1]-range(comparison$S)[2])/mean(comparison$S)),
                       "G" = abs((range(comparison$G)[1]-range(comparison$G)[2])/mean(comparison$G)))
-  print("%error between methods")
+  print("fractional error between methods")
   print(range)
   output <- list("Summary" = comparison,
                  "Method.1.indvfits" = indvfits,
-                 "Range" = comparison)
+                 "Range" = range)
   if (Mmodel != "Monomolecular.2State"){
     if (methods[2] == TRUE){
       output$Method.2.fit <- Tm_vs_lnCt_fit
