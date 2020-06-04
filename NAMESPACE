@@ -2,6 +2,7 @@
 
 export(calc.extcoeff)
 export(meltR.A)
+export(meltR.A.derivative)
 export(meltR.A.nlme)
 export(meltR.F)
 export(o3a.to.MeltR.csv)

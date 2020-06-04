@@ -5,6 +5,7 @@
 #'@param data_frame The MeltR data frame you want to take the derivative of. Columns must be named "Sample", "Pathlength", "Temperature", and "Absorbance.
 #'@param n The number of data point you want to smooth the first derivative to. Default n = 4.
 #'@return A list of data frames. One data frame contains the first derivative and one data frame contains the second derivative.
+#' @export
 meltR.A.derivative = function(data_frame, n = 4){
   ####First derivative
   a <- {}
