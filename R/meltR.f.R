@@ -300,19 +300,28 @@ meltR.F = function(data_frame,
   output[[3]] <- vh_plot_fit
   output[[4]] <- gfit
   output[[5]] <- data_frame
-  output[[6]] <- R
+  if (Optimize_B_conc == TRUE){
+    output[[6]] <- R
+  }
+  if (Optimize_B_conc == FALSE){
+    output[[6]] <- NA
+  }
+  output[[7]] <- data_frame("H" = abs(range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H),
+                            "S" = abs(range(output[[1]]$S)[1] - range(output[[1]]$S)[2])/mean(output[[1]]$S),
+                            "G" = abs(range(output[[1]]$G)[1] - range(output[[1]]$G)[2])/mean(output[[1]]$G))
+  print("Fractional error between methods")
+  print(output[[7]])
   names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R")
   if (Tmodel == "Kirchoff"){
-    output[[7]] <- rbind(KC_plot_summary, Gfit.KC_summary)
+    output[[8]] <- rbind(KC_plot_summary, Gfit.KC_summary)
     row.names(output[[7]]) <- c(1:2)
-    output[[7]] <- cbind(data.frame("Method" =c("1 KC plot", "2 Global fit")), output[[5]])
+    output[[8]] <- cbind(data.frame("Method" =c("1 KC plot", "2 Global fit")), output[[5]])
     print("Kirchoff")
     print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error[2]),]$SE.lnK), sep = ""))
     print(output[[7]])
-    output[[8]] <- KC_plot_fit
-    output[[9]] <- gfit.KC
+    output[[9]] <- KC_plot_fit
+    output[[10]] <- gfit.KC
     names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R", "Kirchoff", "KC_method_1_fit", "KC_method_2_fit")
   }
   output <- output
-
 }
