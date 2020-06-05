@@ -308,7 +308,7 @@ meltR.F = function(data_frame,
   }
   output[[7]] <- data.frame("H" = abs((range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H)),
                             "S" = abs((range(output[[1]]$S)[1] - range(output[[1]]$S)[2])/mean(output[[1]]$S)),
-                            "G" = abs((range(output[[1]]$G)[1] - range(output[[1]]$G)[2])/mean(output[[1]]$G))
+                            "G" = abs((range(output[[1]]$G)[1] - range(output[[1]]$G)[2])/mean(output[[1]]$G)))
   print("Fractional error between methods")
   print(output[[7]])
   names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R", "Fractional_error_between_methods")
