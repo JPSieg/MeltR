@@ -306,7 +306,7 @@ meltR.F = function(data_frame,
   if (Optimize_B_conc == FALSE){
     output[[6]] <- NA
   }
-  output[[7]] <- data_frame("H" = abs(range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H),
+  output[[7]] <- data.frame("H" = abs(range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H),
                             "S" = abs(range(output[[1]]$S)[1] - range(output[[1]]$S)[2])/mean(output[[1]]$S),
                             "G" = abs(range(output[[1]]$G)[1] - range(output[[1]]$G)[2])/mean(output[[1]]$G))
   print("Fractional error between methods")
