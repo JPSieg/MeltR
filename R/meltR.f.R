@@ -306,12 +306,12 @@ meltR.F = function(data_frame,
   if (Optimize_B_conc == FALSE){
     output[[6]] <- NA
   }
-  output[[7]] <- data.frame("H" = abs(range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H),
-                            "S" = abs(range(output[[1]]$S)[1] - range(output[[1]]$S)[2])/mean(output[[1]]$S),
-                            "G" = abs(range(output[[1]]$G)[1] - range(output[[1]]$G)[2])/mean(output[[1]]$G))
+  output[[7]] <- data.frame("H" = abs((range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H)),
+                            "S" = abs((range(output[[1]]$S)[1] - range(output[[1]]$S)[2])/mean(output[[1]]$S)),
+                            "G" = abs((range(output[[1]]$G)[1] - range(output[[1]]$G)[2])/mean(output[[1]]$G))
   print("Fractional error between methods")
   print(output[[7]])
-  names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R")
+  names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R", "Fractional_error_between_methods")
   if (Tmodel == "Kirchoff"){
     output[[8]] <- rbind(KC_plot_summary, Gfit.KC_summary)
     row.names(output[[7]]) <- c(1:2)
