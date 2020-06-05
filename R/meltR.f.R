@@ -183,7 +183,12 @@ meltR.F = function(data_frame,
     b <- rbind(b, a)
   }
   gfit_data <- b
-  gfit_start = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, Fmax = Fmax[which(indvfits$SE.lnK <= K_error[1])], Fmin = Fmin[which(indvfits$SE.lnK <= K_error[1])])
+  if (is.na(K_error[2]) == FALSE){
+    gfit_start = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, Fmax = Fmax[which(indvfits$SE.lnK <= K_error[2])], Fmin = Fmin[which(indvfits$SE.lnK <= K_error[2])])
+  }
+  if (is.na(K_error[2]) == TRUE){
+    gfit_start = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, Fmax = Fmax, Fmin = Fmin)
+  }
   gfit <- nls(Emission ~ Global(H, S, Fmax, Fmin, Reading, A, B, Temperature),
               start = gfit_start,
               data = gfit_data)
