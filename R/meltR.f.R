@@ -132,7 +132,7 @@ meltR.F = function(data_frame,
   indvfits$lnK <- log((10^-9)*indvfits$K)
   indvfits$SE.lnK <- indvfits$SE.K/indvfits$K
   vh_start = list(H = -70, S = -0.180)
-  if (K_error[1] != NA){
+  if (is.na(K_error[1]) == FALSE){
     if (length(which(indvfits$SE.lnK <= K_error[1])) <= 5){
       print(paste("Only ", length(which(indvfits$SE.lnK <= K_error[1])), " isotherms have an acceptable K error. Try increasing the tolerance threshold.", sep = ""))
     }
@@ -140,7 +140,7 @@ meltR.F = function(data_frame,
                        start = vh_start,
                        data = indvfits[which(indvfits$SE.lnK <= K_error[1]),])
   }
-  if (K_error[1] == NA){
+  if (is.na(K_error[1]) == TRUE){
     vh_plot_fit <- nls(lnK~Tmodels$VantHoff(H, S, Temperature),
                        start = vh_start,
                        data = indvfits)
@@ -167,12 +167,12 @@ meltR.F = function(data_frame,
   ####Method 2 Global fit####
   gfit_data <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
                           "Temperature" = c(), "B" = c(), "A" = c(), "Emission" = c())
-  if (K_error[1] != NA){
+  if (is.na(K_error[1]) == FALSE){
     for (i in which(indvfits$SE.lnK <= K_error[1])){
       gfit_data <- rbind(gfit_data, subset(data_frame, Reading == i))
     }
   }
-  if (K_error[1] == NA){
+  if (is.na(K_error[1]) == TRUE){
     gfit_data <- data_frame
   }
   b <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
