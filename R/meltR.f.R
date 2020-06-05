@@ -321,7 +321,7 @@ meltR.F = function(data_frame,
     print(output[[7]])
     output[[9]] <- KC_plot_fit
     output[[10]] <- gfit.KC
-    names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R", "Kirchoff", "KC_method_1_fit", "KC_method_2_fit")
+    names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R", "Fractional_error_between_methods", "Kirchoff", "KC_method_1_fit", "KC_method_2_fit")
   }
   output <- output
 }
