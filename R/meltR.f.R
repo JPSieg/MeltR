@@ -167,12 +167,12 @@ meltR.F = function(data_frame,
   ####Method 2 Global fit####
   gfit_data <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
                           "Temperature" = c(), "B" = c(), "A" = c(), "Emission" = c())
-  if (is.na(K_error[1]) == FALSE){
+  if (is.na(K_error[2]) == FALSE){
     for (i in which(indvfits$SE.lnK <= K_error[1])){
       gfit_data <- rbind(gfit_data, subset(data_frame, Reading == i))
     }
   }
-  if (is.na(K_error[1]) == TRUE){
+  if (is.na(K_error[2]) == TRUE){
     gfit_data <- data_frame
   }
   b <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
