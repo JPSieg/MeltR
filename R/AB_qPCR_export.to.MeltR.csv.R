@@ -50,7 +50,7 @@ AB.qPCR.export.to.MeltR.csv = function(data_file, index_file, output_name = NA, 
     if (line == "[Melt Region Normalized Data]"){
       while(line != ""){
         line = readLines(con, n = 1)
-        if(length(line) == 0){
+        if(line == ""){
           break
         }
         str = strsplit(toString(line), split = "\t")
@@ -61,12 +61,12 @@ AB.qPCR.export.to.MeltR.csv = function(data_file, index_file, output_name = NA, 
             Em_Reading[i] <- strsplit(toString(str[[1]][a[i]]), split = " ")[[1]][2]
           }
         }
-        if (str[[1]][1] != "Well"){ #Make a list of vectors containing the Emission in each well
-          Emission_wells <- c(Temperature_wells, str[[1]][2])
-          Emissions <- c(Temperatures, list(as.numeric(str[[1]][5:length(str[[1]])])))
+        if (str[[1]][1] != "Well"){ #Make a list of vectors containing the temperaure in each well
+          Emission_wells <- c(Emission_wells, str[[1]][2])
+          Emissions <- c(Emissions, list(as.numeric(str[[1]][5:length(str[[1]])])))
           names(Emissions) <- Emission_wells
         }
-    }
+      }
     }
   }
   index <- read.csv(index_file)
