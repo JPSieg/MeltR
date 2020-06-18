@@ -10,9 +10,10 @@
 #'@param index_file Path to the .csv formatted index file.
 #'@param output_name Optional name of the .csv file you want to write. Default = NA to not write a file.
 #'@param Temp_correction Optional function to apply to correct the temperature readings, determined by callibrating the temperature in the qPCR machine. Default = NA to not apply a correction.
+#'@param Scale Option to scale the emission value by dividing by a value specified here. Default = NA not to scale the Emission values.
 #'@return A data frame containing the Normalized emission and temperature data for the wells you specified with the index file.
 #' @export
-AB.qPCR.export.to.MeltR.csv = function(data_file, index_file, output_name = NA, Temp_correction = NA){
+AB.qPCR.export.to.MeltR.csv = function(data_file, index_file, output_name = NA, Temp_correction = NA, Scale = NA){
   ####Read in temperature data####
   Emission_wells <- c()
   Emissions <- list()
@@ -83,6 +84,9 @@ AB.qPCR.export.to.MeltR.csv = function(data_file, index_file, output_name = NA, 
   }
   if (is.na(Temp_correction) == FALSE){
     output$Temperature <- Temp_correction(output$Temperature)
+  }
+  if (is.na(Scale) == FALSE){
+    output$Emission <- output$Emission/Scale
   }
   print(head(output))
   if (is.na(output_name) == FALSE){
