@@ -76,8 +76,8 @@ AB.qPCR.export.to.MeltR.csv = function(data_file, index_file, output_name = NA, 
                     data.frame("Well" = names(Emissions)[which(names(Emissions) == index$Well[i])],
                                "Reading" = Em_Reading,
                                "Temperature" = Temperatures[[which(names(Temperatures) == index$Well[i])]],
-                               "A" = index$B[i],
-                               "B" = index$A[i],
+                               "A" = index$A[i],
+                               "B" = index$B[i],
                                "Emission" = Emissions[[which(names(Emissions) == index$Well[i])]]))
   }
   if (is.na(Temp_correction) == FALSE){
