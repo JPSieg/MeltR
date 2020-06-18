@@ -8,7 +8,8 @@ AB.qPCR.export.to.MeltR.csv(
   data_file,
   index_file,
   output_name = NA,
-  Temp_correction = NA
+  Temp_correction = NA,
+  Scale = NA
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ AB.qPCR.export.to.MeltR.csv(
 \item{output_name}{Optional name of the .csv file you want to write. Default = NA to not write a file.}
 
 \item{Temp_correction}{Optional function to apply to correct the temperature readings, determined by callibrating the temperature in the qPCR machine. Default = NA to not apply a correction.}
+
+\item{Scale}{Option to scale the emission value by dividing by a value specified here. Default = NA not to scale the Emission values.}
 }
 \value{
 A data frame containing the Normalized emission and temperature data for the wells you specified with the index file.
