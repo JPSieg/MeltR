@@ -37,6 +37,12 @@ meltR.F = function(data_frame,
                    Save_results = "none",
                    file_prefix = "Fit",
                    file_path = getwd()){
+  ####Make sure Temperature, A, B, Reading, and Emission are numeric####
+  data_frame$Reading <- as.numeric(data_frame$Reading)
+  data_frame$Temperature <- as.numeric(data_frame$Temperature)
+  data_frame$A <- as.numeric(data_frame$A)
+  data_frame$B <- as.numeric(data_frame$B)
+  data_frame$Emission <- as.numeric(data_frame$Emission)
   ####List of molecular models to fit####
   Mmodel <- function(K, A, B){ ((K+A+B)-(((K+A+B)^2)-(4*A*B))^(1/2))/(2*A) }
   ####List of thermodynamics models to fit to####
@@ -51,19 +57,19 @@ meltR.F = function(data_frame,
     model <- Fmax + (Fmin-Fmax)*f
     return(model)
   }
-    Individual = Global = function(K, Fmax, Fmin, A, B){
+  Individual = Global = function(K, Fmax, Fmin, A, B){
       f <- Mmodel(K = K, A = A, B = B)
       model <- Fmax + (Fmin-Fmax)*f
       return(model)
     }
-    Global = function(H, S, Fmax, Fmin, Reading, A, B, Temperature){
+  Global = function(H, S, Fmax, Fmin, Reading, A, B, Temperature){
       K <- (10^9)*exp(Tmodels$VantHoff(H = H, S = S, Temperature = Temperature))
       f <- Mmodel(K = K, A = A, B = B)
       model <- Fmax[Reading] + (Fmin[Reading] - Fmax[Reading])*f
       return(model)
     }
-    calcG = function(H, S){H - (310.15*S)}
-    calcG.SE = function(SE.H, SE.S, covar){ sqrt((SE.H)^2 + (310.15*SE.S)^2 - 2*310.15*SE.H*SE.S*covar) }
+  calcG = function(H, S){H - (310.15*S)}
+  calcG.SE = function(SE.H, SE.S, covar){ sqrt((SE.H)^2 + (310.15*SE.S)^2 - 2*310.15*SE.H*SE.S*covar) }
   ####Find starting Fmax and Fmin and optimize B conc####
   a <- {}
   Fmax.start <- c()
@@ -77,10 +83,7 @@ meltR.F = function(data_frame,
   if (Optimize_B_conc == TRUE){
     if (Low_reading == "auto"){
       Low_reading <- data_frame$Reading[which.min(data_frame$Temperature)]
-    }
-    if (Low_reading != "auto"){
-      Low_reading <- data_frame$Reading[Low_reading]
-    }
+    }else{Low_reading <- data_frame$Reading[Low_reading]}
     optomize_start <- list(R = 1, Fmax = Fmax.start[Low_reading], Fmin = Fmin.start[Low_reading])
     hockey_stick <- a[[Low_reading]]
     hockey_stick$low_K <- low_K

@@ -69,6 +69,7 @@ AB.qPCR.export.to.MeltR.csv = function(data_file, index_file, output_name = NA, 
       }
     }
   }
+  close(con)
   index <- read.csv(index_file)
   output <- data.frame("Well" = c(), "Reading" = c(), "Temperature" = c(), "A" = c(), "B" = c(), "Emission" = c())
   for (i in 1:length(index$Well)){
