@@ -21,6 +21,7 @@
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
+#'@param Tm_smooth Number of Temperature points your want to smooth as you determine the Tm for various points. Default = 4.
 #'@return
 #' @export
 meltR.F = function(data_frame,
@@ -36,7 +37,51 @@ meltR.F = function(data_frame,
                    low_K = 0.01,
                    Save_results = "none",
                    file_prefix = "Fit",
-                   file_path = getwd()){
+                   file_path = getwd(),
+                   Tm_smooth = 4){
+  ####Tm analysis####
+  a <- data_frame[which(data_frame$B >= data_frame$A),]
+  A <- c()
+  B <- c()
+  Tm <- c()
+  b <- {}
+  d <- {}
+  n <- Tm_smooth
+  for (i in 1:length(unique(a$Well))){
+    b <- subset(a, Well == unique(a$Well)[i])
+    Well <- unique(a$Well)[i]
+    A[i] <- b$A[1]
+    B[i] <- b$B[1]
+    x <- c()
+    y <- c()
+    for (j in n:length(b$Temperature)){
+      y[j] <- (b$Emission[j] - b$Emission[(j-(n-1))])/(b$Temperature[j] - b$Temperature[j-(n-1)])
+      x[j] <- mean(b$Temperature[(j - n + 1):j])
+    }
+    d[[i]] <- data.frame("Well" = Well,
+                         "Temperature" = x,
+                         "A" = b$A[1],
+                         "B" = b$B[1],
+                         "First.derivative" = y)
+    Tm[i] <- x[which(y == max(y, na.rm = TRUE))]
+  }
+  e <- d[[1]]
+  for (i in 2:length(d)){
+    e <- rbind(e, d[[i]])
+  }
+  Tm_data <- e
+  Tm_summary <- data.frame("Well" = unique(a$Well),
+                           "A" = A,
+                           "B" = B,
+                           "Tm" = Tm)
+  if (Save_results == "all"){
+    pdf(paste(file_path, "/", file_prefix, "_first_derivative.pdf", sep = ""),
+        width = 3, height = 3, pointsize = 0.25)
+    plot(Tm_data$Temperature, Tm_data$First.derivative,
+         xlab = "Temperature" ~ (degree ~ C), ylab = "dF/dT",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+    dev.off()
+  }
   ####Make sure Temperature, A, B, Reading, and Emission are numeric####
   data_frame$Reading <- as.numeric(data_frame$Reading)
   data_frame$Temperature <- as.numeric(data_frame$Temperature)
@@ -320,28 +365,49 @@ meltR.F = function(data_frame,
   output[[3]] <- vh_plot_fit
   output[[4]] <- gfit
   output[[5]] <- data_frame
+  output[[6]] <- Tm_data
+  output[[7]] <- Tm_summary
   if (Optimize_B_conc == TRUE){
-    output[[6]] <- R
+    output[[8]] <- R
   }
   if (Optimize_B_conc == FALSE){
-    output[[6]] <- NA
+    output[[8]] <- NA
   }
-  output[[7]] <- data.frame("H" = abs((range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H)),
+  output[[9]] <- data.frame("H" = abs((range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H)),
                             "S" = abs((range(output[[1]]$S)[1] - range(output[[1]]$S)[2])/mean(output[[1]]$S)),
                             "G" = abs((range(output[[1]]$G)[1] - range(output[[1]]$G)[2])/mean(output[[1]]$G)))
   print("Fractional error between methods")
-  print(output[[7]])
-  names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R", "Fractional_error_between_methods")
+  print(output[[9]])
+  names(output) <- c("VantHoff",
+                     "K",
+                     "VH_method_1_fit",
+                     "VH_method_2_fit",
+                     "Raw_data",
+                     "Tm_data",
+                     "Tm_summary",
+                     "R",
+                     "Fractional_error_between_methods")
   if (Tmodel == "Kirchoff"){
-    output[[8]] <- rbind(KC_plot_summary, Gfit.KC_summary)
-    row.names(output[[7]]) <- c(1:2)
-    output[[8]] <- cbind(data.frame("Method" =c("1 KC plot", "2 Global fit")), output[[5]])
+    output[[10]] <- rbind(KC_plot_summary, Gfit.KC_summary)
+    row.names(output[[10]]) <- c(1:2)
+    output[[10]] <- cbind(data.frame("Method" =c("1 KC plot", "2 Global fit")), output[[5]])
     print("Kirchoff")
     print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error[2]),]$SE.lnK), sep = ""))
-    print(output[[7]])
-    output[[9]] <- KC_plot_fit
-    output[[10]] <- gfit.KC
-    names(output) <- c("VantHoff", "K", "VH_method_1_fit", "VH_method_2_fit", "Raw_data", "R", "Fractional_error_between_methods", "Kirchoff", "KC_method_1_fit", "KC_method_2_fit")
+    print(output[[10]])
+    output[[11]] <- KC_plot_fit
+    output[[12]] <- gfit.KC
+    names(output) <- c("VantHoff",
+                       "K",
+                       "VH_method_1_fit",
+                       "VH_method_2_fit",
+                       "Raw_data",
+                       "Tm_data",
+                       "Tm_summary",
+                       "R",
+                       "Fractional_error_between_methods",
+                       "Kirchoff",
+                       "KC_method_1_fit",
+                       "KC_method_2_fit")
   }
   output <- output
 }

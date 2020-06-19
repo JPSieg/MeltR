@@ -19,7 +19,8 @@ meltR.F(
   low_K = 0.01,
   Save_results = "none",
   file_prefix = "Fit",
-  file_path = getwd()
+  file_path = getwd(),
+  Tm_smooth = 4
 )
 }
 \arguments{
@@ -48,6 +49,8 @@ meltR.F(
 \item{file_prefix}{Prefix that you want on the saved files.}
 
 \item{file_path}{Path to the directory you want to save results in.}
+
+\item{Tm_smooth}{Number of Temperature points your want to smooth as you determine the Tm for various points. Default = 4.}
 
 \item{Optomize_B_conc}{Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the quencher labeled strand based on the shape of low temperature isotherms with K values < 0.1.}
 }
