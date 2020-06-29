@@ -26,7 +26,7 @@
 #' @export
 meltR.F = function(data_frame,
                    Tmodel = "VantHoff",
-                   K_error = c(0.25, 0.25),
+                   K_error = c(0.5, 0.5),
                    Start_K = 0.1,
                    Optimize_B_conc = TRUE,
                    Low_reading = "auto",
@@ -34,54 +34,11 @@ meltR.F = function(data_frame,
                    B_conc = 4,
                    A_dilution_factor = c(50),
                    B_dilution_factor = c(250, 200, 150, 100, 62.5, 50, 37.5, 25, 12.70492, 2.540984, 0.254098, 0),
-                   low_K = 0.01,
+                   low_K = 0.1,
                    Save_results = "none",
                    file_prefix = "Fit",
                    file_path = getwd(),
-                   Tm_smooth = 4){
-  ####Tm analysis####
-  a <- data_frame[which(data_frame$B >= data_frame$A),]
-  A <- c()
-  B <- c()
-  Tm <- c()
-  b <- {}
-  d <- {}
-  n <- Tm_smooth
-  for (i in 1:length(unique(a$Well))){
-    b <- subset(a, Well == unique(a$Well)[i])
-    Well <- unique(a$Well)[i]
-    A[i] <- b$A[1]
-    B[i] <- b$B[1]
-    x <- c()
-    y <- c()
-    for (j in n:length(b$Temperature)){
-      y[j] <- (b$Emission[j] - b$Emission[(j-(n-1))])/(b$Temperature[j] - b$Temperature[j-(n-1)])
-      x[j] <- mean(b$Temperature[(j - n + 1):j])
-    }
-    d[[i]] <- data.frame("Well" = Well,
-                         "Temperature" = x,
-                         "A" = b$A[1],
-                         "B" = b$B[1],
-                         "First.derivative" = y)
-    Tm[i] <- x[which(y == max(y, na.rm = TRUE))]
-  }
-  e <- d[[1]]
-  for (i in 2:length(d)){
-    e <- rbind(e, d[[i]])
-  }
-  Tm_data <- e
-  Tm_summary <- data.frame("Well" = unique(a$Well),
-                           "A" = A,
-                           "B" = B,
-                           "Tm" = Tm)
-  if (Save_results == "all"){
-    pdf(paste(file_path, "/", file_prefix, "_first_derivative.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    plot(Tm_data$Temperature, Tm_data$First.derivative,
-         xlab = "Temperature" ~ (degree ~ C), ylab = "dF/dT",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-    dev.off()
-  }
+                   Tm_smooth = 8){
   ####Make sure Temperature, A, B, Reading, and Emission are numeric####
   data_frame$Reading <- as.numeric(data_frame$Reading)
   data_frame$Temperature <- as.numeric(data_frame$Temperature)
@@ -115,6 +72,18 @@ meltR.F = function(data_frame,
     }
   calcG = function(H, S){H - (310.15*S)}
   calcG.SE = function(SE.H, SE.S, covar){ sqrt((SE.H)^2 + (310.15*SE.S)^2 - 2*310.15*SE.H*SE.S*covar) }
+  Tm.v.A.B = function(H, S, A, B){
+    if (A > B){
+      invT <- -((0.0019872/H)*log(A-(0.5*B))) + (S/H) -((9*0.0019872*log(10))/H)
+    }
+    if (A == B){
+      invT <- ((0.0019872/H)*log(B)) + (S/H) - ((0.0019872/H)*log(2)) - ((9*0.0019872*log(10))/H)
+    }
+    if (A < B){
+      invT <- ((0.0019872/H)*log(B-(0.5*A))) + (S/H) -((9*0.0019872*log(10))/H)
+    }
+    invT <- invT
+  }
   ####Find starting Fmax and Fmin and optimize B conc####
   a <- {}
   Fmax.start <- c()
@@ -144,6 +113,50 @@ meltR.F = function(data_frame,
         if (round(data_frame$B[i]) == round(B_conc*B_dilution_factor[j])){ data_frame$B[i] <- B_conc*B_dilution_factor[j]*R}
       }
     }
+  }
+  ####Tm analysis####
+  a <- data_frame[which(data_frame$B >= 0.25*data_frame$A),]
+  A <- c()
+  B <- c()
+  Tm <- c()
+  b <- {}
+  d <- {}
+  n <- Tm_smooth
+  for (i in 1:length(unique(a$Well))){
+    b <- subset(a, Well == unique(a$Well)[i])
+    Well <- unique(a$Well)[i]
+    A[i] <- b$A[1]
+    B[i] <- b$B[1]
+    x <- c()
+    y <- c()
+    for (j in n:length(b$Temperature)){
+      y[j] <- (b$Emission[j] - b$Emission[(j-(n-1))])/(b$Temperature[j] - b$Temperature[j-(n-1)])
+      x[j] <- mean(b$Temperature[(j - n + 1):j])
+    }
+    d[[i]] <- data.frame("Well" = Well,
+                         "Temperature" = x,
+                         "A" = b$A[1],
+                         "B" = b$B[1],
+                         "First.derivative" = y)
+    Tm[i] <- x[which(y == max(y, na.rm = TRUE))]
+  }
+  e <- d[[1]]
+  for (i in 2:length(d)){
+    e <- rbind(e, d[[i]])
+  }
+  Tm_data <- e
+  Tm_summary <- data.frame("Well" = unique(a$Well),
+                           "A" = A,
+                           "B" = B,
+                           "Tm" = Tm)
+  Tm_summary$invT <- 1/(273.15 + Tm_summary$Tm)
+  if (Save_results == "all"){
+    pdf(paste(file_path, "/", file_prefix, "_first_derivative.pdf", sep = ""),
+        width = 3, height = 3, pointsize = 0.25)
+    plot(Tm_data$Temperature, Tm_data$First.derivative,
+         xlab = "Temperature" ~ (degree ~ C), ylab = "dF/dT",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+    dev.off()
   }
   ####Method 1 Fit individual isotherms####
   a <- {}
@@ -346,6 +359,7 @@ meltR.F = function(data_frame,
     names(Gfit.KC_summary) <- c("H", "SE.H", "S", "SE.S", "C", "SE.C", "G", "SE.G")
     Gfit.KC_summary <- data.frame(Gfit.KC_summary)
   }
+  ####Method 3 1/Tm versus B analysis####
   ####Save results####
   output <- {}
   output[[1]] <- rbind(VH_plot_summary, Gfit_summary)
