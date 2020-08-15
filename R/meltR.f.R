@@ -71,7 +71,7 @@ meltR.F = function(data_frame,
       return(model)
     }
   calcG = function(H, S){H - (310.15*S)}
-  calcG.SE = function(SE.H, SE.S, covar){ sqrt((SE.H)^2 + (310.15*SE.S/1000)^2 - 2*310.15*SE.H*(SE.S/1000)*covar) }
+  calcG.SE = function(SE.H, SE.S, covar){ sqrt((SE.H)^2 + (310.15*SE.S)^2 - (2*310.15*covar)) }
   Tm.v.A.B = function(H, S, A, B){
     if (A > B){
       invT <- -((0.0019872/H)*log(A-(0.5*B))) + (S/H) -((9*0.0019872*log(10))/H)
