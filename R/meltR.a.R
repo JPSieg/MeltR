@@ -233,8 +233,10 @@ meltR.A = function(data_frame,
       a[[i]] <- a[[i]][ -which(a[[i]]$Temperature < ranges[[i]][1]) ,]
     }
     b <- a[[1]]
-    for (i in c(2:length(unique(no.background$Sample)))){
-      b <- rbind(b, a[[i]])
+    if (length(a) > 1){
+      for (i in c(2:length(unique(no.background$Sample)))){
+        b <- rbind(b, a[[i]])
+      }
     }
     no.background <- b
   }
@@ -265,8 +267,10 @@ meltR.A = function(data_frame,
     }
   }
   k <- samples[[1]]
-  for (i in c(2:length(samples))){
-    k <- rbind(k, samples[[i]])
+  if (length(samples) > 1){
+    for (i in c(2:length(samples))){
+      k <- rbind(k, samples[[i]])
+    }
   }
   no.background <- subset(k, Sample != blank)
   ####Calculate starting thermo parameters for nls####
@@ -603,8 +607,8 @@ meltR.A = function(data_frame,
   }
   if (methods[3] == FALSE){
     Gfit_summary <- list(NA, NA,
-                       NA, NA,
-                       NA, NA)
+                         NA, NA,
+                         NA, NA)
     names(Gfit_summary) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
     Tm_vs_lnCt <- data.frame(Gfit_summary)
   }

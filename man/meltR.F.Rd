@@ -7,7 +7,7 @@
 meltR.F(
   data_frame,
   Tmodel = "VantHoff",
-  K_error = c(0.25, 0.25),
+  K_error = c(0.5, 0.5),
   Start_K = 0.1,
   Optimize_B_conc = TRUE,
   Low_reading = "auto",
@@ -16,11 +16,11 @@ meltR.F(
   A_dilution_factor = c(50),
   B_dilution_factor = c(250, 200, 150, 100, 62.5, 50, 37.5, 25, 12.70492, 2.540984,
     0.254098, 0),
-  low_K = 0.01,
+  low_K = 0.1,
   Save_results = "none",
   file_prefix = "Fit",
   file_path = getwd(),
-  Tm_smooth = 4
+  Tm_smooth = 8
 )
 }
 \arguments{
