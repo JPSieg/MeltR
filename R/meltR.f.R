@@ -109,9 +109,7 @@ meltR.F = function(data_frame,
   ####Change the Q concentrations to an optimal F/Q ratio####
   if (Optimize_B_conc == TRUE){
     for (i in c(1:length(data_frame$Well))){
-      for (j in c(1:length(B_dilution_factor))){
-        if (round(data_frame$B[i]) == round(B_conc*B_dilution_factor[j])){ data_frame$B[i] <- B_conc*B_dilution_factor[j]*R}
-      }
+        data_frame$A[i] <- data_frame$A[i]/R
     }
   }
   ####Tm analysis####
