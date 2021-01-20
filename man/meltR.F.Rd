@@ -7,15 +7,11 @@
 meltR.F(
   data_frame,
   Tmodel = "VantHoff",
+  K_range = FALSE,
   K_error = c(0.5, 0.5),
   Start_K = 0.1,
-  Optimize_B_conc = TRUE,
+  Optimize_conc = TRUE,
   Low_reading = "auto",
-  A_conc = 4,
-  B_conc = 4,
-  A_dilution_factor = c(50),
-  B_dilution_factor = c(250, 200, 150, 100, 62.5, 50, 37.5, 25, 12.70492, 2.540984,
-    0.254098, 0),
   low_K = 0.1,
   Save_results = "none",
   file_prefix = "Fit",
@@ -34,14 +30,6 @@ meltR.F(
 
 \item{Low_reading}{Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optomize the concentration. Default = "auto" will use the lowest temperature reading.}
 
-\item{A_conc}{Used by the concentration optimization algorithm. The experimentally determined concentration in microMolar of the A = fluorophore labeled strand in the stock solution used to prepare the experimental solutions.}
-
-\item{B_conc}{Used by the concentration optimization algorithm. The experimentally determined concentration in microMolar of the B = quencher labeled strand in the stock solution used to prepare the experimental solutions.}
-
-\item{A_dilution_factor}{Used by the concentration optimization algorithm. The dilution factors used to prepare the final samples from the A = fluorophore labeled strand. Final concentration in nanoMolar = Dilution_factor*concentration stock in micromolar. Default = 50.}
-
-\item{B_dilution_factor}{Used by the concentration optimization algorithm. The dilution factors used to prepare the final samples from the B = quencher labeled strand. Final concentration in nanoMolar = Dilution_factor*concentration stock in micromolar. Default = 250, 200, 150, 100, 62.5, 50, 37.5, 25, 12.70492, 2.540984, 0.254098, 0.}
-
 \item{low_K}{Used by the concentration optimization algorithm. A low K value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = 0.01.}
 
 \item{Save_results}{What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.}
@@ -51,6 +39,8 @@ meltR.F(
 \item{file_path}{Path to the directory you want to save results in.}
 
 \item{Tm_smooth}{Number of Temperature points your want to smooth as you determine the Tm for various points. Default = 4.}
+
+\item{K-range}{A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom K_range or c(start, end) to set a K_range. Example: "K_range = c(5, 100)"}
 
 \item{Optomize_B_conc}{Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the quencher labeled strand based on the shape of low temperature isotherms with K values < 0.1.}
 }

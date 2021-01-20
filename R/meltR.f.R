@@ -10,13 +10,10 @@
 #'@param data_frame data_frame containing fluorescence binding data
 #'@param Tmodel The thermodynamic model you want to fit the data to. Options are "VantHoff" and "Kirchoff".
 #'@param K_error Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = c(0.25, 0.25).
+#'@param K-range A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom K_range or c(start, end) to set a K_range. Example: "K_range = c(5, 100)"
 #'@param Start_K A K value to start non-linear regression. Default = 0.1.
 #'@param Optomize_B_conc Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the quencher labeled strand based on the shape of low temperature isotherms with K values < 0.1.
 #'@param Low_reading Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optomize the concentration. Default = "auto" will use the lowest temperature reading.
-#'@param A_conc Used by the concentration optimization algorithm. The experimentally determined concentration in microMolar of the A = fluorophore labeled strand in the stock solution used to prepare the experimental solutions.
-#'@param B_conc Used by the concentration optimization algorithm. The experimentally determined concentration in microMolar of the B = quencher labeled strand in the stock solution used to prepare the experimental solutions.
-#'@param A_dilution_factor Used by the concentration optimization algorithm. The dilution factors used to prepare the final samples from the A = fluorophore labeled strand. Final concentration in nanoMolar = Dilution_factor*concentration stock in micromolar. Default = 50.
-#'@param B_dilution_factor Used by the concentration optimization algorithm. The dilution factors used to prepare the final samples from the B = quencher labeled strand. Final concentration in nanoMolar = Dilution_factor*concentration stock in micromolar. Default = 250, 200, 150, 100, 62.5, 50, 37.5, 25, 12.70492, 2.540984, 0.254098, 0.
 #'@param low_K Used by the concentration optimization algorithm. A low K value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = 0.01.
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
@@ -26,14 +23,11 @@
 #' @export
 meltR.F = function(data_frame,
                    Tmodel = "VantHoff",
+                   K_range = FALSE,
                    K_error = c(0.5, 0.5),
                    Start_K = 0.1,
-                   Optimize_B_conc = TRUE,
+                   Optimize_conc = TRUE,
                    Low_reading = "auto",
-                   A_conc = 4,
-                   B_conc = 4,
-                   A_dilution_factor = c(50),
-                   B_dilution_factor = c(250, 200, 150, 100, 62.5, 50, 37.5, 25, 12.70492, 2.540984, 0.254098, 0),
                    low_K = 0.1,
                    Save_results = "none",
                    file_prefix = "Fit",
@@ -94,7 +88,7 @@ meltR.F = function(data_frame,
     Fmin.start[i] <- mean(a[[i]]$Emission[ which(a[[i]]$Emission <= quantile(a[[i]]$Emission, probs =0.2)) ])
   }
   ####Optimize the mole ratio of fluorophore labeled RNA to quencher labeled RNA####
-  if (Optimize_B_conc == TRUE){
+  if (Optimize_conc == TRUE){
     if (Low_reading == "auto"){
       Low_reading <- data_frame$Reading[which.min(data_frame$Temperature)]
     }else{Low_reading <- data_frame$Reading[Low_reading]}
@@ -107,7 +101,7 @@ meltR.F = function(data_frame,
     R <- coef(hockey_stick_fit)[1]
   }
   ####Change the Q concentrations to an optimal F/Q ratio####
-  if (Optimize_B_conc == TRUE){
+  if (Optimize_conc == TRUE){
     for (i in c(1:length(data_frame$Well))){
         data_frame$A[i] <- data_frame$A[i]/R
     }
@@ -190,19 +184,24 @@ meltR.F = function(data_frame,
   indvfits$invT <- 1/(273.15 + indvfits$Temperature)
   indvfits$lnK <- log((10^-9)*indvfits$K)
   indvfits$SE.lnK <- indvfits$SE.K/indvfits$K
+  if(length(K_range) > 1){
+    indvfits.to.fit <- indvfits[which(dplyr::between(indvfits$K, K_range[1], K_range[2])), ]
+  }else{
+    indvfits.to.fit <- indvfits
+  }
   vh_start = list(H = -70, S = -0.180)
   if (is.na(K_error[1]) == FALSE){
-    if (length(which(indvfits$SE.lnK <= K_error[1])) <= 5){
-      print(paste("Only ", length(which(indvfits$SE.lnK <= K_error[1])), " isotherms have an acceptable K error. Try increasing the tolerance threshold.", sep = ""))
+    if (length(which(indvfits.to.fit$SE.lnK <= K_error[1])) <= 5){
+      print(paste("Only ", length(which(indvfits.to.fit$SE.lnK <= K_error[1])), " isotherms have an acceptable K error. Try increasing the tolerance threshold.", sep = ""))
     }
     vh_plot_fit <- nls(lnK~Tmodels$VantHoff(H, S, Temperature),
                        start = vh_start,
-                       data = indvfits[which(indvfits$SE.lnK <= K_error[1]),])
+                       data = indvfits.to.fit[which(indvfits.to.fit$SE.lnK <= K_error[1]),])
   }
   if (is.na(K_error[1]) == TRUE){
     vh_plot_fit <- nls(lnK~Tmodels$VantHoff(H, S, Temperature),
                        start = vh_start,
-                       data = indvfits)
+                       data = indvfits.to.fit)
   }
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_1_VH_plot.pdf", sep = ""),
@@ -225,17 +224,25 @@ meltR.F = function(data_frame,
   VH_plot_summary <- data.frame(VH_plot_summary)
   ####Method 2 Global fit####
   gfit_data <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
-                          "Temperature" = c(), "B" = c(), "A" = c(), "Emission" = c())
+                          "Temperature" = c(), "B" = c(), "A" = c(), "Emission" = c(), "K" = c(), "index" = c())
+  #Filter data by K error
   if (is.na(K_error[2]) == FALSE){
     for (i in which(indvfits$SE.lnK <= K_error[1])){
-      gfit_data <- rbind(gfit_data, subset(data_frame, Reading == i))
+      a <- subset(data_frame, Reading == i)
+      a$K <- indvfits$K[i]
+      a$index <- i
+      gfit_data <- rbind(gfit_data, a)
     }
   }
   if (is.na(K_error[2]) == TRUE){
     gfit_data <- data_frame
   }
+  #Filter data by K range
+  if (length(K_range) > 1){
+    gfit_data <- gfit_data[which(dplyr::between(gfit_data$K, K_range[1], K_range[2])), ]
+  }
   b <- data.frame("Helix" = c(), "Well" = c(), "Reading" = c(),
-                  "Temperature" = c(), "B" = c(), "A" = c(), "Emission" = c())
+                  "Temperature" = c(), "B" = c(), "A" = c(), "Emission" = c(), "K" = c(), "index" = c())
   for (i in c(1:length(unique(gfit_data$Reading)))){
     a <- subset(gfit_data, Reading == unique(gfit_data$Reading)[i])
     a$Reading <- i
@@ -243,7 +250,10 @@ meltR.F = function(data_frame,
   }
   gfit_data <- b
   if (is.na(K_error[2]) == FALSE){
-    gfit_start = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, Fmax = Fmax[which(indvfits$SE.lnK <= K_error[2])], Fmin = Fmin[which(indvfits$SE.lnK <= K_error[2])])
+    gfit_start = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, Fmax = Fmax[unique(gfit_data$index)], Fmin = Fmin[unique(gfit_data$index)])
+  }
+  if (length(K_range) > 1){
+    gfit_start = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, Fmax = Fmax[unique(gfit_data$index)], Fmin = Fmin[unique(gfit_data$index)])
   }
   if (is.na(K_error[2]) == TRUE){
     gfit_start = list(H = VH_plot_summary$H, S = VH_plot_summary$S/1000, Fmax = Fmax, Fmin = Fmin)
@@ -379,10 +389,10 @@ meltR.F = function(data_frame,
   output[[5]] <- data_frame
   output[[6]] <- Tm_data
   output[[7]] <- Tm_summary
-  if (Optimize_B_conc == TRUE){
+  if (Optimize_conc == TRUE){
     output[[8]] <- R
   }
-  if (Optimize_B_conc == FALSE){
+  if (Optimize_conc == FALSE){
     output[[8]] <- NA
   }
   output[[9]] <- data.frame("H" = abs((range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H)),
