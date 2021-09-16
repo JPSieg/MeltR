@@ -145,7 +145,7 @@ Helix.energy = function(seqF = "UGCCUUAG",
                         GC.GC = length(which(vector.terms == "GC.GC")), #GC.GC
                         Term.AU = length(which(vector.terms == "Term.AU")),
                         FAMC.GBHQ1 = length(which(vector.terms == "FAMC.GBHQ1")),
-                        FAMC.GBHQ1 = length(which(vector.terms == "FAMU.ABHQ1")),
+                        FAMU.ABHQ1 = length(which(vector.terms == "FAMU.ABHQ1")),
                         Symmetry = length(which(vector.terms == "Symmetry")),
                         Initiation = 1)
 

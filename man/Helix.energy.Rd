@@ -5,10 +5,12 @@
 \title{Calculates folding INN-HB parameters for a helix sequnece}
 \usage{
 Helix.energy(
-  seqF,
-  seqR,
+  seqF = "UGCCUUAG",
+  seqR = "CUAAGGCA",
   output = "df",
   F.Q = FALSE,
+  Fluor = "FAM",
+  Qunecher = "BHQ1",
   AA.UU = -0.9,
   AU.AU = -1.1,
   UA.UA = -1.3,
@@ -22,6 +24,7 @@ Helix.energy(
   Initiation = 4.09,
   Term.AU = 0.45,
   FAMC.GBHQ1 = -3.93,
+  FAMU.ABHQ1 = -3,
   Symmetry = 0.43
 )
 }
