@@ -20,8 +20,8 @@
 #'@param Symmetry = 0.43 Energy for a folding parameter
 #'@return A data frame containing the data in the "information in the ".o3a" formatted file.
 #' @export
-Helix.energy = function(seqF = "UGCCUUAG",
-                       seqR = "CUAAGGCA",
+Helix.energy = function(seqF = "UUCCCU",
+                       seqR = "AGGGAA",
                        output = "df",
                        F.Q = FALSE,
                        Fluor = "FAM",
@@ -80,14 +80,14 @@ Helix.energy = function(seqF = "UGCCUUAG",
   AU.start = FALSE
 
   if(vector.seqF[1] == "A"){
-    AU.term = TRUE
+    AU.start = TRUE
   }
 
   if(vector.seqF[1] == "U"){
-    AU.term = TRUE
+    AU.start = TRUE
   }
 
-  if (AU.term){
+  if (AU.start){
     vector.terms = c("Term.AU", vector.terms)
   }
 
