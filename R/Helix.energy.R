@@ -20,10 +20,12 @@
 #'@param Symmetry = 0.43 Energy for a folding parameter
 #'@return A data frame containing the data in the "information in the ".o3a" formatted file.
 #' @export
-Helix.energy = function(seqF,
-                       seqR,
+Helix.energy = function(seqF = "UGCCUUAG",
+                       seqR = "CUAAGGCA",
                        output = "df",
                        F.Q = FALSE,
+                       Fluor = "FAM",
+                       Qunecher = "BHQ1",
                        AA.UU = -0.9, #UU.AA 1
                        AU.AU = -1.1,#AU.AU
                        UA.UA = -1.3, #UA.UA
@@ -37,12 +39,19 @@ Helix.energy = function(seqF,
                        Initiation = 4.09,
                        Term.AU = 0.45,
                        FAMC.GBHQ1 = -3.93,
+                       FAMU.ABHQ1 = -3.0,
                        Symmetry = 0.43){
   ####Split sequence string####
 
   vector.seqF = strsplit(seqF, split = "")[[1]]
   vector.seqR = strsplit(seqR, split = "")[[1]]
 
+  ####If Fluorophore/quencher labeled####
+
+  if (F.Q){
+    vector.seqF = c("FAM", vector.seqF)
+    vector.seqR = c(vector.seqR, "BHQ1")
+  }
 
   ####Fill in NN terms####
 
@@ -80,12 +89,6 @@ Helix.energy = function(seqF,
 
   if (AU.term){
     vector.terms = c("Term.AU", vector.terms)
-  }
-
-  ####Add F/Q bonus####
-
-  if (F.Q){
-    vector.terms = c("FAMC.GBHQ1", vector.terms)
   }
 
   ####Add initiation penalty####
@@ -142,6 +145,7 @@ Helix.energy = function(seqF,
                         GC.GC = length(which(vector.terms == "GC.GC")), #GC.GC
                         Term.AU = length(which(vector.terms == "Term.AU")),
                         FAMC.GBHQ1 = length(which(vector.terms == "FAMC.GBHQ1")),
+                        FAMC.GBHQ1 = length(which(vector.terms == "FAMU.ABHQ1")),
                         Symmetry = length(which(vector.terms == "Symmetry")),
                         Initiation = 1)
 
