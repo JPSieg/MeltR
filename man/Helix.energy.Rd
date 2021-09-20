@@ -25,6 +25,8 @@ Helix.energy(
   Term.AU = 0.45,
   FAMC.GBHQ1 = -3.93,
   FAMU.ABHQ1 = -3,
+  FAMG.CBHQ1 = -4,
+  FAMA.UBHQ1 = -2.5,
   Symmetry = 0.43
 )
 }

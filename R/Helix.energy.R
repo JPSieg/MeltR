@@ -40,6 +40,8 @@ Helix.energy = function(seqF = "UUCCCU",
                        Term.AU = 0.45,
                        FAMC.GBHQ1 = -3.93,
                        FAMU.ABHQ1 = -3.0,
+                       FAMG.CBHQ1 = -4,
+                       FAMA.UBHQ1 = -2.5,
                        Symmetry = 0.43){
   ####Split sequence string####
 
@@ -146,6 +148,8 @@ Helix.energy = function(seqF = "UUCCCU",
                         Term.AU = length(which(vector.terms == "Term.AU")),
                         FAMC.GBHQ1 = length(which(vector.terms == "FAMC.GBHQ1")),
                         FAMU.ABHQ1 = length(which(vector.terms == "FAMU.ABHQ1")),
+                        FAMG.CBHQ1 = length(which(vector.terms == "FAMG.CBHQ1")),
+                        FAMA.UBHQ1 = length(which(vector.terms == "FAMA.UBHQ1")),
                         Symmetry = length(which(vector.terms == "Symmetry")),
                         Initiation = 1)
 
