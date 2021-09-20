@@ -135,23 +135,38 @@ Helix.energy = function(seqF = "UUCCCU",
       string.formula = paste(string.formula, vector.terms[i], sep = " + ")
     }
   }
-  df.param = data.frame(AA.UU = length(which(vector.terms == "AA.UU")), #UU.AA 1
-                        AU.AU = length(which(vector.terms == "AU.AU")), #AU.AU
-                        UA.UA = length(which(vector.terms == "UA.UA")), #UA.UA
-                        CU.AG = length(which(vector.terms == "CU.AG")), #AG.CU 2
-                        CA.UG = length(which(vector.terms == "CA.UG")), #UG.CA 3
-                        GU.AC = length(which(vector.terms == "GU.AC")), #AC.GU 4
-                        GA.UC = length(which(vector.terms == "GA.UC")), #UC.GA 5
-                        CG.CG = length(which(vector.terms == "CG.CG")), #CG.CG
-                        GG.CC = length(which(vector.terms == "GG.CC")), #CC.GG 6
-                        GC.GC = length(which(vector.terms == "GC.GC")), #GC.GC
-                        Term.AU = length(which(vector.terms == "Term.AU")),
-                        FAMC.GBHQ1 = length(which(vector.terms == "FAMC.GBHQ1")),
-                        FAMU.ABHQ1 = length(which(vector.terms == "FAMU.ABHQ1")),
-                        FAMG.CBHQ1 = length(which(vector.terms == "FAMG.CBHQ1")),
-                        FAMA.UBHQ1 = length(which(vector.terms == "FAMA.UBHQ1")),
-                        Symmetry = length(which(vector.terms == "Symmetry")),
-                        Initiation = 1)
+  if (F.Q){
+    df.param = data.frame(AA.UU = length(which(vector.terms == "AA.UU")), #UU.AA 1
+                          AU.AU = length(which(vector.terms == "AU.AU")), #AU.AU
+                          UA.UA = length(which(vector.terms == "UA.UA")), #UA.UA
+                          CU.AG = length(which(vector.terms == "CU.AG")), #AG.CU 2
+                          CA.UG = length(which(vector.terms == "CA.UG")), #UG.CA 3
+                          GU.AC = length(which(vector.terms == "GU.AC")), #AC.GU 4
+                          GA.UC = length(which(vector.terms == "GA.UC")), #UC.GA 5
+                          CG.CG = length(which(vector.terms == "CG.CG")), #CG.CG
+                          GG.CC = length(which(vector.terms == "GG.CC")), #CC.GG 6
+                          GC.GC = length(which(vector.terms == "GC.GC")), #GC.GC
+                          Term.AU = length(which(vector.terms == "Term.AU")),
+                          FAMC.GBHQ1 = length(which(vector.terms == "FAMC.GBHQ1")),
+                          FAMU.ABHQ1 = length(which(vector.terms == "FAMU.ABHQ1")),
+                          FAMG.CBHQ1 = length(which(vector.terms == "FAMG.CBHQ1")),
+                          FAMA.UBHQ1 = length(which(vector.terms == "FAMA.UBHQ1")),
+                          Initiation = 1)
+  }else{
+    df.param = data.frame(AA.UU = length(which(vector.terms == "AA.UU")), #UU.AA 1
+                          AU.AU = length(which(vector.terms == "AU.AU")), #AU.AU
+                          UA.UA = length(which(vector.terms == "UA.UA")), #UA.UA
+                          CU.AG = length(which(vector.terms == "CU.AG")), #AG.CU 2
+                          CA.UG = length(which(vector.terms == "CA.UG")), #UG.CA 3
+                          GU.AC = length(which(vector.terms == "GU.AC")), #AC.GU 4
+                          GA.UC = length(which(vector.terms == "GA.UC")), #UC.GA 5
+                          CG.CG = length(which(vector.terms == "CG.CG")), #CG.CG
+                          GG.CC = length(which(vector.terms == "GG.CC")), #CC.GG 6
+                          GC.GC = length(which(vector.terms == "GC.GC")), #GC.GC
+                          Term.AU = length(which(vector.terms == "Term.AU")),
+                          Initiation = 1)
+  }
+
 
   fold.E = eval(parse(text = string.formula))
 
