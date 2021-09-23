@@ -24,6 +24,7 @@ Helix.energy = function(seqF = "UUCCCU",
                        seqR = "AGGGAA",
                        output = "df",
                        F.Q = FALSE,
+                       Double.label = 0,
                        Fluor = "FAM",
                        Qunecher = "BHQ1",
                        AA.UU = -0.9, #UU.AA 1
@@ -38,10 +39,10 @@ Helix.energy = function(seqF = "UUCCCU",
                        GC.GC = -3.4, #GC.GC
                        Initiation = 4.09,
                        Term.AU = 0.45,
-                       FAMC.GBHQ1 = -3.93,
-                       FAMU.ABHQ1 = -3.0,
-                       FAMG.CBHQ1 = -4,
-                       FAMA.UBHQ1 = -2.5,
+                       FAMC.GBHQ1 = -3.93, #GBHQ1.FAMC 7
+                       FAMU.ABHQ1 = -3.0, #ABHQ1.FAMU 8
+                       FAMG.CBHQ1 = -4, #CBHQ1.FAMG 9
+                       FAMA.UBHQ1 = -2.5, #UBHQ1.FAMA 10
                        Symmetry = 0.43){
   ####Split sequence string####
 
@@ -51,8 +52,12 @@ Helix.energy = function(seqF = "UUCCCU",
   ####If Fluorophore/quencher labeled####
 
   if (F.Q){
-    vector.seqF = c("FAM", vector.seqF)
-    vector.seqR = c(vector.seqR, "BHQ1")
+    vector.seqF = c(Fluor, vector.seqF)
+    vector.seqR = c(vector.seqR, Qunecher)
+    if (Double.label == 1){
+      vector.seqF = c(vector.seqF, Qunecher)
+      vector.seqR = c(Fluor, vector.seqR)
+    }
   }
 
   ####Fill in NN terms####
@@ -121,8 +126,20 @@ Helix.energy = function(seqF = "UUCCCU",
     if(vector.terms[i] == "UC.GA"){ #5
       vector.terms[i] = "GA.UC"
     }
-    if(vector.terms[i] == "CC.GG"){ #5
+    if(vector.terms[i] == "CC.GG"){ #6
       vector.terms[i] = "GG.CC"
+    }
+    if(vector.terms[i] == "GBHQ1.FAMC"){ #7
+      vector.terms[i] = "FAMC.GBHQ1"
+    }
+    if(vector.terms[i] == "ABHQ1.FAMU"){ #8
+      vector.terms[i] = "FAMU.ABHQ1"
+    }
+    if(vector.terms[i] == "CBHQ1.FAMG"){ #9
+      vector.terms[i] = "FAMG.CBHQ1"
+    }
+    if(vector.terms[i] == "UBHQ1.FAMA"){ #10
+      vector.terms[i] = "FAMA.UBHQ1"
     }
   }
 

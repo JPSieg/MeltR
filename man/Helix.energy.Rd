@@ -9,6 +9,7 @@ Helix.energy(
   seqR = "AGGGAA",
   output = "df",
   F.Q = FALSE,
+  Double.label = 0,
   Fluor = "FAM",
   Qunecher = "BHQ1",
   AA.UU = -0.9,

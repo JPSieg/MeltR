@@ -15,6 +15,7 @@
 #'@param Optomize_B_conc Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the quencher labeled strand based on the shape of low temperature isotherms with K values < 0.1.
 #'@param Low_reading Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optomize the concentration. Default = "auto" will use the lowest temperature reading.
 #'@param low_K Used by the concentration optimization algorithm. A low K value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = 0.01.
+#'@param B.conc.Tm Only use quencher (or B strands) higher than this threshold in the 1/Tm versus lnCt fitting method, method 3
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
@@ -29,6 +30,7 @@ meltR.F = function(data_frame,
                    Optimize_conc = TRUE,
                    Low_reading = "auto",
                    low_K = 0.1,
+                   B.conc.Tm = 500,
                    Save_results = "none",
                    file_prefix = "Fit",
                    file_path = getwd(),
@@ -114,8 +116,23 @@ meltR.F = function(data_frame,
   b <- {}
   d <- {}
   n <- Tm_smooth
+
   for (i in 1:length(unique(a$Well))){
     b <- subset(a, Well == unique(a$Well)[i])
+    fit.Em = lm(Emission ~ poly(Temperature, 10, raw=TRUE),
+                data = b)
+    b$dE.dT = coef(fit.Em)[2] + 2*coef(fit.Em)[3]*b$Temperature +
+      3*coef(fit.Em)[4]*b$Temperature^2 + 4*coef(fit.Em)[5]*b$Temperature^3 +
+      5*coef(fit.Em)[6]*b$Temperature^4 + 6*coef(fit.Em)[7]*b$Temperature^5 +
+      7*coef(fit.Em)[8]*b$Temperature^6 + 8*coef(fit.Em)[9]*b$Temperature^7 +
+      9*coef(fit.Em)[10]*b$Temperature^8 + 10*coef(fit.Em)[11]*b$Temperature^9
+    Ts = seq(25, 75, length.out = 500)
+    dE.dT = coef(fit.Em)[2] + 2*coef(fit.Em)[3]*Ts +
+      3*coef(fit.Em)[4]*Ts^2 + 4*coef(fit.Em)[5]*Ts^3 +
+      5*coef(fit.Em)[6]*Ts^4 + 6*coef(fit.Em)[7]*Ts^5 +
+      7*coef(fit.Em)[8]*Ts^6 + 8*coef(fit.Em)[9]*Ts^7 +
+      9*coef(fit.Em)[10]*Ts^8 + 10*coef(fit.Em)[11]*Ts^9
+    Tm[i] = Ts[which.max(dE.dT)]
     Well <- unique(a$Well)[i]
     A[i] <- b$A[1]
     B[i] <- b$B[1]
@@ -130,8 +147,8 @@ meltR.F = function(data_frame,
                          "A" = b$A[1],
                          "B" = b$B[1],
                          "First.derivative" = y)
-    Tm[i] <- x[which(y == max(y, na.rm = TRUE))]
   }
+
   e <- d[[1]]
   for (i in 2:length(d)){
     e <- rbind(e, d[[i]])
@@ -285,6 +302,41 @@ meltR.F = function(data_frame,
                        round(calcG(coef(gfit)[1], coef(gfit)[2]), 1), round(calcG.SE(summary(gfit)$coefficients[1,2], summary(gfit)$coefficients[2,2], summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)), 1))
   names(Gfit_summary) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
   Gfit_summary <- data.frame(Gfit_summary)
+
+  ####Method 3 Tm versus LnCt####
+
+  df.Tm = Tm_summary
+
+  df.Tm$Ct = (10^-9)*df.Tm$B - (10^-9)*0.5*df.Tm$A
+
+  df.Tm$lnCt = log(df.Tm$Ct)
+
+  fit = lm(invT ~ lnCt,
+           data = df.Tm %>% filter(B >= B.conc.Tm))
+
+  R = 0.00198720425864083
+
+  H = R/coef(fit)[2]
+  SE.H = abs(-R*coef(summary(fit))[2,2]/(coef(summary(fit))[2,1]^2))
+  S = H*coef(fit)[1]
+  SE.S = abs(S*sqrt(((SE.H/H)^2) + ((coef(summary(fit))[1,2]/coef(summary(fit))[1,1]))^2))
+  G = H - (273.13 + 37)*S
+  SE.G = abs(sqrt(SE.H^2 + ((273.13 + 37)*SE.S)^2))
+
+  df.Tm.result = data.frame(H, SE.H, 1000*S, 1000*SE.S, G, SE.G)
+
+  colnames(df.Tm.result) = c("H", "SE.H", "S", "SE.S", "G", "SE.G")
+
+  if (Save_results == "all"){
+    pdf(paste(file_path, "/", file_prefix, "_method_3_Tm_vs_lnCt_plot.pdf", sep = ""),
+        width = 3, height = 3, pointsize = 0.25)
+    plot(df.Tm$lnCt, df.Tm$invT,
+         xlab = "ln[Ct (M)]", ylab = "1/Tm (1/K)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+    abline(a = S/H, b = R/H)
+    dev.off()
+  }
+
   ####Fit to a Kirchoff thermodynamic model Method 1####
   if (Tmodel == "Kirchoff"){
     KC_start = list(H = Gfit_summary$H, S = Gfit_summary$S/1000, C = 0)
@@ -370,9 +422,9 @@ meltR.F = function(data_frame,
   ####Method 3 1/Tm versus B analysis####
   ####Save results####
   output <- {}
-  output[[1]] <- rbind(VH_plot_summary, Gfit_summary)
-  row.names(output[[1]]) <- c(1:2)
-  output[[1]] <- cbind(data.frame("Method" =c("1 VH plot", "2 Global fit")), output)
+  output[[1]] <- rbind(VH_plot_summary, Gfit_summary, df.Tm.result)
+  row.names(output[[1]]) <- c(1:3)
+  output[[1]] <- cbind(data.frame("Method" =c("1 VH plot", "2 Global fit", "3 1/Tm vs lnCT")), output)
   print("Van't Hoff")
   print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error[1]),]$SE.lnK), sep = ""))
   print(output[[1]])

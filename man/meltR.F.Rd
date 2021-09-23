@@ -13,6 +13,7 @@ meltR.F(
   Optimize_conc = TRUE,
   Low_reading = "auto",
   low_K = 0.1,
+  B.conc.Tm = 500,
   Save_results = "none",
   file_prefix = "Fit",
   file_path = getwd(),
@@ -31,6 +32,8 @@ meltR.F(
 \item{Low_reading}{Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optomize the concentration. Default = "auto" will use the lowest temperature reading.}
 
 \item{low_K}{Used by the concentration optimization algorithm. A low K value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = 0.01.}
+
+\item{B.conc.Tm}{Only use quencher (or B strands) higher than this threshold in the 1/Tm versus lnCt fitting method, method 3}
 
 \item{Save_results}{What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.}
 
