@@ -311,17 +311,16 @@ meltR.F = function(data_frame,
 
   df.Tm$lnCt = log(df.Tm$Ct)
 
-  fit = lm(invT ~ lnCt,
-           data = df.Tm %>% filter(B >= B.conc.Tm))
+  fit = nls(invT ~ (S/H) + (0.00198720425864083/H)*lnCt,
+      data = subset(df.Tm, B >= B.conc.Tm),
+      start = list(H = -70, S = -0.22))
 
-  R = 0.00198720425864083
-
-  H = R/coef(fit)[2]
-  SE.H = abs(-R*coef(summary(fit))[2,2]/(coef(summary(fit))[2,1]^2))
-  S = H*coef(fit)[1]
-  SE.S = abs(S*sqrt(((SE.H/H)^2) + ((coef(summary(fit))[1,2]/coef(summary(fit))[1,1]))^2))
+  H = coef(fit)[1]
+  SE.H = coef(summary(fit))[1,2]
+  S = coef(fit)[2]
+  SE.S = coef(summary(fit))[2,2]
   G = H - (273.13 + 37)*S
-  SE.G = abs(sqrt(SE.H^2 + ((273.13 + 37)*SE.S)^2))
+  SE.G = calcG.SE(SE.H, SE.S, summary(fit)$cov.unscaled[1,2]*(summary(fit)$sigma^2))
 
   df.Tm.result = data.frame(H, SE.H, 1000*S, 1000*SE.S, G, SE.G)
 
