@@ -30,7 +30,7 @@ meltR.F = function(data_frame,
                    Optimize_conc = TRUE,
                    Low_reading = "auto",
                    low_K = 0.1,
-                   B.conc.Tm = 500,
+                   B.conc.Tm = 200,
                    Save_results = "none",
                    file_prefix = "Fit",
                    file_path = getwd(),
@@ -332,7 +332,7 @@ meltR.F = function(data_frame,
     plot(df.Tm$lnCt, df.Tm$invT,
          xlab = "ln[Ct (M)]", ylab = "1/Tm (1/K)",
          cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-    abline(a = S/H, b = R/H)
+    abline(a = S/H, b = 0.00198720425864083/H, col = "red")
     dev.off()
   }
 
