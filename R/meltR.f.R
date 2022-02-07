@@ -19,20 +19,19 @@
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
-#'@param Tm_smooth Number of Temperature points your want to smooth as you determine the Tm for various points. Default = 4.
 #'@return
 #' @export
 meltR.F = function(df,
                    K_range = c(10,500),
                    K_error_quantile = 0.25,
+                   Start_K = 1,
                    Optimize_conc = TRUE,
                    Low_reading = "auto",
                    low_K = 0.1,
-                   B.conc.Tm = 200,
+                   B.conc.Tm = 250,
                    Save_results = "none",
                    file_prefix = "Fit",
-                   file_path = getwd(),
-                   Tm_smooth = 8){
+                   file_path = getwd()){
   ####Make sure Temperature, A, B, Reading, and Emission are numeric####
 
   df$Reading = as.numeric(df$Reading)
@@ -87,8 +86,8 @@ meltR.F = function(df,
   Fmin.start = c()
   for (i in c(1:length(unique(df$Reading)))){
     df.reading = subset(df, Reading == unique(df$Reading)[i])
-    Fmax.start[i] = mean(df.reading$Emission[ which(df.reading$Emission >= quantile(df.reading$Emission, probs =0.80)) ])
-    Fmin.start[i] = mean(df.reading$Emission[ which(df.reading$Emission <= quantile(df.reading$Emission, probs =0.2)) ])
+    Fmax.start[i] = mean(df.reading$Emission[ which(df.reading$Emission >= quantile(df.reading$Emission, probs =0.80, na.rm = TRUE)) ])
+    Fmin.start[i] = mean(df.reading$Emission[ which(df.reading$Emission <= quantile(df.reading$Emission, probs =0.2, na.rm = TRUE)) ])
   }
 
   ####Optimize the mole ratio of fluorophore labeled RNA to quencher labeled RNA####
@@ -118,7 +117,10 @@ meltR.F = function(df,
     }
   }
 
+
   ####Tm analysis####
+
+  df.no.0 = subset(df, df$B >= 0.25*df$A)
 
   Well = c()
   A = c()
@@ -135,14 +137,17 @@ meltR.F = function(df,
     dE.dT = function(x){eval(parse(text = string.dE.dT))}
 
     #plot(df.well$Temperature, df.well$Emission)
+    #lines(df.well$Temperature, predict(fit.Em), col = "red")
+    #lines(seq(min(df.well$Temperature) + 2, max(df.well$Temperature) - 2, length.out = 1000),
+    #      80*dE.dT(seq(min(df.well$Temperature) + 2, max(df.well$Temperature) - 2, length.out = 1000)), col = "red")
     #lines(seq(min(df.well$Temperature), max(df.well$Temperature), length.out = 1000),
-    #      10*dE.dT(seq(min(df.well$Temperature), max(df.well$Temperature), length.out = 1000)), col = "red")
+    #      80*dE.dT(seq(min(df.well$Temperature), max(df.well$Temperature), length.out = 1000)), col = "blue")
     #abline(v = Tm[i])
 
     Well[i] = df.well$Well[1]
     A[i] = df.well$A[1]
     B[i] = df.well$B[1]
-    Tm[i] = seq(min(df.well$Temperature), max(df.well$Temperature), length.out = 1000)[which.max(dE.dT(seq(min(df.well$Temperature), max(df.well$Temperature), length.out = 1000)))]
+    Tm[i] = seq(min(df.well$Temperature) + 2, max(df.well$Temperature) - 2, length.out = 1000)[which.max(dE.dT(seq(min(df.well$Temperature) + 2, max(df.well$Temperature) - 2, length.out = 1000)))]
 
 
   } #End for loop
@@ -190,11 +195,26 @@ meltR.F = function(df,
   indvfits$lnK = log((10^-9)*indvfits$K)
   indvfits$SE.lnK = indvfits$SE.K/indvfits$K
 
+  indvfits2 = data.frame("Temperature" =  temp,
+                        "Reading" = Reading,
+                        "K" = K,
+                        "SE.K" = SE.K,
+                        "Fmax" = Fmax,
+                        "Fmin" = Fmin)
+  indvfits2$invT = 1/(273.15 + indvfits$Temperature)
+  indvfits2$lnK = log((10^-9)*indvfits$K)
+  indvfits2$SE.lnK = indvfits$SE.K/indvfits$K
+
+  if (length(which(is.na(indvfits$K))) > 0){
+    indvfits = indvfits[-which(is.na(indvfits$K)),]
+  }
+
   indvfits.to.fit = indvfits[-c(which(indvfits$K <= K_range[1]), which(indvfits$K >= K_range[2])),]
+
 
   vh_start = list(H = -70, S = -0.180)
 
-  K_error = quantile(indvfits.to.fit$SE.lnK, K_error_quantile)
+  K_error = quantile(indvfits.to.fit$SE.lnK, K_error_quantile, na.rm = TRUE)
 
   indvfits.to.fit = indvfits.to.fit[-which(indvfits.to.fit$SE.lnK >= K_error),]
 
@@ -212,7 +232,7 @@ meltR.F = function(df,
              x0 = indvfits$invT[i], x1 = indvfits$invT[i],
              length=0.02, angle=90, code = 3)
     }
-    lines(indvfits$invT, Tmodels$VantHoff(H = coef(vh_plot_fit)[1], S = coef(vh_plot_fit)[2], Temperature = indvfits$Temperature), col = "red")
+    lines(indvfits$invT, Tmodel(H = coef(vh_plot_fit)[1], S = coef(vh_plot_fit)[2], Temperature = indvfits$Temperature), col = "red")
     dev.off()
   }
 
@@ -313,17 +333,19 @@ meltR.F = function(df,
   output[[1]] = rbind(VH_plot_summary, Gfit_summary, df.Tm.result)
   row.names(output[[1]]) = c(1:3)
   output[[1]] = cbind(data.frame("Method" =c("1 VH plot", "2 Global fit", "3 1/Tm vs lnCT")), output)
+  output[[1]]$K_error = c(K_error, K_error, NA)
+  output[[1]]$R = R
   print("Van't Hoff")
   print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error[1]),]$SE.lnK), sep = ""))
   print(output[[1]])
   if (Save_results != "none"){
     write.table(output, paste(file_path, "/", file_prefix, "_VH_summary.csv", sep = ""), sep = ",", row.names = FALSE)
   }
-  output[[2]] = data.frame("Temperature" = indvfits$Temperature,
-                            "K" = 1/((10^-9)*indvfits$K),
-                            "SE.K" = ((10^9)*indvfits$SE.K)/(indvfits$K^2),
-                            "Fmax" = indvfits$Fmax,
-                            "Fmin" = indvfits$Fmin)
+  output[[2]] = data.frame("Temperature" = indvfits2$Temperature,
+                            "K" = 1/((10^-9)*indvfits2$K),
+                            "SE.K" = ((10^9)*indvfits2$SE.K)/(indvfits$K^2),
+                            "Fmax" = indvfits2$Fmax,
+                            "Fmin" = indvfits2$Fmin)
   output[[3]] = vh_plot_fit
   output[[4]] = gfit
   output[[5]] = df
@@ -349,5 +371,5 @@ meltR.F = function(df,
                      "Tms",
                      "R",
                      "Fractional_error_between_methods")
-  output = output
+  output  = output
 }

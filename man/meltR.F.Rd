@@ -5,27 +5,21 @@
 \title{Fit fluorescence binding isotherms to obtain thermodynamic parameters}
 \usage{
 meltR.F(
-  data_frame,
-  Tmodel = "VantHoff",
-  K_range = FALSE,
-  K_error = c(0.5, 0.5),
-  Start_K = 0.1,
+  df,
+  K_range = c(10, 500),
+  K_error_quantile = 0.25,
+  Start_K = 1,
   Optimize_conc = TRUE,
   Low_reading = "auto",
   low_K = 0.1,
-  B.conc.Tm = 500,
+  B.conc.Tm = 250,
   Save_results = "none",
   file_prefix = "Fit",
-  file_path = getwd(),
-  Tm_smooth = 8
+  file_path = getwd()
 )
 }
 \arguments{
-\item{data_frame}{data_frame containing fluorescence binding data}
-
-\item{Tmodel}{The thermodynamic model you want to fit the data to. Options are "VantHoff" and "Kirchoff".}
-
-\item{K_error}{Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = c(0.25, 0.25).}
+\item{df}{df containing fluorescence binding data}
 
 \item{Start_K}{A K value to start non-linear regression. Default = 0.1.}
 
@@ -41,7 +35,9 @@ meltR.F(
 
 \item{file_path}{Path to the directory you want to save results in.}
 
-\item{Tm_smooth}{Number of Temperature points your want to smooth as you determine the Tm for various points. Default = 4.}
+\item{Tmodel}{The thermodynamic model you want to fit the data to. Options are "VantHoff" and "Kirchoff".}
+
+\item{K_error}{Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = c(0.25, 0.25).}
 
 \item{K-range}{A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom K_range or c(start, end) to set a K_range. Example: "K_range = c(5, 100)"}
 
