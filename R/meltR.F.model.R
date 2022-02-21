@@ -9,6 +9,8 @@
 #'@param S The entropy of folding in kcal/mol/K.
 #'@param fmax The approximate fluorescence maximum of the fluorophore labeled strand in its single stranded state
 #'@param fmin The approximate fluorescence minimum for the double stranded state where the fluorophore labeled strand is base paired with the quencher labeled strand.
+#'@param FAM_error
+#'@param BHQ1_error
 #'@param Emission_SD The approximate experimental error for each emission reading.
 #'@return A dataframe containing the modeled data. Ready to feed into meltR.F.
 #' @export
@@ -16,6 +18,8 @@ meltR.F.model = function(H,
                          S,
                          fmax = 2,
                          fmin = 0.2,
+                         FAM_error = 1,
+                         BHQ1_error = 1,
                          Emission_SD = 0.05){
 
   ####Generate a thermodynamic model####
@@ -41,8 +45,8 @@ meltR.F.model = function(H,
                          "S" = S,
                          "fmax" = fmax,
                          "fmin" = fmin,
-                         "A" = 200,
-                         "B" = rep(c(c(0, 1, 10, 50, 100, 150, 200, 250, 400, 600, 800, 1000),
+                         "A" = FAM_error*200,
+                         "B" = BHQ1_error*rep(c(c(0, 1, 10, 50, 100, 150, 200, 250, 400, 600, 800, 1000),
                                      c(0, 1, 10, 50, 100, 150, 200, 250, 400, 600, 800, 1000),
                                      c(0, 1, 10, 50, 100, 150, 200, 250, 400, 600, 800, 1000)), length(seq(20, 80, by = 0.5))),
                          "Well" = rep(c("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12",

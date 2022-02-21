@@ -4,7 +4,15 @@
 \alias{meltR.F.model}
 \title{Fit fluorescence binding isotherms to obtain thermodynamic parameters}
 \usage{
-meltR.F.model(H, S, fmax = 2, fmin = 0.2, Emission_SD = 0.05)
+meltR.F.model(
+  H,
+  S,
+  fmax = 2,
+  fmin = 0.2,
+  FAM_error = 1,
+  BHQ1_error = 1,
+  Emission_SD = 0.05
+)
 }
 \arguments{
 \item{H}{The enthalpy of folding in kcal/mol.}

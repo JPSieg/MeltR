@@ -22,7 +22,7 @@
 #'@return
 #' @export
 meltR.F = function(df,
-                   K_range = c(10,500),
+                   K_range = c(1,150),
                    K_error_quantile = 0.25,
                    Start_K = 1,
                    Optimize_conc = TRUE,
@@ -31,7 +31,8 @@ meltR.F = function(df,
                    B.conc.Tm = 250,
                    Save_results = "none",
                    file_prefix = "Fit",
-                   file_path = getwd()){
+                   file_path = getwd(),
+                   silent = FALSE){
   ####Make sure Temperature, A, B, Reading, and Emission are numeric####
 
   df$Reading = as.numeric(df$Reading)
@@ -104,6 +105,7 @@ meltR.F = function(df,
                             low = 0, algorithm = 'port',
                             start = optomize_start, data = hockey_stick)
     R = coef(hockey_stick_fit)[1]
+    K.opt = coef(hockey_stick_fit)[2]
   }
 
   #plot(hockey_stick$B, hockey_stick$Emission)
@@ -115,6 +117,9 @@ meltR.F = function(df,
     for (i in c(1:length(df$Well))){
         df$A[i] = df$A[i]/R
     }
+  }else{
+    R = NA
+    K.opt = NA
   }
 
 
@@ -233,12 +238,14 @@ meltR.F = function(df,
              length=0.02, angle=90, code = 3)
     }
     lines(indvfits$invT, Tmodel(H = coef(vh_plot_fit)[1], S = coef(vh_plot_fit)[2], Temperature = indvfits$Temperature), col = "red")
+    abline(h = log((10^-9)*K_range[1]), col = "blue")
+    abline(h = log((10^-9)*K_range[2]), col = "orange")
     dev.off()
   }
 
-  VH_plot_summary = list(round(coef(vh_plot_fit)[1], 1), round(summary(vh_plot_fit)$coefficients[1,2], 1),
-                          round(1000*coef(vh_plot_fit)[2], 1), round(1000*summary(vh_plot_fit)$coefficients[2,2], 1),
-                          round(calcG(coef(vh_plot_fit)[1], coef(vh_plot_fit)[2]), 1), round(calcG.SE(summary(vh_plot_fit)$coefficients[1,2], summary(vh_plot_fit)$coefficients[2,2], summary(vh_plot_fit)$cov.unscaled[1,2]*(summary(vh_plot_fit)$sigma^2)), 1))
+  VH_plot_summary = list(coef(vh_plot_fit)[1], summary(vh_plot_fit)$coefficients[1,2],
+                          1000*coef(vh_plot_fit)[2], 1000*summary(vh_plot_fit)$coefficients[2,2],
+                          calcG(coef(vh_plot_fit)[1], coef(vh_plot_fit)[2]), calcG.SE(summary(vh_plot_fit)$coefficients[1,2], summary(vh_plot_fit)$coefficients[2,2], summary(vh_plot_fit)$cov.unscaled[1,2]*(summary(vh_plot_fit)$sigma^2)))
   names(VH_plot_summary) = c("H", "SE.H", "S", "SE.S", "G", "SE.G")
   VH_plot_summary = data.frame(VH_plot_summary)
 
@@ -289,9 +296,9 @@ meltR.F = function(df,
     }
     dev.off()
   }
-  Gfit_summary = list(round(coef(gfit)[1], 1), round(summary(gfit)$coefficients[1,2], 1),
-                       round(1000*coef(gfit)[2], 1), round(1000*summary(gfit)$coefficients[2,2], 1),
-                       round(calcG(coef(gfit)[1], coef(gfit)[2]), 1), round(calcG.SE(summary(gfit)$coefficients[1,2], summary(gfit)$coefficients[2,2], summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)), 1))
+  Gfit_summary = list(coef(gfit)[1], summary(gfit)$coefficients[1,2],
+                       1000*coef(gfit)[2], 1000*summary(gfit)$coefficients[2,2],
+                       calcG(coef(gfit)[1], coef(gfit)[2]), calcG.SE(summary(gfit)$coefficients[1,2], summary(gfit)$coefficients[2,2], summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)))
   names(Gfit_summary) = c("H", "SE.H", "S", "SE.S", "G", "SE.G")
   Gfit_summary = data.frame(Gfit_summary)
 
@@ -335,15 +342,19 @@ meltR.F = function(df,
   output[[1]] = cbind(data.frame("Method" =c("1 VH plot", "2 Global fit", "3 1/Tm vs lnCT")), output)
   output[[1]]$K_error = c(K_error, K_error, NA)
   output[[1]]$R = R
-  print("Van't Hoff")
-  print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error[1]),]$SE.lnK), sep = ""))
-  print(output[[1]])
+  output[[1]]$Kd.opt = K.opt
+  if (silent == FALSE){
+    print("Van't Hoff")
+    print(paste("accurate Ks = ", length(indvfits[which(indvfits$SE.lnK <= K_error[1]),]$SE.lnK), sep = ""))
+    print(output[[1]])
+  }
+
   if (Save_results != "none"){
     write.table(output, paste(file_path, "/", file_prefix, "_VH_summary.csv", sep = ""), sep = ",", row.names = FALSE)
   }
   output[[2]] = data.frame("Temperature" = indvfits2$Temperature,
                             "K" = 1/((10^-9)*indvfits2$K),
-                            "SE.K" = ((10^9)*indvfits2$SE.K)/(indvfits$K^2),
+                            "SE.K" = ((10^9)*indvfits2$SE.K)/(indvfits2$K^2),
                             "Fmax" = indvfits2$Fmax,
                             "Fmin" = indvfits2$Fmin)
   output[[3]] = vh_plot_fit
@@ -360,8 +371,12 @@ meltR.F = function(df,
   output[[9]] = data.frame("H" = abs((range(output[[1]]$H)[1] - range(output[[1]]$H)[2])/mean(output[[1]]$H)),
                             "S" = abs((range(output[[1]]$S)[1] - range(output[[1]]$S)[2])/mean(output[[1]]$S)),
                             "G" = abs((range(output[[1]]$G)[1] - range(output[[1]]$G)[2])/mean(output[[1]]$G)))
-  print("Fractional error between methods")
-  print(output[[9]])
+  if (silent == FALSE){
+    print("Fractional error between methods")
+    print(output[[9]])
+  }
+
+
   names(output) = c("VantHoff",
                      "K",
                      "VH_method_1_fit",

@@ -6,7 +6,7 @@
 \usage{
 meltR.F(
   df,
-  K_range = c(10, 500),
+  K_range = c(1, 150),
   K_error_quantile = 0.25,
   Start_K = 1,
   Optimize_conc = TRUE,
@@ -15,7 +15,8 @@ meltR.F(
   B.conc.Tm = 250,
   Save_results = "none",
   file_prefix = "Fit",
-  file_path = getwd()
+  file_path = getwd(),
+  silent = FALSE
 )
 }
 \arguments{
