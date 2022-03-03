@@ -7,24 +7,24 @@
 #'between isotherms and the Fmax and Fmin are allowed to float. Also includes an algorithm that
 #'optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
 #'
-#'@param df df containing fluorescence binding data
-#'@param Tmodel The thermodynamic model you want to fit the data to. Options are "VantHoff" and "Kirchoff".
-#'@param K_error Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = c(0.25, 0.25).
-#'@param K-range A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom K_range or c(start, end) to set a K_range. Example: "K_range = c(5, 100)"
-#'@param Start_K A K value to start non-linear regression. Default = 0.1.
-#'@param Optomize_B_conc Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the quencher labeled strand based on the shape of low temperature isotherms with K values < 0.1.
-#'@param Low_reading Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optomize the concentration. Default = "auto" will use the lowest temperature reading.
+#'@param df data frame containing fluorescence binding data
+#'@param Kd_error_quantile Quantile for uncertainty in equilibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = 0.25 or the 25% most accurate binding constants in the Kd_range (See "Kd_range").
+#'@param Kd_range A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom Kd_range or c(start, end) to set a Kd_range. Example: "Kd_range = c(5, 100)"
+#'@param Start_K A Kd value to start non-linear regression. Default = 0.1.
+#'@param Optimize_conc Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the concentration for the fluorophore labeled strand based on the shape of low temperature isotherms.
+#'@param Low_reading Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optimize the concentration. Default = "auto" will use the lowest temperature reading.
 #'@param low_K Used by the concentration optimization algorithm. A low K value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = 0.01.
 #'@param B.conc.Tm Only use quencher (or B strands) higher than this threshold in the 1/Tm versus lnCt fitting method, method 3
-#'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
+#'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formatted tables of parameters, "some" to save ".csv" formatted tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
+#'@param silent Set to TRUE to run in silent mode (which does not print results in the console). Good for running in loops. Default is TRUE.
 #'@return
 #' @export
 meltR.F = function(df,
-                   K_range = c(1,150),
-                   K_error_quantile = 0.25,
-                   Start_K = 1,
+                   Kd_error_quantile = 0.25,
+                   Kd_range = c(1,150),
+                   Start_K = 0.1,
                    Optimize_conc = TRUE,
                    Low_reading = "auto",
                    low_K = 0.1,
@@ -214,12 +214,12 @@ meltR.F = function(df,
     indvfits = indvfits[-which(is.na(indvfits$K)),]
   }
 
-  indvfits.to.fit = indvfits[-c(which(indvfits$K <= K_range[1]), which(indvfits$K >= K_range[2])),]
+  indvfits.to.fit = indvfits[-c(which(indvfits$K <= Kd_range[1]), which(indvfits$K >= Kd_range[2])),]
 
 
   vh_start = list(H = -70, S = -0.180)
 
-  K_error = quantile(indvfits.to.fit$SE.lnK, K_error_quantile, na.rm = TRUE)
+  K_error = quantile(indvfits.to.fit$SE.lnK, Kd_error_quantile, na.rm = TRUE)
 
   indvfits.to.fit = indvfits.to.fit[-which(indvfits.to.fit$SE.lnK >= K_error),]
 
@@ -238,8 +238,8 @@ meltR.F = function(df,
              length=0.02, angle=90, code = 3)
     }
     lines(indvfits$invT, Tmodel(H = coef(vh_plot_fit)[1], S = coef(vh_plot_fit)[2], Temperature = indvfits$Temperature), col = "red")
-    abline(h = log((10^-9)*K_range[1]), col = "blue")
-    abline(h = log((10^-9)*K_range[2]), col = "orange")
+    abline(h = log((10^-9)*Kd_range[1]), col = "blue")
+    abline(h = log((10^-9)*Kd_range[2]), col = "orange")
     dev.off()
   }
 
