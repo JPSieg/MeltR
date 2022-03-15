@@ -218,12 +218,14 @@ meltR.A = function(data_frame,
     }
     names(extcoef) <- c("Total", NucAcid[c(2:length(NucAcid))])
   }
+
   ####Remove values not in fitTs####
+
   if (is.null(fitTs) == FALSE){
-    if (length(list(fitTs)) == 1){
+    if (length(fitTs) == 1){
       ranges <- rep(list(fitTs), length(unique(no.background$Sample)))
     }
-    if (length(list(fitTs)) != 1){
+    if (length(fitTs) != 1){
       ranges <- fitTs
     }
     a <- {}
@@ -240,15 +242,17 @@ meltR.A = function(data_frame,
     }
     no.background <- b
   }
+
   ####Calculate Ct for each curve####
   samples <- {}
   if (length(extcoef) == 3){
     ct <- c()
     for (i in c(1:length(unique(no.background$Sample)))){
       samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-      for (j in c(length(samples[[i]]$Sample):1)){
-        if (samples[[i]]$Temperature[j] > concT){
-          ct[i] <- (samples[[i]]$Absorbance[j]/(extcoef$Total*samples[[i]]$Pathlength[j]))
+      df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
+      for (j in c(length(df.raw$Sample):1)){
+        if (df.raw$Temperature[j] > concT){
+          ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
         }
         samples[[i]]$Ct <- ct[i]
       }
@@ -258,9 +262,10 @@ meltR.A = function(data_frame,
     ct <- c()
     for (i in c(1:length(unique(no.background$Sample)))){
       samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-      for (j in c(length(samples[[i]]$Sample):1)){
-        if (samples[[i]]$Temperature[j] > concT){
-          ct[i] <- (samples[[i]]$Absorbance[j]/(extcoef$Total*samples[[i]]$Pathlength[j]))
+      df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
+      for (j in c(length(df.raw$Sample):1)){
+        if (df.raw$Temperature[j] > concT){
+          ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
         }
         samples[[i]]$Ct <- ct[i]
       }
