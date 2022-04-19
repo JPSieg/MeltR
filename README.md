@@ -27,7 +27,7 @@ devtools::install_github("JPSieg/MeltR")
 
 ### Absorbance data preprocessing
 
-###Thermodynamic models for duplex formation
+### Thermodynamic models for duplex formation
 
 MeltR can obtain thermodynamic parameters from absorbance melting curves from heteroduplex, homoduplex (selfcomplementary), and monomolecular self-structured DNA and RNA melting curves. Thermo-dynamic parameters for helix formation are obtained using a Van't Hoff model:
 
@@ -61,7 +61,9 @@ The absorbtivity of each sample as a function of temperature is a function of th
 <img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})f(T) + (m_{SS}T %2b b_{SS})(1-f(T))\qquad (6)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})f(T) + (m_{SS}T %2b b_{SS})(1-f(T)) \qquad (6)}\qquad (1)}#gh-dark-mode-only">
 
+f(t) is variable, calculated by the analytic solution of the binding constant. MelR uses Equation 7 for heteroduplexes, Equation 8 for homoduplexes, and Equation 8 monomolecular self-structured RNA. 
 
+Thus, method 1 fits absorbtivity versus temperature is fit to equations 9, 10, and 11 to determine for  heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively. 
 
 ## Fitting fluorescence binding isotherms
 
