@@ -661,11 +661,11 @@ meltR.A = function(data_frame,
 
   ####Assemble data for custom derivative plots####
 
-  df.deriv = first.derive[[1]]
+  #df.deriv = first.derive[[1]]
 
-  for (i in 2:length(first.derive)){
-    df.deriv = rbind(df.deriv, first.derive[[i]])
-  }
+  #for (i in 2:length(first.derive)){
+   # df.deriv = rbind(df.deriv, first.derive[[i]])
+  #}
 
   ####Assemble data for custom individual fit plots####
 
