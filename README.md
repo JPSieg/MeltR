@@ -74,10 +74,28 @@ f(t) is variable, calculated by the analytic solution of the binding constant. M
 
 Where Ct is the total strand concentration. K(T) is the equillibrium constant as a function of temperature, given by Equation 7 for heteroduplexes, Equation 8 for homoduplexes, and Equation 9 monomolecular self-structured RNA.
 
-<img src= "https://render.githubusercontent.com/render/math?math={K(T) = \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})} %2b ln(\frac{4}{Ct})}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}K(T) = \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})} %2b ln(\frac{4}{Ct})}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={K(T) = \exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}K(T) = \exp{(\frac{H}{R*Tm} - \frac{1}{Tm}) %2b ln(\frac{4}{Ct})}}#gh-dark-mode-only">
 
-Thus, method 1 fits absorbtivity versus temperature is fit to equations 9, 10, and 11 to determine thermodynamic prameters for  heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively. 
+<img src= "https://render.githubusercontent.com/render/math?math={K(T) = \exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))} }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}K(T) = \exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))}}#gh-dark-mode-only">
+
+<img src= "https://render.githubusercontent.com/render/math?math={K(T) = \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}#gh-light-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={\color{white}K(T) = \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})})}#gh-dark-mode-only">
+
+
+Thus, method 1 fits absorbtivity versus temperature is fit to equations 9, 10, and 11 to determine thermodynamic prameters for  heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively.
+
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2})\qquad (6)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2}) \qquad (6)}\qquad (1)}#gh-dark-mode-only">
+
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2})\qquad (6)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*K(T)*Ct} %2b 2 - \sqrt{(\frac{1}{2*K(T)*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*K(T)*Ct} %2b 2 - \sqrt{(\frac{1}{2*K(T)*Ct} %2b 2)^2 - 4}}{2}) \qquad (6)}\qquad (1)}#gh-dark-mode-only">
+
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}})\qquad (6)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}) \qquad (6)}\qquad (1)}#gh-dark-mode-only">
+
+### Method 2 fitting the Tm as a function of Ct
 
 ## Fitting fluorescence binding isotherms
 
