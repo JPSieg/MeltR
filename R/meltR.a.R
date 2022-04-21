@@ -321,8 +321,8 @@ meltR.A = function(data_frame,
 
     #dev.off()
 
-    first.derive[[i]]$dA.dT = dE.dT(first.derive[[i]]$Temperature) + dE.dT(first.derive[[i]]$Temperature)*((predict(fit.Em) - first.derive[[i]]$Absorbance)/first.derive[[i]]$Absorbance)
-    first.derive[[i]]$dA.dT2 = dE.dT2(first.derive[[i]]$Temperature) + dE.dT2(first.derive[[i]]$Temperature)*((predict(fit.Em) - first.derive[[i]]$Absorbance)/first.derive[[i]]$Absorbance)
+    first.derive[[i]]$dA.dT = dE.dT(first.derive[[i]]$Temperature) + dE.dT(first.derive[[i]]$Temperature)*((first.derive[[i]]$Absorbance - predict(fit.Em))/first.derive[[i]]$Absorbance)
+    first.derive[[i]]$dA.dT2 = dE.dT2(first.derive[[i]]$Temperature) + dE.dT2(first.derive[[i]]$Temperature)*((first.derive[[i]]$Absorbance - predict(fit.Em))/first.derive[[i]]$Absorbance)
 
     #plot(first.derive[[i]]$Temperature, first.derive[[i]]$dA.dT)
     #plot(first.derive[[i]]$Temperature, first.derive[[i]]$dA.dT2)
