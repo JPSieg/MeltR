@@ -13,7 +13,7 @@
 #'@param Start_K A Kd value to start non-linear regression. Default = 0.1.
 #'@param Optimize_conc Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the concentration for the fluorophore labeled strand based on the shape of low temperature isotherms.
 #'@param Low_reading Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optimize the concentration. Default = "auto" will use the lowest temperature reading.
-#'@param low_K Used by the concentration optimization algorithm. A low K value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = 0.01.
+#'@param low_K Used by the concentration optimization algorithm. A low K value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = FALSE to allow the low_K to float in the concentration optimization algorithm.
 #'@param B.conc.Tm Only use quencher (or B strands) higher than this threshold in the 1/Tm versus lnCt fitting method, method 3
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formatted tables of parameters, "some" to save ".csv" formatted tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
@@ -27,7 +27,7 @@ meltR.F = function(df,
                    Start_K = 0.1,
                    Optimize_conc = TRUE,
                    Low_reading = "auto",
-                   low_K = 0.1,
+                   low_K = FALSE,
                    B.conc.Tm = 250,
                    Save_results = "none",
                    file_prefix = "Fit",
@@ -98,14 +98,26 @@ meltR.F = function(df,
       Low_reading = df$Reading[which.min(df$Temperature)]
     }else{Low_reading = df$Reading[Low_reading]}
 
-    optomize_start = list(R = 1, K = 0.01, Fmax = Fmax.start[Low_reading], Fmin = Fmin.start[Low_reading])
-    hockey_stick = subset(df, Reading == Low_reading)
-    hockey_stick$low_K = low_K
-    hockey_stick_fit = nls(Emission ~ Optimize(R, K, A, B, Fmax, Fmin),
-                            low = 0, algorithm = 'port',
-                            start = optomize_start, data = hockey_stick)
-    R = coef(hockey_stick_fit)[1]
-    K.opt = coef(hockey_stick_fit)[2]
+    if (low_K == FALSE){
+      optomize_start = list(R = 1, K = 0.01, Fmax = Fmax.start[Low_reading], Fmin = Fmin.start[Low_reading])
+      hockey_stick = subset(df, Reading == Low_reading)
+      hockey_stick$low_K = low_K
+      hockey_stick_fit = nls(Emission ~ Optimize(R, K, A, B, Fmax, Fmin),
+                             low = 0, algorithm = 'port',
+                             start = optomize_start, data = hockey_stick)
+      R = coef(hockey_stick_fit)[1]
+      K.opt = coef(hockey_stick_fit)[2]
+    }else{
+      optomize_start = list(R = 1, Fmax = Fmax.start[Low_reading], Fmin = Fmin.start[Low_reading])
+      hockey_stick = subset(df, Reading == Low_reading)
+      hockey_stick$low_K = low_K
+      hockey_stick_fit = nls(Emission ~ Optimize(R, K = low_K, A, B, Fmax, Fmin),
+                             low = 0, algorithm = 'port',
+                             start = optomize_start, data = hockey_stick)
+      R = coef(hockey_stick_fit)[1]
+      K.opt = low_K
+    }
+
   }
 
   #plot(hockey_stick$B, hockey_stick$Emission)
