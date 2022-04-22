@@ -222,10 +222,9 @@ meltR.A = function(data_frame,
   ####Remove values not in fitTs####
 
   if (is.null(fitTs) == FALSE){
-    if (length(fitTs) == 1){
+    if (is.list(fitTs) == FALSE){
       ranges <- rep(list(fitTs), length(unique(no.background$Sample)))
-    }
-    if (length(fitTs) != 1){
+    }else{
       ranges <- fitTs
     }
     a <- {}
@@ -661,22 +660,28 @@ meltR.A = function(data_frame,
 
   ####Assemble data for custom derivative plots####
 
-  #df.deriv = first.derive[[1]]
+  df.deriv = first.derive[[1]]
 
-  #for (i in 2:length(first.derive)){
-   # df.deriv = rbind(df.deriv, first.derive[[i]])
-  #}
+  if (length(first.derive) > 1){
+    for (i in 2:length(first.derive)){
+      print(i)
+      df.deriv = rbind(df.deriv, first.derive[[i]])
+    }
+  }
 
   ####Assemble data for custom individual fit plots####
 
   df.method.1 = subset(no.background, Sample == unique(no.background$Sample)[1])
   df.method.1$Model = predict(fit[[1]])
 
-  for (i in 2:length(unique(no.background$Sample))){
-    df.method.1.i = subset(no.background, Sample == unique(no.background$Sample)[i])
-    df.method.1.i$Model = predict(fit[[i]])
-    df.method.1 = rbind(df.method.1, df.method.1.i)
+  if (length(unique(no.background$Sample)) >1){
+    for (i in 2:length(unique(no.background$Sample))){
+      df.method.1.i = subset(no.background, Sample == unique(no.background$Sample)[i])
+      df.method.1.i$Model = predict(fit[[i]])
+      df.method.1 = rbind(df.method.1, df.method.1.i)
+    }
   }
+
 
   ####Assemble data for custom 1/Tm versus lnCt plots####
 
