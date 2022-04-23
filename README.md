@@ -27,6 +27,8 @@ devtools::install_github("JPSieg/MeltR")
 
 ### Absorbance data preprocessing
 
+MeltR can obtain thermodynamic parameters from absorbance melting curves from heteroduplex, homoduplex (selfcomplementary), and monomolecular self-structured DNA and RNA melting curves using the non-linear regression function in base R, "nls".
+
 MeltR performs the data preprocessing steps before fitting:
 
 1.) RNA and DNA extinction coefficients are calculated from the sequence using the data from (Methods in Enzymology, 1989; Vol. 180, pp 304-325).
@@ -37,18 +39,28 @@ MeltR performs the data preprocessing steps before fitting:
 
 4.) High and low temperature data are trimmed (to the users specification) to ensure linear baselines.
 
-5.) First and second derivatives are taken using polynomial regression. First, the data are fit too a 20th order polynomial to aproximate the data. Then, the first and second derivatives of the polynomial. The approximate melting temperature (Tm) is calculated by finding the maximum of the first derivative curve and the T0.75 (or the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the first derivative (Figure X), to a precision of at least 0.1 degC.
-
-![Melt_curve_derivative](https://user-images.githubusercontent.com/63312483/164780663-09a53ad4-0699-4e29-a31a-c79eaa1b2669.svg "Employee Data title")
+5.) First and second derivatives are taken using polynomial regression. First, the data are fit too a 20th order polynomial to aproximate the data. Then, the first and second derivatives of the polynomial. The approximate T0.5 (the approximate melting temperature Tm where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve and the T0.75 (the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the first derivative (Figure X), to a precision of less than 0.1 degC.
 
 
-6.) Initial parameter estimates are calculated for each curves. The slopes and intercepts of the baselines are estimated by fitting the  
+![alt text](https://user-images.githubusercontent.com/63312483/164780663-09a53ad4-0699-4e29-a31a-c79eaa1b2669.svg "Employee Data title")
 
+  
+6.) Initial parameter estimates are calculated for each curves. The initial values for slopes and intercepts of the baselines are estimated by fitting absorbance values that are greater than the 75th quantile for the uper baselines and fitting aborbance values theat are lower than the 25th quantile for the lower baseline, to y = mx + b. Initial values for the enthalpy are determined using the T0.5 and T0.75 (in Kelvin) from first and second derivative curves. MeltR uses equation x, equation y, and equation zm, for heteroduplex, homoduplex, and monomolecular self-structured DNA and RNA melting curves.   
 
+<img src= "https://render.githubusercontent.com/render/math?math={dH = -0.007*(\frac{1}{T0.5} - \frac{1}{T0.75}) \qquad (1)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}dH = -0.007*(\frac{1}{T0.5} - \frac{1}{T0.75})\qquad (1)}#gh-dark-mode-only">
+
+<img src= "https://render.githubusercontent.com/render/math?math={dH = -0.0044*(\frac{1}{T0.5} - \frac{1}{T0.75}) \qquad (1)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}dH = -0.0044*(\frac{1}{T0.5} - \frac{1}{T0.75})\qquad (1)}#gh-dark-mode-only">
+
+<img src= "https://render.githubusercontent.com/render/math?math={dH = -0.0032*(\frac{1}{T0.5} - \frac{1}{T0.75}) \qquad (1)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}dH = -0.0032*(\frac{1}{T0.5} - \frac{1}{T0.75})\qquad (1)}#gh-dark-mode-only">
+
+The initial Tm is estimated from the first derivative of the melting curve, determined in step 5.
 
 ### Thermodynamic models for duplex formation
 
-MeltR can obtain thermodynamic parameters from absorbance melting curves from heteroduplex, homoduplex (selfcomplementary), and monomolecular self-structured DNA and RNA melting curves. Thermo-dynamic parameters for helix formation are obtained using a Van't Hoff model:
+Thermo-dynamic parameters for helix formation are obtained using a Van't Hoff model:
 
 <img src= "https://render.githubusercontent.com/render/math?math={lnK = \frac{dS}{R} - \frac{dH}{RT}\qquad (1)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}lnK = \frac{dS}{R} - \frac{dH}{RT}\qquad (1)}#gh-dark-mode-only">
@@ -115,6 +127,8 @@ Thus, method 1 fits absorbtion versus temperature is fit to equations 9, 10, and
 <img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}})\qquad (6)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}) \qquad (6)}\qquad (1)}#gh-dark-mode-only">
 
+Free energy at 37 degC (dG) and entropies (dS) of helix formation were calculated from the dH and the Tm.
+
 ### Method 2 fitting the Tm as a function of Ct
 
 Method 2 fits the relationship between 1/Tm and the total strand concentration Ct. To avoid inaccuracies in Tm determination from first derivative plots or covariation with the H terms in method 1, Tms were determined for Method 2 using a semi-quantitative method. Slopes and intercepts from method 1 used to calculate F(T) at each experimental temperature using the absorbance. 
@@ -132,9 +146,20 @@ F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T in {0.4 to 0.
 
 ### Method 3 Global fitting
 
-Method 3 fits all curves to equations x, y, and z, simultaneously in a clobal fit. In this fit, the baselines are allowed to vary but dHs and dTs are constrained to a single value for all curves. For global fitting, the slopes and intercepts of the fits from Method 1 are used as initial parameter estimates for the slopes and intercepts of the global fit, and the average of the dHs and Tms from Method 1 are used as initial parameter estimates for the dH and Tm.
+Method 3 fits all curves to equations x, y, and z, simultaneously in a global fit. In this fit, equations x, y, z, are rearranged to be in terms of the dS instead of the Tm. 
 
-### Post processing: Conversions and error propagation
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2})\qquad (6)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2}) \qquad (6)}\qquad (1)}#gh-dark-mode-only">
+
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{H}{R*Tm} - \frac{1}{Tm} %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2})\qquad (6)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*K(T)*Ct} %2b 2 - \sqrt{(\frac{1}{2*K(T)*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*K(T)*Ct} %2b 2 - \sqrt{(\frac{1}{2*K(T)*Ct} %2b 2)^2 - 4}}{2}) \qquad (6)}\qquad (1)}#gh-dark-mode-only">
+
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}})\qquad (6)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b \exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}) \qquad (6)}\qquad (1)}#gh-dark-mode-only">
+
+The baselines are allowed to vary but dHs and dTs are constrained to a single value for all curves. For global fitting, the slopes and intercepts of the fits from Method 1 are used as initial parameter estimates for the slopes and intercepts of the global fit, and the average of the dHs and dSs from Method 1 are used as initial parameter estimates for the dH and dS.
+
+
 
 
 ## Fitting fluorescence binding isotherms
