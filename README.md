@@ -196,6 +196,7 @@ Method 3 fits all curves to equations x, y, and z, simultaneously in a global fi
 
 The baselines are allowed to vary but dHs and dTs are constrained to a single value for all curves. For global fitting, the slopes and intercepts of the fits from Method 1 are used as initial parameter estimates for the slopes and intercepts of the global fit, and the average of the dHs and dSs from Method 1 are used as initial parameter estimates for the dH and dS.
 
+The dG and error in the dG is calculated using the same equations as Method 2.
 
 ## Fitting fluorescence binding isotherms
 
