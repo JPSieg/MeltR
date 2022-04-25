@@ -23,6 +23,10 @@ devtools::install_github("JPSieg/MeltR")
 
 ## Fitting fluorescence isotherms
 
+### Absorbance data preprocessing
+
+### Method 1 fitting melting curves individually
+
 ## Fitting abosorbance melting curves
 
 ### Absorbance data preprocessing
