@@ -23,15 +23,67 @@ devtools::install_github("JPSieg/MeltR")
 
 ## Fitting fluorescence isotherms
 
-### Absorbance data preprocessing
+MeltR can obtain thermodynamic parameters from fluorescence binding isotherms for heteroduplex DNA and RNA using the non-linear regression function in base R, "nls". In this strategy, a quencher labeled strand is titrated, at about 1 to 1000 nM concentrations, into different wells in a qPCR plate containing a constant concentration of fluorophore labeled strand. The fluorophore labeled strand binds to the quencher labeled strand resulting, reducing the fluorescence emmission (E) and resulting in an apparant fluorescence binding isotherm, where the shape of the curve is determined by Equation 1.
 
-### Method 1 fitting melting curves individually
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*F(Kd, [A]_{T}, [B]_{T}) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_max)*F(Kd, [A]_{T}, [B]_{T})\qquad (1)}#gh-dark-mode-only">
+
+Where Fmax is the fluorescence emission of unbound fluorophore labeled strand (A), Fmin is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and F(Kd, [A]T, [B]T) is the mole fraction of the bound fluorophore labeled strand to the total fluorophore labeled strand. 
+
+<img src= "https://render.githubusercontent.com/render/math?math={ F(Kd, [A]T, [B]T) = \frac{[AB]}{[A]_{T}} }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} F(Kd, [A]T, [B]T) = \frac{[AB]}{[A]_{T}} \qquad (1)}#gh-dark-mode-only">
+
+F(Kd, [A]T, [B]T) is a function controled experimental variables, the total fluorophore labled strandd ([A]T) and the total quenceher labeled strand ([B]), and the Kd is given by the the expression:
+
+<img src= "https://render.githubusercontent.com/render/math?math={K_{D} = \frac{[A][B]}{[AB]} }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} K_{D} = \frac{[A][B]}{[AB]} \qquad (1)}#gh-dark-mode-only">
+
+F(Kd, [A]T, [B]T) can be determined by solving the Kd expression to obtain:
+
+<img src= "https://render.githubusercontent.com/render/math?math={F(Kd, [A]T, [B]T) = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} F(Kd, [A]T, [B]T) = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (1)}#gh-dark-mode-only">
+
+Thus, the Kd at each temperature was determined by fitting isotherms at each temperature to equation x, obtained by plugging equation y into equation z.
+
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_max)*\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (1)}#gh-dark-mode-only">
+
+Thermodynamic parameters for helix formation were extracted by the Van't hoff relationship between the Kd the temperature using the two methods described below.
+
+<img src= "https://render.githubusercontent.com/render/math?math={ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} \qquad (1)}#gh-dark-mode-only">
+
+For a single experiment, all samples should be diluted from the same fluorophore and quencher stocks, so that MeltR can deal with systematic uncertainty in strand concentrations. 
+
+### Fluorescence data processing
+
+MeltR performs the data preprocessing steps before fitting:
+
+1.) The fluorophore labeled strand concentration is optomized using the concentration optimization algorithm.
+
+2.) Isotherms are fit to equation x to determine Kd and error in the Kd at each temperature.
+
+3.) Kds are filtered by Kd magnitude and error according to the users specifications to determine which isotherms are most reliable. First, Kds outside of a user specified range (1 to 250 nM by default) are thrown out. Second, Kds are ranked by the error in the Kd. Kds that are below a user specified error quantile are thrown out. The default Kd error quantile file is 0.25, meaning the algorithem with keep the to 25% most accurate Kds.  
+
+4.) The most reliable Kds and temperatures are passed to Method 1 to make Van't Hoff plots.
+
+5.) Fluorescence data from the most reliable Kds and temperatures are passed to Method 2 for global fitting. 
+
+### Concentration optimization algorithm.
+
+We have determined that the accuracy of fit results is highly dependent on errors in the concentration of fluorophore and quencher RNA strands in stock solutions. 
+
+### Method 1 Van't Hoff plot
+
+
+### Method 2 Global fit
+
 
 ## Fitting abosorbance melting curves
 
 ### Absorbance data preprocessing
 
-MeltR can obtain thermodynamic parameters from absorbance melting curves from heteroduplex, homoduplex (selfcomplementary), and monomolecular self-structured DNA and RNA melting curves using the non-linear regression function in base R, "nls".
+MeltR can obtain thermodynamic parameters from absorbance melting curves for heteroduplex, homoduplex (selfcomplementary), and monomolecular self-structured DNA and RNA using the non-linear regression function in base R, "nls".
 
 MeltR performs the data preprocessing steps before fitting:
 
