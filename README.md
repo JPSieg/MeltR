@@ -154,27 +154,8 @@ Error in the dS and dG is calculated by propagating error in the fit terms dH an
 <img src= "https://render.githubusercontent.com/render/math?math={ SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 %2b {(\frac{SE_{Tm}}{Tm})}^2 - 2*\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (1) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 %2b {(\frac{SE_{Tm}}{Tm})}^2 - 2*\frac{Covar_{dH, Tm}}{dH*Tm}}  \qquad (1) }#gh-dark-mode-only">
 
-
-
-calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) + (0.0019872*log(4/Ct)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
-      calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct)))) }
-      calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
-
-for homoduplexes:
-
-
-calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) + (0.0019872*log(1/Ct)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
-      calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct)))) }
-      calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2)}
-
-For monomolecular self-structured RNA/DNA:
-
-calcS = function(H, Tm){ (H/(273.15 + Tm)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
-      calcG = function(H, Tm){H - (310*((H/(273.15 + Tm))))}
-      calcG.SE = function(H, Tm, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*(H/(273.15 + Tm)))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
+<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = |dG|\sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dH}}{dH})}^2 %2b {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15*\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (1) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = |dG|\sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dH}}{dH})}^2 %2b {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15*\frac{Covar_{dH, Tm}}{dH*Tm}}  \qquad (1) }#gh-dark-mode-only">
 
 ### Method 2 fitting the Tm as a function of Ct
 
@@ -190,6 +171,8 @@ F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T in {0.4 to 0.
 
 <img src= "https://render.githubusercontent.com/render/math?math={ \frac{1}{Tm} =  \frac{R}{dH}*lnCt) %2b \frac{dS}{dH}  \qquad (1)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}F\frac{1}{Tm} =  \frac{R}{dH}*lnCt) %2b \frac{dS}{dH}     \qquad (1)}#gh-dark-mode-only">
+
+
 
 ### Method 3 Global fitting
 
