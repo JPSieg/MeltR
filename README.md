@@ -146,8 +146,13 @@ For homoduplexes:
 
 For monomolecular self-structured RNA/DNA:
 
-<img src= "https://render.githubusercontent.com/render/math?math={ dS = \frac{dH}{Tm} %2b R*ln(\frac{1}{Ct}) \qquad (1) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} dS = \frac{dH}{Tm} %2b R*ln(\frac{1}{Ct}) \qquad (1) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ dS = \frac{dH}{Tm} \qquad (1) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} dS = \frac{dH}{Tm} \qquad (1) }#gh-dark-mode-only">
+
+Error in the dS and dG is calculated by propagating error in the fit terms dH and dT.
+
+<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 %2b {(\frac{SE_{Tm}}{Tm})}^2 - 2*\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (1) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 %2b {(\frac{SE_{Tm}}{Tm})}^2 - 2*\frac{Covar_{dH, Tm}}{dH*Tm}}  \qquad (1) }#gh-dark-mode-only">
 
 
 
