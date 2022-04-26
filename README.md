@@ -61,7 +61,7 @@ MeltR performs the data preprocessing steps before fitting:
 
 1.) The fluorophore labeled strand concentration is optomized using the concentration optimization algorithm.
 
-2.) Isotherms are fit to equation x to determine Kd and error in the Kd at each temperature.
+2.) Isotherms are fit to equation x to determine Kd and error in the Kd at each temperature using nls in base R. Initial values for Fmax, Fmin, and Kd are provided by the user. 
 
 3.) Kds are filtered by Kd magnitude and error according to the users specifications to determine which isotherms are most reliable. First, Kds outside of a user specified range (1 to 250 nM by default) are thrown out. Second, Kds are ranked by the error in the Kd. Kds that are below a user specified error quantile are thrown out. The default Kd error quantile file is 0.25, meaning the algorithem with keep the to 25% most accurate Kds.  
 
@@ -71,7 +71,22 @@ MeltR performs the data preprocessing steps before fitting:
 
 ### Concentration optimization algorithm.
 
-We have determined that the accuracy of fit results is highly dependent on errors in the concentration of fluorophore and quencher RNA strands in stock solutions. 
+We have determined that the accuracy of fit results is highly dependent on errors in the concentration of fluorophore and quencher RNA strands in stock solutions. Fit accuracy is dependent on the mole ratio of fluorophore and quencher labeled RNA in stock solutions, but not dependent on the total magnitude of both fluorophore and quencher labeled RNA concentrations in the stocks. Thus, the concentration optimization algorithm in MeltR does not need to find exact concentrations, just the mole ratio (R) of fluorophore and quencher labeled RNA in samples that should have equal concentrations of fluorophore and quencher, for example 200 nM FAM-RNA and 200 nM RNA-BHQ1.
+
+MeltR uses a fluorecence binding isotherm from a temperature where the Kd is more than 10 times less than the fluorophore labeled strand concentration, where binding to the quencher strand is over-determined. Under these conditions, the shape of the curve will be independent of the Kd. For example, at a 200 nM fluorophore labeled strand concentration, the shape of the binding curve will be indendent of Kd if the Kd is less than 10 nM. The curve will resemble a hockey stick (Figure 1) composed of two straint lines. The first line, where [A]T > [B]T, will decrease as the [B]T is increased and the fluorophore labeled strand is saturated. The second line, where [A]T < [B]T, will be constant as the [B]T is increased because the fluorphore labeled strand is saturated. The intersection of the first and second line will occure at:
+
+<img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T} = [B]_{T}  \qquad (1)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = [B]_{T} \qquad (1)}#gh-dark-mode-only">
+
+The absolute concentration of [A]T and [B]T cannot be known with precicion. However, the mole ratio of the error (R) in the fluorophore and quencher stocks can be estimated from this data point at equation x.:
+
+<img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T} = [B]_{T}  \qquad (1)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = [B]_{T} \qquad (1)}#gh-dark-mode-only">
+
+Where:
+
+
+Since the 
 
 ### Method 1 Van't Hoff plot
 
