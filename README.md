@@ -358,7 +358,60 @@ colnames(df1) = c("Helix", "Well", "Reading", "Temperature", "B", "A", "Emission
 
 ### Applying “meltR.F” to obtain thermodynamic parameters
 
-In general, it is a good idea to check your data before you start fitting. First, check the 
+For this tutorial, we will use sample data included in MeltR. First check that it is in your memory and find out what is in the data.
+
+```{r}
+?df.fluor.data
+df = df.fluor.data
+```
+
+In general, it is a good idea to plot your data before you start fitting. First, I want to check the quality of low temperature isotherms. Using the tidyverse and ggrepel.
+
+```{r}
+head(df)
+  Well Reading Temperature   A    B  Emission Helix  Condition
+1   A1       1    23.36537 200 1000 0.1671729     J Monovalent
+2   A1       2    23.83693 200 1000 0.1680626     J Monovalent
+3   A1       3    24.31056 200 1000 0.1687870     J Monovalent
+4   A1       4    24.78221 200 1000 0.1695139     J Monovalent
+5   A1       5    25.25150 200 1000 0.1703547     J Monovalent
+6   A1       6    25.72722 200 1000 0.1712532     J Monovalent
+ggplot(df %>% filter(Reading == 1), aes(x = B, y = Emission, label = Well)) +
+  geom_point() +
+  geom_text_repel()
+```
+
+The result is a really nice binding isotherm (Figure X). One should check a few more readings by changing the value in the filter command, for example 20, 60, 80, etc... If you observe one or two ovious outliers in the data set, it is reasonable to remove them using the filter.
+
+![Isotherm_example](https://user-images.githubusercontent.com/63312483/165367119-ed4e15df-4c08-46d7-82c6-03b386f61395.svg)
+
+
+```{r}
+df = df %>% filter(!Well %in% c("A1", "C3"))
+```
+
+If you are satified with the the data, we can move on to fitting. I will first inspect the help file for meltR.F.
+
+```{r}
+?meltR.F
+```
+
+The only argument that needs set is data frame.
+
+```{r}
+fit = meltR.F(df)
+[1] "Van't Hoff"
+[1] "accurate Ks = 16"
+          Method          H     SE.H         S      SE.S         G       SE.G   K_error         R   Kd.opt
+1      1 VH plot  -48.37473 1.048500 -121.6157  3.357021 -10.65562 0.01033199 0.2916302 0.7797618 6.165553
+2   2 Global fit  -48.88546 6.302188 -123.2438 20.157522 -10.66140 0.06564137 0.2916302 0.7797618 6.165553
+3 3 1/Tm vs lnCT -107.56199 6.130992 -307.3621 19.197411 -12.23977 0.17862684        NA 0.7797618 6.165553
+[1] "Fractional error between methods"
+         H        S         G
+1 0.866907 1.009086 0.1416247
+```
+
+
 
 
 ### Saving “meltR.F” outputs
