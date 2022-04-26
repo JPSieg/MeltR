@@ -320,6 +320,8 @@ meltR.F = function(df,
 
   df.Tm$Ct = (10^-9)*df.Tm$B - (10^-9)*0.5*df.Tm$A
 
+  df.Tm = filter(df.Tm, df.Tm > 0)
+
   df.Tm$lnCt = log(df.Tm$Ct)
 
   fit = nls(invT ~ (S/H) + (0.00198720425864083/H)*lnCt,
@@ -337,22 +339,22 @@ meltR.F = function(df,
 
   colnames(df.Tm.result) = c("H", "SE.H", "S", "SE.S", "G", "SE.G")
 
-  if (Save_results == "all"){
-    pdf(paste(file_path, "/", file_prefix, "_method_3_Tm_vs_lnCt_plot.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    plot(df.Tm$lnCt, df.Tm$invT,
-         xlab = "ln[Ct (M)]", ylab = "1/Tm (1/K)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-    abline(a = S/H, b = 0.00198720425864083/H, col = "red")
-    dev.off()
-  }
+  #if (Save_results == "all"){
+  #  pdf(paste(file_path, "/", file_prefix, "_method_3_Tm_vs_lnCt_plot.pdf", sep = ""),
+  #      width = 3, height = 3, pointsize = 0.25)
+  #  plot(df.Tm$lnCt, df.Tm$invT,
+  #       xlab = "ln[Ct (M)]", ylab = "1/Tm (1/K)",
+   #      cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+   # abline(a = S/H, b = 0.00198720425864083/H, col = "red")
+  #  dev.off()
+  #}
 
   ####Save results####
   output = {}
-  output[[1]] = rbind(VH_plot_summary, Gfit_summary, df.Tm.result)
-  row.names(output[[1]]) = c(1:3)
-  output[[1]] = cbind(data.frame("Method" =c("1 VH plot", "2 Global fit", "3 1/Tm vs lnCT")), output)
-  output[[1]]$K_error = c(K_error, K_error, NA)
+  output[[1]] = rbind(VH_plot_summary, Gfit_summary)
+  row.names(output[[1]]) = c(1:2)
+  output[[1]] = cbind(data.frame("Method" =c("1 VH plot", "2 Global fit")), output)
+  output[[1]]$K_error = c(K_error, K_error)
   output[[1]]$R = R
   output[[1]]$Kd.opt = K.opt
   if (silent == FALSE){
