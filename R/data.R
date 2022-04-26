@@ -1,0 +1,18 @@
+
+# This goes in R/data.R
+
+#' @title df.fluor.data
+#' @description Fluorecence binding isotherms measuring FAM-CGUAUGUA binding to UACAUACG-BHQ1 in 240 mM NaCl 140 mM KCl 2 mM MgCl2 20 mM MOPS 0.01 mM EDTA 0.001% SDS pH 7.0
+#' @format A data frame with 4114 rows and 8 variables:
+#' \describe{
+#'   \item{\code{Well}}{double Well location in a microplate}
+#'   \item{\code{Reading}}{double Plate reading on the same sample}
+#'   \item{\code{Temperature}}{double Temperature in degrees Celcius}
+#'   \item{\code{A}}{double total FAM-CGUAUGUA concentration in nM}
+#'   \item{\code{B}}{double total UACAUACG-BHQ1 concentration in nM}
+#'   \item{\code{Emission}}{double Fluorecence emission}
+#'   \item{\code{Helix}}{double Helix ID}
+#'   \item{\code{Conditition}}{double Buffer condition in the description}
+#'}
+"df.fluor.data"
+

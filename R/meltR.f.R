@@ -23,7 +23,7 @@
 #' @export
 meltR.F = function(df,
                    Kd_error_quantile = 0.25,
-                   Kd_range = c(1,150),
+                   Kd_range = c(1,250),
                    Start_K = 0.1,
                    Optimize_conc = TRUE,
                    Low_reading = "auto",
