@@ -320,7 +320,7 @@ meltR.F = function(df,
 
   df.Tm$Ct = (10^-9)*df.Tm$B - (10^-9)*0.5*df.Tm$A
 
-  df.Tm = filter(df.Tm, df.Tm > 0)
+  df.Tm = filter(df.Tm$Ct, df.Tm > 0)
 
   df.Tm$lnCt = log(df.Tm$Ct)
 
