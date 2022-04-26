@@ -85,18 +85,36 @@ The absolute concentration of [A]T and [B]T cannot be known with precicion. Howe
 
 Where [A]T-estimated is the estimated total A concentration, or what it should be based on the concentration of the stock, and R is given by equation x.
 
-R = frac{[B]_{T}}{[A]_{T-estimated}}}
+<img src= "https://render.githubusercontent.com/render/math?math={ R = frac{[B]_{T}}{[A]_{T-estimated}}}  \qquad (1)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  R = frac{[B]_{T}}{[A]_{T-estimated}}} \qquad (1)}#gh-dark-mode-only">
 
 MeltR fits an overdetermined isotherm to a binding curve (selected by the user but by default the isotherm collected at the lowest temperature) to a modified version of Equation x to determine R.
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A]_{T}%2b[B]_{T}R)}^2 - 4[A]_{T}[B]_{T}R}}{2[A]_{T}}  }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A]_{T}%2b[B]_{T}R)}^2 - 4[A]_{T}[B]_{T}R}}{2[A]_{T}}  \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A-estimated}]_{T}%2b[B]_{T}R)}^2 - 4[A-estimated}]_{T}[B]_{T}R}}{2[A]_{T-estimated}}}  }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A]_{T-estimated}}%2b[B]_{T}R)}^2 - 4[A]_{T-estimated}}[B]_{T}R}}{2[A]_{T-estimated}}}  \qquad (1)}#gh-dark-mode-only">
 
-By default, the fit to determine R allows R and KD to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several KDs that are more than 10 times less than the fluorophore labeled strand concentrations. They should then inspect the R from several iterations of the optimization algorithm set to different values to make sure it is similar to the iteration that allows the Kd to float.  
+By default, the fit to determine R allows R and KD to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several KDs that are more than 10 times less than the fluorophore labeled strand concentrations. They should then inspect the R from several iterations of the optimization algorithm set to different values to make sure it is similar to the iteration that allows the Kd to float.
+
+[A]T is then corrected with Equation x.
+
+<img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T}  = \frac{[A]_{T-estimated}}{R}  \qquad (1)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = \frac{[A]_{T-estimated}}{R} \qquad (1)}#gh-dark-mode-only">
 
 ### Method 1 Van't Hoff plot
 
+Method 1 fits Kds that were passed from the preprtocessing steps to equation x. The free energy of helix formation at 37 degC (dG) was calculated from the dH and dS values provided by the fit.
 
+The standard error of the dG was propagated from the standartd error of dH and the dS from the fit, and the covariation between the two values.
+
+<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (1) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}  \qquad (1) }#gh-dark-mode-only">
+
+Helix formation energies are traditionally reported in terms of the association constant.
+
+<img src= "https://render.githubusercontent.com/render/math?math={ K = \frac{[AB]}{[A][B] = 1/K_{D}} \qquad (1)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} K = \frac{[AB]}{[A][B] = 1/K_{D}} \qquad (1)}#gh-dark-mode-only">
+
+Thus, dHs and dSs reported by MeltR are also reported in terms of the association constant, which is obtained by multiplying helix formation energies from fitting Kds by negative one. 
 
 ### Method 2 Global fit
 
