@@ -75,6 +75,9 @@ We have determined that the accuracy of fit results is highly dependent on error
 
 MeltR uses a fluorecence binding isotherm from a temperature where the Kd is more than 10 times less than the fluorophore labeled strand concentration, where binding to the quencher strand is over-determined. Under these conditions, the shape of the curve will be independent of the Kd. For example, at a 200 nM fluorophore labeled strand concentration, the shape of the binding curve will be indendent of Kd if the Kd is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straint lines. The first line, where [A]T > [B]T, will decrease as the [B]T is increased and the fluorophore labeled strand is saturated. The second line, where [A]T < [B]T, will be constant as the [B]T is increased because the fluorphore labeled strand is saturated. The intersection of the first and second line will occure at:
 
+![Job_plot](https://user-images.githubusercontent.com/63312483/165352390-3e58a2df-1920-4cb4-9805-dee99d67eb6a.svg)
+### Figure 1 Concentration optimization algorithm
+
 <img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T} = [B]_{T}  \qquad (1)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = [B]_{T} \qquad (1)}#gh-dark-mode-only">
 
@@ -88,10 +91,10 @@ Where [A]T-estimated is the estimated total A concentration, or what it should b
 <img src= "https://render.githubusercontent.com/render/math?math={ R = \frac{[B]_{T}}{[A]_{T-estimated}}  \qquad (1)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}  R = \frac{[B]_{T}}{[A]_{T-estimated}} \qquad (1)}#gh-dark-mode-only">
 
-MeltR fits an overdetermined isotherm to a binding curve (selected by the user but by default the isotherm collected at the lowest temperature) to a modified version of Equation x to determine R.
+MeltR fits an overdetermined isotherm to a binding curve (selected by the user but by default the isotherm collected at the lowest temperature) to a modified version of Equation x to determine R (Figure 1 B).
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A]_{T}-estimated}%2b[B]_{T}R)}^2 - 4[A-estimated}]_{T}[B]_{T}R}}}{2[A]_{T-estimated}}  }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A]_{T-estimated}}%2b[B]_{T}R)}^2 - 4[A]_{T-estimated}}[B]_{T}R}}{2[A]_{T-estimated}}}  \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A]_{T-estimated}%2bB]_{T}R)}^2 - 4[A]_{T-estimated}[B]_{T}R}}{2[A]_{T-estimated}}  }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A]_{T-estimated}%2bB]_{T}R)}^2 - 4[A]_{T-estimated}[B]_{T}R}}{2[A]_{T-estimated}}  \qquad (1)}#gh-dark-mode-only">
 
 By default, the fit to determine R allows R and KD to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several KDs that are more than 10 times less than the fluorophore labeled strand concentrations. They should then inspect the R from several iterations of the optimization algorithm set to different values to make sure it is similar to the iteration that allows the Kd to float.
 
@@ -102,7 +105,7 @@ By default, the fit to determine R allows R and KD to float. The user should als
 
 ### Method 1 Van't Hoff plot
 
-Method 1 fits Kds that were passed from the preprtocessing steps to equation x. The free energy of helix formation at 37 degC (dG) was calculated from the dH and dS values provided by the fit.
+Method 1 fits Kds that were passed from the preprocessing steps to equation x. The free energy of helix formation at 37 degC (dG) was calculated from the dH and dS values provided by the fit.
 
 The standard error of the dG was propagated from the standartd error of dH and the dS from the fit, and the covariation between the two values.
 
@@ -118,6 +121,14 @@ Thus, dHs and dSs reported by MeltR are also reported in terms of the associatio
 
 ### Method 2 Global fit
 
+Method 2 globally fits fluorescence data that were passed from the preprocessing to equation x, obtained by plugging equation y into equation z. Fmax and Fmin was allowed to float between temperatures and dH and dS were constant.
+
+K_{D} = \exp{\frac{dS}{R} - \frac{dH}{RT}}
+
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (1)}#gh-dark-mode-only">
+
+Helix folding energies 
 
 ## Fitting abosorbance melting curves
 
@@ -294,33 +305,76 @@ The baselines are allowed to vary but dHs and dTs are constrained to a single va
 
 The dG and error in the dG is calculated using the same equations as Method 2.
 
+# Running MeltR
+
+In this section, we cover how to use MeltR in your R console. If you have not already, read section X to understand the theory underlying the results of MeltR. This section will cover what to type and how to avoid pitfalls. The most common with MeltR is fitting data that is inconsistent with the underlying model, either a fluorescence isotherm or a absorbance melting curve with a non-standard shape. In this case, data will need to be subsetted prior to the fitting set. While MeltR has no dependencies other than base R 4.1.3, data wrangling and plotting functions in the "tidyverse" package are highly recommended, along with the "ggrepel" package, for data quality checks and filtering. To begin, open a new R session in the proper directory. Load relevant packages into your memory.
+
+```{r}
+library(MeltR)
+library(tidyverse)
+library(ggrepel)
+```
+
+Help documentation for MeltR functions can be pulled up using standard R commands.
+
+```{r}
+?meltR.F
+?meltR.A
+```
+
 ## Fitting fluorescence binding isotherms
 
-# 4 Calculating extinction coefficients in MeltR
+Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 5.1). There should be a “Well” column where numbers or character strings specify what well in a microplate the data came from, a “Reading” column that specifies the reading a data point comes from, a “Temperature” column that specifies the temperature where the data was recorded, a “B” column which specifies an approximate quencher labeled strand concentration in nM, an “A” column which specifies an approximate fluorophore labeled strand concentration in nM, and an “Emission” column containing the fluorescence emission intensity. 
 
-# 5 Fitting Absorbance Melting Curves in MeltR
+### Formatting fluorescence data for MeltR
 
-## 5.1 Formatting absorbance data for MeltR
+Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 5.1). There should be a “Well” column where numbers or character strings specify what well in a microplate the data came from, a “Reading” column that specifies the reading a data point comes from, a “Temperature” column that specifies the temperature where the data was recorded, a “B” column which specifies an approximate quencher labeled strand concentration in nM, an “A” column which specifies an approximate fluorophore labeled strand concentration in nM, and an “Emission” column containing the fluorescence emission intensity. 
 
-## 5.2 Reading data into an R data frame
+![image](https://user-images.githubusercontent.com/63312483/165355843-40b03fbc-7d89-429e-8252-1b65ea6fced1.png)
 
-## 5.3 Applying “meltR.A” to obtain thermodynamic parameters
+Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorperation of an extra space, so that MeltR cannot recognize relevant data when it is read into R. The second is incorperation of characters characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
 
-## 5.4 Saving “meltR.A” outputs
+### Reading data into an R data frame
 
-# 6 Fitting Fluorescence Binding Isotherms in MeltR
+Comma separated value (“.csv”) data can be read into an R data frame for MeltR using the “read.csv” function that is included in base R.
 
-## 6.1 Formatting fluorescence data for MeltR
+```{r}
+df = read.csv("path/file_name.csv")
+```
 
-## 6.2 Reading data into R
-## 6.3 Applying “meltR.F” to obtain thermodynamic parameters	
-## 6.4 Saving “meltR.F” outputs
+Data can be checked with the "View" function.
 
-# Advanced plotting MeltR outputs in ggplot2	10
+```{r}
+View(df)
+```
 
-#Appendix
+Note, the columns in “df” should be named correctly. However, if the columns are not named correctly, MeltR cannot recognize them. You can rename the columns of a data frame using:
 
-## Appendix A Utility functions for reformatting OLIS data	10
 
-### Reading a “.o3a” formatted file	10
-### Pulling data from a single wavelength from multiple “.o3a” files	10
+```{r}
+colnames(df1) = c("Helix", "Well", "Reading", "Temperature", "B", "A", "Emission")
+```
+
+
+### Applying “meltR.F” to obtain thermodynamic parameters
+
+In general, it is a good idea to check your data before you start fitting. First, check the 
+
+
+### Saving “meltR.F” outputs
+
+### Advanced plotting meltR.F outputs using the "tidyverse"
+
+## Fitting Absorbance Melting Curves in MeltR
+
+### Formatting absorbance data for MeltR
+
+### Reading data into an R data frame
+
+### Applying “meltR.A” to obtain thermodynamic parameters
+
+### Saving “meltR.A” outputs
+
+### Advanced plotting meltR.F outputs using the "tidyverse"
+
+
