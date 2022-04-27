@@ -23,6 +23,10 @@ meltR.F.model(
 
 \item{fmin}{The approximate fluorescence minimum for the double stranded state where the fluorophore labeled strand is base paired with the quencher labeled strand.}
 
+\item{FAM_error}{The error in FAM concentrations}
+
+\item{BHQ1_error}{The error in BHQ1 concentrations}
+
 \item{Emission_SD}{The approximate experimental error for each emission reading.}
 }
 \value{

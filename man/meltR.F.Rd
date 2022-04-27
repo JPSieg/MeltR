@@ -7,7 +7,7 @@
 meltR.F(
   df,
   Kd_error_quantile = 0.25,
-  Kd_range = c(1, 250),
+  Kd_range = c(10, 1000),
   Start_K = 0.1,
   Optimize_conc = TRUE,
   Low_reading = "auto",
