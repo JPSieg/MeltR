@@ -453,15 +453,16 @@ Note, the concentration optimization algorithm, by default allowing the Kd.opt t
 
 The concentration with constrained Kds optomization algorithm adjusts the FAM-RNA concentration to at most 281, about 10% varience with constrained Kds. Thus, the default concentration optimization is robust.
 
-
 ### Saving meltR.F outputs
 
-meltR.F results can be saved to the disk by saving  
+meltR.F results can be saved to the disk by saving 
+
+![meltR F_outputs](https://user-images.githubusercontent.com/63312483/165539409-58029182-7905-4a1a-a86d-b931fe4a1542.svg)
 
 
-### Other important meltR.F outputs
+### Refining meltR.F fits
 
-### Advanced plotting meltR.F outputs using the "tidyverse"
+### Advanced analysis of meltR.F outputs using the "tidyverse"
 
 ## Fitting Absorbance Melting Curves in MeltR
 
