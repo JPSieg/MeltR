@@ -489,18 +489,64 @@ meltR.F(df,
 
 ![Refined_VH_plot](https://user-images.githubusercontent.com/63312483/165550513-87659c1c-0a43-4e79-a9ef-d2b22a53e673.svg)
 
-### Advanced analysis of meltR.F outputs using in R
+### Advanced analysis of meltR.F outputs in R
 
 meltR.F can pass a more extensive output to an object in R. 
 
 ```{r}
-meltR.F(df,
+MeltR.fit = meltR.F(df,
         Kd_range = c(40, 500),
         Kd_error_quantile = 0.5,
         Save_results = "all")
 ```
 
+The object, "MeltR.fit" is now a list of objects that can be passed to plotting functions.
 
+```{r}
+names(MeltR.fit)
+[1] "VantHoff"                         "K"                               
+[3] "VH_method_1_fit"                  "VH_method_2_fit"                 
+[5] "Raw_data"                         "First_derivative"                
+[7] "Tms"                              "R"                               
+[9] "Fractional_error_between_methods"
+```
+
+[1] VantHoff: is a data frame containing the duflex formation energies. It can be called using:
+
+
+```{r}
+MeltR.fit$VantHoff
+        Method         H     SE.H         S      SE.S         G       SE.G  K_error         R   Kd.opt
+1    1 VH plot -60.60235 0.964952 -160.5832  3.057177 -10.79747 0.01834264 6.182951 0.7797618 6.165553
+2 2 Global fit -59.90460 6.321305 -158.3554 20.049234 -10.79066 0.11245376 6.182951 0.7797618 6.165553
+```
+
+[2] K: is a data frame containing the results from fitting each isotherm individually. It can be called using:
+
+```{r}
+MeltR.fit$K
+    Temperature            K        SE.K     Fmax       Fmin
+1      23.36537 126470651.49  43997717.6 1.339861 0.15790009
+2      23.83693 123142459.99  42167682.9 1.348603 0.15856410
+3      24.31056 119560930.01  41121008.6 1.357213 0.15915429
+4      24.78221 116170413.96  39360803.6 1.366129 0.16004967
+5      25.25150 112810595.89  38232221.2 1.373145 0.16095413
+```
+
+[3] VH_method_1_fit: is a nls object containing the fit obtained from the Van't Hoff plot. It can be called using:
+
+```{r}
+MeltR.fit$VH_method_1_fit
+Nonlinear regression model
+  model: lnK ~ Tmodel(H, S, Temperature)
+   data: indvfits.to.fit
+       H        S 
+-60.6024  -0.1606 
+ residual sum-of-squares: 0.04117
+
+Number of iterations to convergence: 1 
+Achieved convergence tolerance: 3.877e-07
+```
 
 ## Fitting Absorbance Melting Curves in MeltR
 
