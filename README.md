@@ -61,6 +61,8 @@ MeltR performs the data preprocessing steps before fitting:
 
 1.) The fluorophore labeled strand concentration is optomized using the concentration optimization algorithm.
 
+2.) The Tm of each sample is estimated using the first derivative of fluorescence emission as a function of temperature. First derivatives are calculated using polynomial regression. The data are fit too a 20th order polynomial to aproximate the data. Then, the first derivative of the polynomial are recorded using calculus. The approximate Tm (where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve to a precision of less than 0.1 degC. These Tms are unreliable because fluorecence baselines vary wildly with temperature. However, Tms are useful for qualitative comparison of stability between conditions.  
+
 2.) Isotherms are fit to equation x to determine Kd and error in the Kd at each temperature using nls in base R. Initial values for Fmax, Fmin, and Kd are provided by the user. 
 
 3.) Kds are filtered by Kd magnitude and error according to the users specifications to determine which isotherms are most reliable. First, Kds outside of a user specified range (1 to 250 nM by default) are thrown out. Second, Kds are ranked by the error in the Kd. Kds that are below a user specified error quantile are thrown out. The default Kd error quantile file is 0.25, meaning the algorithem with keep the to 25% most accurate Kds.  
@@ -73,9 +75,10 @@ MeltR performs the data preprocessing steps before fitting:
 
 We have determined that the accuracy of fit results is highly dependent on errors in the concentration of fluorophore and quencher RNA strands in stock solutions. Fit accuracy is dependent on the mole ratio of fluorophore and quencher labeled RNA in stock solutions, but not dependent on the total magnitude of both fluorophore and quencher labeled RNA concentrations in the stocks. Thus, the concentration optimization algorithm in MeltR does not need to find exact concentrations, just the mole ratio (R) of fluorophore and quencher labeled RNA in samples that should have equal concentrations of fluorophore and quencher, for example 200 nM FAM-RNA and 200 nM RNA-BHQ1.
 
-MeltR uses a fluorecence binding isotherm from a temperature where the Kd is more than 10 times less than the fluorophore labeled strand concentration, where binding to the quencher strand is over-determined. Under these conditions, the shape of the curve will be independent of the Kd. For example, at a 200 nM fluorophore labeled strand concentration, the shape of the binding curve will be indendent of Kd if the Kd is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straint lines. The first line, where [A]T > [B]T, will decrease as the [B]T is increased and the fluorophore labeled strand is saturated. The second line, where [A]T < [B]T, will be constant as the [B]T is increased because the fluorphore labeled strand is saturated. The intersection of the first and second line will occure at:
+MeltR uses a fluorecence binding isotherm from a temperature where the Kd is more than 10 times less than the fluorophore labeled strand concentration, where binding to the quencher strand is over-determined. Under these conditions, the shape of the curve will be independent of the Kd, and the isotherm can be used as a Job plot. For example, at a 200 nM fluorophore labeled strand concentration, the shape of the binding curve will be indendent of Kd if the Kd is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straint lines. The first line, where [A]T > [B]T, will decrease as the [B]T is increased and the fluorophore labeled strand is saturated. The second line, where [A]T < [B]T, will be constant as the [B]T is increased because the fluorphore labeled strand is saturated. The intersection of the first and second line will occure at:
 
 ![Job_plot](https://user-images.githubusercontent.com/63312483/165352390-3e58a2df-1920-4cb4-9805-dee99d67eb6a.svg)
+
 ### Figure 1 Concentration optimization algorithm
 
 <img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T} = [B]_{T}  \qquad (1)}#gh-light-mode-only">
@@ -146,7 +149,7 @@ MeltR performs the data preprocessing steps before fitting:
 
 4.) High and low temperature data are trimmed (to the users specification) to ensure linear baselines.
 
-5.) First and second derivatives are taken using polynomial regression. First, the data are fit too a 20th order polynomial to aproximate the data. Then, the first and second derivatives of the polynomial. The approximate T0.5 (the approximate melting temperature Tm where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve and the T0.75 (the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the first derivative (Figure X), to a precision of less than 0.1 degC.
+5.) First and second derivatives are taken using polynomial regression. First, the data are fit too a 20th order polynomial to aproximate the data. Then, the first and second derivatives of the polynomial are recorded using calculus. The approximate T0.5 (the approximate melting temperature Tm where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve and the T0.75 (the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the first derivative (Figure X), to a precision of less than 0.1 degC.
 
 ![alt text](https://user-images.githubusercontent.com/63312483/164780663-09a53ad4-0699-4e29-a31a-c79eaa1b2669.svg "Employee Data title")
 
@@ -453,15 +456,172 @@ Note, the concentration optimization algorithm, by default allowing the Kd.opt t
 
 The concentration with constrained Kds optomization algorithm adjusts the FAM-RNA concentration to at most 281, about 10% varience with constrained Kds. Thus, the default concentration optimization is robust.
 
-
 ### Saving meltR.F outputs
 
-meltR.F results can be saved to the disk by saving  
+meltR.F results can be saved to the disk using the "Save_results" argument.
+
+```{r}
+meltR.F(df,
+        Save_results = "all")
+```
+
+The "file_prefix" argument can be used to add a custom file name to the outputs
+
+```{r}
+meltR.F(df,
+        Save_results = "all",
+        file_prefix = "Helix_J")
+```
+
+This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure XA). Points represent the Kd and error from fitting isotherms individually. The red line represents the fit to Equation X that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of Kd values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure XB). The third output is a .csv file containing the thermodynamic parameters from each method.
+
+![meltR F_outputs](https://user-images.githubusercontent.com/63312483/165543584-0a15344b-9f9c-4b63-ba60-256a7fe2edd1.svg)
+
+### Refining meltR.F fits
+
+Two arguments are important for refining meltR.F fits. The first is, "Kd_range", which is the range of KDs in nM that will be fit to obtain thermodynamic parameters. By default, the "Kd_range" is set to 10 to 1000. The second is, "Kd_error_quantile", which controls the amount of error that is included in the KDs that will be fit to obtain thermodynamic parameters. By default, the "Kd_error_quantile" is 0.25, meaning only the 25% most accurate KDs in the "K_range" will be fit to obtain thermodynamic parameters. 
+
+As a first guess, the Kd range should start about 10 times less than the Fluorophore labeled RNA strand concentration and end at about 10 times more than the Fluorophore labeled RNA strand, and the "Kd_error_quantile" should be conservative, near 0.25. After this, the Van't Hoff plot should be inspected. for how well the fit matches the linear range. The "Kd_range" should be constrained and the "Kd_error_quantile"  should be increased. For example, a "Kd_range" of 40 to 500 nM and a "Kd_error_quantile" of 0.5 works well for the sample data (Figure X).
+
+```{r}
+meltR.F(df,
+        Kd_range = c(40, 500),
+        Kd_error_quantile = 0.5,
+        Save_results = "all")
+```
+
+![Refined_VH_plot](https://user-images.githubusercontent.com/63312483/165550513-87659c1c-0a43-4e79-a9ef-d2b22a53e673.svg)
+
+### Advanced analysis of meltR.F outputs in R
+
+meltR.F can pass a more extensive output to an object in R. 
+
+```{r}
+MeltR.fit = meltR.F(df,
+        Kd_range = c(40, 500),
+        Kd_error_quantile = 0.5,
+        Save_results = "all")
+```
+
+The object, "MeltR.fit" is now a list of objects that can be passed to plotting functions.
+
+```{r}
+names(MeltR.fit)
+[1] "VantHoff"                         "K"                               
+[3] "VH_method_1_fit"                  "VH_method_2_fit"                 
+[5] "Raw_data"                         "First_derivative"                
+[7] "Tms"                              "R"                               
+[9] "Fractional_error_between_methods"
+```
+
+[1] VantHoff: is a data frame containing the duflex formation energies. It can be called using:
 
 
-### Other important meltR.F outputs
+```{r}
+MeltR.fit$VantHoff
+        Method         H     SE.H         S      SE.S         G       SE.G  K_error         R   Kd.opt
+1    1 VH plot -60.60235 0.964952 -160.5832  3.057177 -10.79747 0.01834264 6.182951 0.7797618 6.165553
+2 2 Global fit -59.90460 6.321305 -158.3554 20.049234 -10.79066 0.11245376 6.182951 0.7797618 6.165553
+```
 
-### Advanced plotting meltR.F outputs using the "tidyverse"
+[2] K: is a data frame containing the results from fitting each isotherm individually. It can be called using:
+
+```{r}
+MeltR.fit$K
+    Temperature            K        SE.K     Fmax       Fmin
+1      23.36537 126470651.49  43997717.6 1.339861 0.15790009
+2      23.83693 123142459.99  42167682.9 1.348603 0.15856410
+3      24.31056 119560930.01  41121008.6 1.357213 0.15915429
+4      24.78221 116170413.96  39360803.6 1.366129 0.16004967
+5      25.25150 112810595.89  38232221.2 1.373145 0.16095413
+```
+
+[3] VH_method_1_fit: is a nls object containing the fit obtained from the Van't Hoff plot. It can be called using:
+
+```{r}
+MeltR.fit$VH_method_1_fit
+Nonlinear regression model
+  model: lnK ~ Tmodel(H, S, Temperature)
+   data: indvfits.to.fit
+       H        S 
+-60.6024  -0.1606 
+ residual sum-of-squares: 0.04117
+
+Number of iterations to convergence: 1 
+Achieved convergence tolerance: 3.877e-07
+```
+
+[4] VH_method_2_fit: is a nls object containing the fit obtained from the global fit. It can be called using:
+
+```{r}
+MeltR.fit$VH_method_2_fit
+Nonlinear regression model
+  model: Emission ~ Global(H, S, Fmax, Fmin, Reading, A, B, Temperature)
+   data: df.gfit
+       H        S    Fmax1    Fmax2    Fmax3    Fmax4    Fmax5    Fmax6    Fmax7 
+-59.9046  -0.1584   1.5799   1.5862   1.5919   1.5996   1.6050   1.6132   1.6187 
+   Fmax8    Fmax9   Fmax10   Fmax11   Fmax12   Fmax13   Fmax14   Fmax15   Fmax16 
+  1.6248   1.6325   1.6384   1.6440   1.6513   1.6586   1.6652   1.6706   1.6782 
+  Fmax17   Fmax18    Fmin1    Fmin2    Fmin3    Fmin4    Fmin5    Fmin6    Fmin7 
+  1.6847   1.6905   0.2683   0.2697   0.2712   0.2727   0.2749   0.2770   0.2803 
+   Fmin8    Fmin9   Fmin10   Fmin11   Fmin12   Fmin13   Fmin14   Fmin15   Fmin16 
+  0.2848   0.2887   0.2941   0.3004   0.3068   0.3147   0.3243   0.3386   0.3494 
+  Fmin17   Fmin18 
+  0.3623   0.3803 
+ residual sum-of-squares: 3.212
+Number of iterations to convergence: 2 
+```
+
+[5] Raw_data: The raw data passed back out of MeltR.F with no modifications. It can be called using:
+
+```{r}
+Well Reading Temperature        A    B  Emission Helix  Condition
+1     A1       1    23.36537 256.4886 1000 0.1671729     J Monovalent
+2     A1       2    23.83693 256.4886 1000 0.1680626     J Monovalent
+3     A1       3    24.31056 256.4886 1000 0.1687870     J Monovalent
+4     A1       4    24.78221 256.4886 1000 0.1695139     J Monovalent
+5     A1       5    25.25150 256.4886 1000 0.1703547     J Monovalent
+```
+
+[6] First derivative: The dirst derivative of each sample. Useful for qualitative comparison of data between conditions. It can be called using:
+
+```{r}
+MeltR.fit$First_derivative
+   Well        A    B       Tm        invT           Ct      lnCt
+1    A1 256.4886 1000 48.33123 0.003110601 8.717557e-07 -13.95276
+2    A2 256.4886  800 47.22254 0.003121366 6.717557e-07 -14.21337
+3    A3 256.4886  600 46.47811 0.003128636 4.717557e-07 -14.56680
+4    A4 256.4886  400 45.42207 0.003139007 2.717557e-07 -15.11836
+5    A5 256.4886  250 44.47293 0.003148387 1.217557e-07 -15.92125
+```
+
+[7] Tms: The approximate Tm of each sample obtained from the maximum of the first derivative. Useful for qualitative comparison of data between solution conditions. It can be called using:
+
+```{r}
+MeltR.fit$Tms
+   Well        A    B       Tm        invT
+1    A1 256.4886 1000 48.33123 0.003110601
+2    A2 256.4886  800 47.22254 0.003121366
+3    A3 256.4886  600 46.47811 0.003128636
+4    A4 256.4886  400 45.42207 0.003139007
+5    A5 256.4886  250 44.47293 0.003148387
+```
+
+[8] R: the mole ratio of fluorophore and quencher labeled RNA, used in the concentration optimization algorithm. It can be called using:
+
+```{r}
+MeltR.fit$R
+        R 
+0.7797618 
+```
+
+[9] Fractional error between Methods: The amount thermodynamic parameters vary between methods. It can be called using:
+
+```{r}
+MeltR.fit$Fractional_error_between_methods
+           H          S            G
+1 0.01158036 0.01397017 0.0006300081
+```
 
 ## Fitting Absorbance Melting Curves in MeltR
 
@@ -469,10 +629,12 @@ meltR.F results can be saved to the disk by saving
 
 ### Reading data into an R data frame
 
-### Applying “meltR.A” to obtain thermodynamic parameters
+### Applying meltR.A to obtain thermodynamic parameters
 
-### Saving “meltR.A” outputs
+### Saving meltR.A outputs
+
+### Saving meltR.A outputs
 
 ### Advanced plotting meltR.F outputs using the "tidyverse"
 
-
+# References
