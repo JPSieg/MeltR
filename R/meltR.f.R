@@ -242,7 +242,7 @@ meltR.F = function(df,
     pdf(paste(file_path, "/", file_prefix, "_method_1_VH_plot.pdf", sep = ""),
         width = 3, height = 3, pointsize = 0.25)
     plot(indvfits$invT, indvfits$lnK,
-         xlab = "1/Temperature" ~ (degree ~ C), ylab = "ln[ K ]",
+         xlab = "1/Temperature (K)", ylab = "ln[ KD ]",
          cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     for(i in c(1:length(indvfits$Temperature))){
       arrows(y0 = indvfits$lnK[i] - indvfits$SE.lnK[i], y1 = indvfits$lnK[i] + indvfits$SE.lnK[i],
