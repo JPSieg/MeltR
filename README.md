@@ -455,12 +455,30 @@ The concentration with constrained Kds optomization algorithm adjusts the FAM-RN
 
 ### Saving meltR.F outputs
 
-meltR.F results can be saved to the disk by saving 
+meltR.F results can be saved to the disk using the "Save_results" argument.
 
-![meltR F_outputs](https://user-images.githubusercontent.com/63312483/165539409-58029182-7905-4a1a-a86d-b931fe4a1542.svg)
+```{r}
+meltR.F(df,
+        Save_results = "all")
+```
 
+The "file_prefix" argument can be used to add a custom file name to the outputs
+
+```{r}
+meltR.F(df,
+        Save_results = "all",
+        file_prefix = "Helix_J")
+```
+
+This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure XA). Points represent the Kd and error from fitting isotherms individually. The red line represents the fit to Equation X that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of Kd values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure XB). The third output is a .csv file containing the thermodynamic parameters from each method.
+
+![meltR F_outputs](https://user-images.githubusercontent.com/63312483/165543584-0a15344b-9f9c-4b63-ba60-256a7fe2edd1.svg)
 
 ### Refining meltR.F fits
+
+Two arguments are important for refining meltR.F fits. The first is, "Kd_range", which is the range of KDs in nM that will be fit to obtain thermodynamic parameters. By default, the "Kd_range" is set to 10 to 1000. The second is, "Kd_error_quantile", which controls the amount of error that is included in the KDs that will be fit to obtain thermodynamic parameters. By default, the "Kd_error_quantile" is 0.25, meaning only the 25% most accurate KDs in the "K_range" will be fit to obtain thermodynamic parameters. 
+
+As a first guess, the Kd range should start about 10 times less than the Fluorophore labeled RNA strand concentration and end at about 10 times more than the Fluorophore labeled RNA strand, and the "Kd_error_quantile" should be conservative, near 0.25. After this, the Van't Hoff plot should be inspected. for how well the fit matches the linear range. The "Kd_range" should be constrained and the "Kd_error_quantile"  should be increased. For example, a 
 
 ### Advanced analysis of meltR.F outputs using the "tidyverse"
 
@@ -470,9 +488,11 @@ meltR.F results can be saved to the disk by saving
 
 ### Reading data into an R data frame
 
-### Applying “meltR.A” to obtain thermodynamic parameters
+### Applying meltR.A to obtain thermodynamic parameters
 
-### Saving “meltR.A” outputs
+### Saving meltR.A outputs
+
+### Saving meltR.A outputs
 
 ### Advanced plotting meltR.F outputs using the "tidyverse"
 
