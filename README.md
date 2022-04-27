@@ -551,6 +551,78 @@ Number of iterations to convergence: 1
 Achieved convergence tolerance: 3.877e-07
 ```
 
+[4] VH_method_2_fit: is a nls object containing the fit obtained from the global fit. It can be called using:
+
+```{r}
+MeltR.fit$VH_method_2_fit
+Nonlinear regression model
+  model: Emission ~ Global(H, S, Fmax, Fmin, Reading, A, B, Temperature)
+   data: df.gfit
+       H        S    Fmax1    Fmax2    Fmax3    Fmax4    Fmax5    Fmax6    Fmax7 
+-59.9046  -0.1584   1.5799   1.5862   1.5919   1.5996   1.6050   1.6132   1.6187 
+   Fmax8    Fmax9   Fmax10   Fmax11   Fmax12   Fmax13   Fmax14   Fmax15   Fmax16 
+  1.6248   1.6325   1.6384   1.6440   1.6513   1.6586   1.6652   1.6706   1.6782 
+  Fmax17   Fmax18    Fmin1    Fmin2    Fmin3    Fmin4    Fmin5    Fmin6    Fmin7 
+  1.6847   1.6905   0.2683   0.2697   0.2712   0.2727   0.2749   0.2770   0.2803 
+   Fmin8    Fmin9   Fmin10   Fmin11   Fmin12   Fmin13   Fmin14   Fmin15   Fmin16 
+  0.2848   0.2887   0.2941   0.3004   0.3068   0.3147   0.3243   0.3386   0.3494 
+  Fmin17   Fmin18 
+  0.3623   0.3803 
+ residual sum-of-squares: 3.212
+Number of iterations to convergence: 2 
+```
+
+[5] Raw_data: The raw data passed back out of MeltR.F with no modifications. It can be called using:
+
+```{r}
+Well Reading Temperature        A    B  Emission Helix  Condition
+1     A1       1    23.36537 256.4886 1000 0.1671729     J Monovalent
+2     A1       2    23.83693 256.4886 1000 0.1680626     J Monovalent
+3     A1       3    24.31056 256.4886 1000 0.1687870     J Monovalent
+4     A1       4    24.78221 256.4886 1000 0.1695139     J Monovalent
+5     A1       5    25.25150 256.4886 1000 0.1703547     J Monovalent
+```
+
+[6] First derivative: The dirst derivative of each sample. Useful for qualitative comparison of data between conditions. It can be called using:
+
+```{r}
+MeltR.fit$First_derivative
+   Well        A    B       Tm        invT           Ct      lnCt
+1    A1 256.4886 1000 48.33123 0.003110601 8.717557e-07 -13.95276
+2    A2 256.4886  800 47.22254 0.003121366 6.717557e-07 -14.21337
+3    A3 256.4886  600 46.47811 0.003128636 4.717557e-07 -14.56680
+4    A4 256.4886  400 45.42207 0.003139007 2.717557e-07 -15.11836
+5    A5 256.4886  250 44.47293 0.003148387 1.217557e-07 -15.92125
+```
+
+[7] Tms: The approximate Tm of each sample obtained from the maximum of the first derivative. Useful for qualitative comparison of data between solution conditions. It can be called using:
+
+```{r}
+MeltR.fit$Tms
+   Well        A    B       Tm        invT
+1    A1 256.4886 1000 48.33123 0.003110601
+2    A2 256.4886  800 47.22254 0.003121366
+3    A3 256.4886  600 46.47811 0.003128636
+4    A4 256.4886  400 45.42207 0.003139007
+5    A5 256.4886  250 44.47293 0.003148387
+```
+
+[8] R: the mole ratio of fluorophore and quencher labeled RNA, used in the concentration optimization algorithm. It can be called using:
+
+```{r}
+MeltR.fit$R
+        R 
+0.7797618 
+```
+
+[9] Fractional error between Methods: The amount thermodynamic parameters vary between methods. It can be called using:
+
+```{r}
+MeltR.fit$Fractional_error_between_methods
+           H          S            G
+1 0.01158036 0.01397017 0.0006300081
+```
+
 ## Fitting Absorbance Melting Curves in MeltR
 
 ### Formatting absorbance data for MeltR
