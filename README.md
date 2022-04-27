@@ -478,9 +478,29 @@ This will create three pre-canned outputs. The first output, corresponding to Me
 
 Two arguments are important for refining meltR.F fits. The first is, "Kd_range", which is the range of KDs in nM that will be fit to obtain thermodynamic parameters. By default, the "Kd_range" is set to 10 to 1000. The second is, "Kd_error_quantile", which controls the amount of error that is included in the KDs that will be fit to obtain thermodynamic parameters. By default, the "Kd_error_quantile" is 0.25, meaning only the 25% most accurate KDs in the "K_range" will be fit to obtain thermodynamic parameters. 
 
-As a first guess, the Kd range should start about 10 times less than the Fluorophore labeled RNA strand concentration and end at about 10 times more than the Fluorophore labeled RNA strand, and the "Kd_error_quantile" should be conservative, near 0.25. After this, the Van't Hoff plot should be inspected. for how well the fit matches the linear range. The "Kd_range" should be constrained and the "Kd_error_quantile"  should be increased. For example, a 
+As a first guess, the Kd range should start about 10 times less than the Fluorophore labeled RNA strand concentration and end at about 10 times more than the Fluorophore labeled RNA strand, and the "Kd_error_quantile" should be conservative, near 0.25. After this, the Van't Hoff plot should be inspected. for how well the fit matches the linear range. The "Kd_range" should be constrained and the "Kd_error_quantile"  should be increased. For example, a "Kd_range" of 40 to 500 nM and a "Kd_error_quantile" of 0.5 works well for the sample data (Figure X).
 
-### Advanced analysis of meltR.F outputs using the "tidyverse"
+```{r}
+meltR.F(df,
+        Kd_range = c(40, 500),
+        Kd_error_quantile = 0.5,
+        Save_results = "all")
+```
+
+![Refined_VH_plot](https://user-images.githubusercontent.com/63312483/165550513-87659c1c-0a43-4e79-a9ef-d2b22a53e673.svg)
+
+### Advanced analysis of meltR.F outputs using in R
+
+meltR.F can pass a more extensive output to an object in R. 
+
+```{r}
+meltR.F(df,
+        Kd_range = c(40, 500),
+        Kd_error_quantile = 0.5,
+        Save_results = "all")
+```
+
+
 
 ## Fitting Absorbance Melting Curves in MeltR
 
@@ -496,4 +516,4 @@ As a first guess, the Kd range should start about 10 times less than the Fluorop
 
 ### Advanced plotting meltR.F outputs using the "tidyverse"
 
-
+# References
