@@ -402,19 +402,64 @@ The only argument that needs set is data frame.
 fit = meltR.F(df)
 [1] "Van't Hoff"
 [1] "accurate Ks = 16"
-          Method          H     SE.H         S      SE.S         G       SE.G   K_error         R   Kd.opt
-1      1 VH plot  -48.37473 1.048500 -121.6157  3.357021 -10.65562 0.01033199 0.2916302 0.7797618 6.165553
-2   2 Global fit  -48.88546 6.302188 -123.2438 20.157522 -10.66140 0.06564137 0.2916302 0.7797618 6.165553
-3 3 1/Tm vs lnCT -107.56199 6.130992 -307.3621 19.197411 -12.23977 0.17862684        NA 0.7797618 6.165553
+        Method         H     SE.H         S      SE.S         G       SE.G   K_error         R   Kd.opt
+1    1 VH plot -48.37473 1.048500 -121.6157  3.357021 -10.65562 0.01033199 0.2916302 0.7797618 6.165553
+2 2 Global fit -48.88546 6.302188 -123.2438 20.157522 -10.66140 0.06564137 0.2916302 0.7797618 6.165553
 [1] "Fractional error between methods"
-         H        S         G
-1 0.866907 1.009086 0.1416247
+           H        S           G
+1 0.01050236 0.013298 0.000542719
 ```
 
+Note, the concentration optimization algorithm, by default allowing the Kd.opt to float, identified an optimal R of ~0.78. Since the FAM-RNA strand in each well is estimated at 200 nM, the concentration optimization algorith will adjust the concentration to 200/0.78 = 256 nM. We will test the robustness of this estimate by constrianing the Kd.op range of KDs that are more than 10 times less than the FAM-RNA concentraion, using the "low_K" argument. For example, 1, 0.5, 0.1, and 0.05 nM. 
+
+```{r}
+> meltR.F(df, low_K = 1)
+[1] "Van't Hoff"
+[1] "accurate Ks = 14"
+        Method         H      SE.H         S      SE.S         G        SE.G  K_error         R Kd.opt
+1    1 VH plot -60.00212 0.7271876 -158.3742  2.317695 -10.88235 0.009438972 0.345963 0.7231654      1
+2 2 Global fit -60.25007 8.9451153 -159.1598 28.490520 -10.88665 0.120521827 0.345963 0.7231654      1
+[1] "Fractional error between methods"
+            H           S            G
+1 0.004123788 0.004947968 0.0003951875
+> meltR.F(df, low_K = 0.5)
+[1] "Van't Hoff"
+[1] "accurate Ks = 14"
+        Method         H      SE.H         S      SE.S         G        SE.G   K_error         R Kd.opt
+1    1 VH plot -62.21273 0.6849323 -165.3667  2.179732 -10.92425 0.009800243 0.3552451 0.7153701    0.5
+2 2 Global fit -62.39456 9.1846917 -165.9409 29.214906 -10.92800 0.134594527 0.3552451 0.7153701    0.5
+[1] "Fractional error between methods"
+            H           S            G
+1 0.002918411 0.003466106 0.0003430056
+> meltR.F(df, low_K = 0.1)
+[1] "Van't Hoff"
+[1] "accurate Ks = 14"
+        Method         H      SE.H         S     SE.S         G        SE.G   K_error         R Kd.opt
+1    1 VH plot -63.08832 0.6549918 -168.1096  2.08445 -10.94912 0.009371838 0.3609151 0.7080886    0.1
+2 2 Global fit -63.28360 9.3633293 -168.7267 29.78152 -10.95302 0.137643619 0.3609151 0.7080886    0.1
+[1] "Fractional error between methods"
+            H           S            G
+1 0.003090634 0.003664033 0.0003556102
+> meltR.F(df, low_K = 0.05)
+[1] "Van't Hoff"
+[1] "accurate Ks = 14"
+        Method         H      SE.H         S     SE.S         G        SE.G   K_error         R Kd.opt
+1    1 VH plot -63.21087 0.6507751 -168.4935  2.07103 -10.95260 0.009311504 0.3617203 0.7070892   0.05
+2 2 Global fit -63.40791 9.3886281 -169.1162 29.86176 -10.95651 0.138076127 0.3617203 0.7070892   0.05
+[1] "Fractional error between methods"
+            H           S            G
+1 0.003112448 0.003688944 0.0003572172
+```
+
+The concentration with constrained Kds optomization algorithm adjusts the FAM-RNA concentration to at most 281, about 10% varience with constrained Kds. Thus, the default concentration optimization is robust.
 
 
+### Saving meltR.F outputs
 
-### Saving “meltR.F” outputs
+meltR.F results can be saved to the disk by saving  
+
+
+### Other important meltR.F outputs
 
 ### Advanced plotting meltR.F outputs using the "tidyverse"
 
