@@ -714,6 +714,8 @@ meltR.A(data_frame = df,
 1 0.1482036 0.1649616 0.04885993
 ```
 
+Note that the fractional error between the methods is over about 15% in terms of the enthalpy. Section X.X discusses how to refine the fits by trimming the absorbance baselines. 
+
 ### Saving meltR.A outputs
 
 meltR.F results can be saved to the disk using the "Save_results" argument.
@@ -737,7 +739,7 @@ meltR.A(data_frame = df,
         file_prefix = "Helix")
 ```
 
-This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure XA). Points represent the Kd and error from fitting isotherms individually. The red line represents the fit to Equation X that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of Kd values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure XB). The third output is a .csv file containing the thermodynamic parameters from each method.
+This will create seven pre-canned outputs.  The third output is a .csv file containing the thermodynamic parameters from each method (Figure XA).
 
 ### Refining MeltR.A fits by trimming fluorescence baselines.
 
