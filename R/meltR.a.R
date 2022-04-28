@@ -664,7 +664,7 @@ meltR.A = function(data_frame,
 
   if (length(first.derive) > 1){
     for (i in 2:length(first.derive)){
-      print(i)
+      #print(i)
       df.deriv = rbind(df.deriv, first.derive[[i]])
     }
   }
