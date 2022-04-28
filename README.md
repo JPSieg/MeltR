@@ -919,6 +919,60 @@ ggplot(MeltR.fit$Method.2.data, aes(x = lnCt)) +
 
 ![Method_2_data](https://user-images.githubusercontent.com/63312483/165801194-97d0934e-ce95-4de9-8ff0-75a236fd6659.svg)
 
+[8] Method.2.fit: A nls object containing the fit obtained from fitting the relationship of Tm and Ct. It can be called using:
 
+```{r}
+MeltR.fit$Method.2.fit
+Nonlinear regression model
+  model: invT ~ TmModel(H, S, lnCt)
+   data: Tm_data
+       H        S 
+-62.2438  -0.1689 
+ residual sum-of-squares: 5.535e-11
+
+Number of iterations to convergence: 4 
+Achieved convergence tolerance: 2.206e-08
+```
+
+[9] Method 3 data: Contains the raw data from method 2 and the model. It can be called and plotted using:
+
+```{r}
+MeltR.fit$Method.3.data
+    Sample Pathlength Temperature Absorbance           Ct       Ext     Model
+201      1          1       15.07  0.2717590 2.832690e-06  95936.75 0.2711654
+202      1          1       15.58  0.2713165 2.832690e-06  95780.54 0.2712364
+203      1          1       16.09  0.2723999 2.832690e-06  96162.99 0.2713091
+204      1          1       16.59  0.2719421 2.832690e-06  96001.39 0.2713822
+205      1          1       17.10  0.2721405 2.832690e-06  96071.42 0.2714587
+
+ggplot(MeltR.fit$Method.3.data, aes(x = Temperature, color = factor(Sample), group = factor(Sample)))+
+  geom_point(mapping = aes(y = Absorbance/(Pathlength*Ct))) +
+  geom_line(mapping = aes(y = Model/(Pathlength*Ct)), color = "black") +
+  theme_classic()
+```
+[10]  Method.3.fit: A nls object containing the fit obtained from fitting the raw data. It can be called using:
+
+```{r}
+MeltR.fit$Method.3.fit
+Nonlinear regression model
+  model: Absorbance ~ GModel(H, S, mED, bED, mESS, bESS, Sample, Temperature,     Ct)
+   data: gfit_data
+         H          S       mED1       mED2       mED3       mED4       mED5 
+-6.741e+01 -1.847e-01  1.083e-04  8.979e-05  2.023e-04  2.624e-05 -1.496e-04 
+      mED6       mED7       mED8       mED9       bED1       bED2       bED3 
+-1.104e-04  2.011e-04  2.073e-04  2.026e-04  2.694e-01  4.634e-01  7.198e-01 
+      bED4       bED5       bED6       bED7       bED8       bED9      mESS1 
+ 1.161e+00  1.016e+00  1.570e+00  5.321e-01  8.743e-01  1.436e+00  3.638e-04 
+     mESS2      mESS3      mESS4      mESS5      mESS6      mESS7      mESS8 
+ 1.862e-04  5.775e-04  5.843e-04  4.111e-04  2.897e-04  1.899e-04  1.432e-04 
+     mESS9      bESS1      bESS2      bESS3      bESS4      bESS5      bESS6 
+ 6.605e-05  3.046e-01  5.374e-01  8.315e-01  1.343e+00  1.178e+00  1.829e+00 
+     bESS7      bESS8      bESS9 
+ 6.392e-01  1.053e+00  1.707e+00 
+ residual sum-of-squares: 0.001631
+
+Number of iterations to convergence: 2 
+Achieved convergence tolerance: 0.0002484
+```
 
 # References
