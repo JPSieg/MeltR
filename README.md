@@ -290,7 +290,6 @@ Error in the dG is calculated by propagating error in the fit terms dH and dS.
 <img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (1) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}  \qquad (1) }#gh-dark-mode-only">
 
-
 ### Method 3 Global fitting
 
 Method 3 fits all curves to equations x, y, and z, simultaneously in a global fit. In this fit, equations x, y, z, are rearranged to be in terms of the dS instead of the Tm. 
@@ -326,8 +325,6 @@ Help documentation for MeltR functions can be pulled up using standard R command
 ```
 
 ## Fitting fluorescence binding isotherms
-
-Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 5.1). There should be a “Well” column where numbers or character strings specify what well in a microplate the data came from, a “Reading” column that specifies the reading a data point comes from, a “Temperature” column that specifies the temperature where the data was recorded, a “B” column which specifies an approximate quencher labeled strand concentration in nM, an “A” column which specifies an approximate fluorophore labeled strand concentration in nM, and an “Emission” column containing the fluorescence emission intensity. 
 
 ### Formatting fluorescence data for MeltR
 
@@ -627,13 +624,122 @@ MeltR.fit$Fractional_error_between_methods
 
 ### Formatting absorbance data for MeltR
 
+Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure X). There should be a “Sample” column where numbers or character strings specify what sampe the absorbance data was collected. There should be one buffer blank in the data set for background subtraction. If no blank is availible, add data with an absorbance of 0 recorded at each temperature. A “Pathlength” column specifies the pathlength in cm of the cuvette the data was collected in. A “Temperature” column specifies the temperature where the data was recorded. Lastly, a “Absorbance” column specifies the absorbance collected at each temperature. 
+
+![Figure_4 1](https://user-images.githubusercontent.com/63312483/165771699-ce0ea0d0-79b5-40c8-8746-9f67b09be245.PNG)
+
+
+Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorperation of an extra space, so that MeltR cannot recognize data when it is read into R. The second is incorperation of characters characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
+
 ### Reading data into an R data frame
+
+
+Comma separated value (“.csv”) data can be read into an R data frame for MeltR using the “read.csv” function that is included in base R.
+
+```{r}
+df = read.csv("path/file_name.csv")
+```
+
+Data can be checked with the "View" function.
+
+```{r}
+View(df)
+```
+
+Note, the columns in “df” should be named correctly. However, if the columns are not named correctly, MeltR cannot recognize them. You can rename the columns of a data frame using:
+
+
+```{r}
+colnames(df1) = c("Sample", "Pathlength", "Temperature", "Absorbance")
+```
 
 ### Applying meltR.A to obtain thermodynamic parameters
 
-### Saving meltR.A outputs
+Sample data is included in MeltR. Data can be loaded into your memory and checked.
+
+```{r}
+?df.abs.data
+df = df.abs.data
+```
+
+In general, it is a good idea to plot your data before you start fitting. First, I want to check the quality of low temperature isotherms. Using the tidyverse.
+
+```{r}
+head(df)
+ggplot(df, aes(x = Temperature, y = Absorbance, color = factor(Sample))) +
+  geom_point() +
+  theme_classic()
+```
+
+![Check_absorbance_data](https://user-images.githubusercontent.com/63312483/165774624-39edee9d-8ab8-4ae7-8852-ace5c222303c.svg)
+
+This data looks good, with a small and consistent blank absorbance and sigmoidal RNA melting curves. If one of the RNA melting curves does not resemble a sigmoid, it should be removed from the data set using:
+
+```{r}
+df = df %>% filter(Sample != "Sample you want to remove")
+```
+
+Data can now be fit using meltR.A. First we need to define the nucleic acid sequence using a vector that specifies the RNA or DNA sequences used in the experiment.
+
+```{r}
+helix = c("RNA", "CGAAAGGU", "ACCUUUCG")
+```
+
+meltR.A requires information from 4 user defined arguments to fit the data: the data frame the absorbance data is stored in, the blank sample, the nucleic acid sequences, and the molecular model. Three molecular models are availible in MeltR, "Monomolecular.2State", "Heteroduplex.2State", and "Homoduplex.2State".
+
+```{r}
+?meltR.A
+meltR.A(data_frame = df,
+        blank = 1,
+        NucAcid = helix,
+        Mmodel = "Heteroduplex.2State")
+[1] "Individual curves"
+  Sample           Ct     H       S     G   Tm
+1      2 2.832690e-06 -63.5 -0.1725  -9.9 43.1
+2      3 4.718659e-06 -71.2 -0.1969 -10.1 44.6
+3      4 7.439046e-06 -64.8 -0.1764 -10.0 46.4
+4      5 1.173670e-05 -64.5 -0.1752 -10.1 48.4
+5      6 2.049582e-05 -70.9 -0.1952 -10.4 50.0
+6      7 3.131297e-05 -74.3 -0.2055 -10.5 51.4
+7      8 5.533500e-05 -71.6 -0.1974 -10.4 53.0
+8      9 8.990554e-05 -74.8 -0.2069 -10.7 54.8
+9     10 1.439218e-04 -76.7 -0.2121 -11.0 57.0
+[1] "Summary"
+              Method     H SE.H      S SE.S     G SE.G
+1  1 individual fits -70.3  4.9 -193.1 14.9 -10.4  0.3
+2 2 Tm versus ln[Ct] -60.4  1.2 -163.0  3.8  -9.9  0.1
+3       3 Global fit -69.7  0.3 -191.3  1.0 -10.4  0.0
+[1] "fractional error between methods"
+          H         S          G
+1 0.1482036 0.1649616 0.04885993
+```
 
 ### Saving meltR.A outputs
+
+meltR.F results can be saved to the disk using the "Save_results" argument.
+
+```{r}
+meltR.A(data_frame = df,
+        blank = 1,
+        NucAcid = helix,
+        Mmodel = "Heteroduplex.2State",
+        Save_results = "all")
+```
+
+The "file_prefix" argument can be used to add a custom file name to the outputs
+
+```{r}
+meltR.A(data_frame = df,
+        blank = 1,
+        NucAcid = helix,
+        Mmodel = "Heteroduplex.2State",
+        Save_results = "all",
+        file_prefix = "Helix")
+```
+
+This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure XA). Points represent the Kd and error from fitting isotherms individually. The red line represents the fit to Equation X that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of Kd values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure XB). The third output is a .csv file containing the thermodynamic parameters from each method.
+
+### Refining MeltR.A fits by trimming fluorescence baselines.
 
 ### Advanced plotting meltR.F outputs using the "tidyverse"
 
