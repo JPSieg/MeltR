@@ -895,6 +895,30 @@ ggplot(MeltR.fit$Method.1.data, aes(x = Temperature, color = factor(Sample), gro
 
 ![Method_1_data](https://user-images.githubusercontent.com/63312483/165797375-d9f7ab04-2749-43ff-962f-6e935cf0ace4.svg)
 
-[6] 
+[6] MeltR.fit$Method.1.fit: A list of nls objects containing the fits obtained from fitting melting curves individually. It can be called using:
+
+```{r}
+MeltR.fit$Method.1.fit
+```
+
+[7] MeltR.fit$Method.2.data: Contains the raw data from method 1 and the model. It can be called and plotted using:
+
+```{r}
+MeltR.fit$Method.2.data
+        lnCt       Tm        invT       Model
+1 -12.774284 42.45013 0.003168566 0.003165178
+2 -12.263986 44.43509 0.003148762 0.003148887
+3 -11.808768 46.09716 0.003132369 0.003134353
+4 -11.352790 47.81681 0.003115587 0.003119796
+5 -10.795290 49.12745 0.003102916 0.003101997
+ggplot(MeltR.fit$Method.2.data, aes(x = lnCt)) +
+  geom_point(mapping = aes(y = invT)) +
+  geom_line(mapping = aes(y = Model)) +
+  theme_classic()
+```
+
+![Method_2_data](https://user-images.githubusercontent.com/63312483/165801194-97d0934e-ce95-4de9-8ff0-75a236fd6659.svg)
+
+
 
 # References
