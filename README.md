@@ -80,7 +80,7 @@ MeltR uses a fluorecence binding isotherm from a temperature where the K<sub>D</
 <img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T} = [B]_{T}  \qquad (7)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = [B]_{T} \qquad (7)}#gh-dark-mode-only">
 
-![Job_plot](https://user-images.githubusercontent.com/63312483/165352390-3e58a2df-1920-4cb4-9805-dee99d67eb6a.svg)
+![Job_plot](https://user-images.githubusercontent.com/63312483/166313141-e3592b45-6b69-4791-940b-c05d9bc8dc12.svg)
 
 The absolute concentration of [A]<sub>T</sub> and [B]<sub>T</sub> cannot be known with precicion. However, the mole ratio of the error (X) in the fluorophore and quencher stocks can be estimated from this data point at equation 8.
 
@@ -305,7 +305,8 @@ The dG and error in the dG is calculated using the same equations as Method 2.
 
 # 4 Running MeltR
 
-In this section, we cover how to use MeltR in your R console. If you have not already, read section X to understand the theory underlying the results of MeltR. This section will cover what to type and how to avoid pitfalls. The most common with MeltR is fitting data that is inconsistent with the underlying model, either a fluorescence isotherm or a absorbance melting curve with a non-standard shape. In this case, data will need to be subsetted prior to the fitting set. While MeltR has no dependencies other than base R 4.1.3, data wrangling and plotting functions in the "tidyverse" package are highly recommended, along with the "ggrepel" package, for data quality checks and filtering. To begin, open a new R session in the proper directory. Load relevant packages into your memory.
+In this section, we cover how to use MeltR in your R console. If you have not already, read section 3 to understand the theory underlying the results of MeltR. In constrast, section 4 will cover MeltR usage and how to avoid pitfalls. The most common error with MeltR is a user attempting to fit data that is inconsistent with the underlying model, either a fluorescence isotherm or a absorbance melting curve with a non-standard shape or specifying an incorrect molecular model. In the case of data-with a non-standard shape, the aberrant data will need to be subsetted out data set prior to fitting the set with MeltR. While MeltR has no dependencies other than base R 4.1.3, data wrangling and plotting functions in the "tidyverse" package<sup>[4]</sup> are highly recommended, along with the "ggrepel" package<sup>[5]</sup>, for data quality checks and filtering. To begin, open a new R session in the proper directory. Load relevant packages into your memory.
+
 
 ```{r}
 library(MeltR)
@@ -320,19 +321,19 @@ Help documentation for MeltR functions can be pulled up using standard R command
 ?meltR.A
 ```
 
-## Fitting fluorescence binding isotherms
+## 4.1 Fitting fluorescence binding isotherms
 
-### Formatting fluorescence data for MeltR
+### 4.1.1 Formatting fluorescence data for MeltR
 
-Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 5.1). There should be a “Well” column where numbers or character strings specify what well in a microplate the data came from, a “Reading” column that specifies the reading a data point comes from, a “Temperature” column that specifies the temperature where the data was recorded, a “B” column which specifies an approximate quencher labeled strand concentration in nM, an “A” column which specifies an approximate fluorophore labeled strand concentration in nM, and an “Emission” column containing the fluorescence emission intensity. 
+Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 3). There should be a “Well” column where numbers or character strings specify what well in a microplate the data came from, a “Reading” column that specifies the reading a data point comes from, a “Temperature” column that specifies the temperature where the data was recorded, a “B” column which specifies an approximate quencher labeled strand concentration in nM, an “A” column which specifies an approximate fluorophore labeled strand concentration in nM, and an “Emission” column containing the fluorescence emission intensity. 
 
-![image](https://user-images.githubusercontent.com/63312483/165355843-40b03fbc-7d89-429e-8252-1b65ea6fced1.png)
+![Formatting fluorescence binding isotherm datat in a csv file for MeltR with Excel](https://user-images.githubusercontent.com/63312483/165355843-40b03fbc-7d89-429e-8252-1b65ea6fced1.png)
 
-Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorperation of an extra space, so that MeltR cannot recognize relevant data when it is read into R. The second is incorperation of characters characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
+Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorperation of an extra space, so that MeltR cannot recognize relevant data when it is read into R. The second is incorperation of characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
 
-### Reading data into an R data frame
+### 4.2.3 Reading data into a R data frame
 
-Comma separated value (“.csv”) data can be read into an R data frame for MeltR using the “read.csv” function that is included in base R.
+Comma separated value (“.csv”) data can be read into a R data frame for MeltR using the “read.csv” function that is included in base R.
 
 ```{r}
 df = read.csv("path/file_name.csv")
@@ -344,17 +345,15 @@ Data can be checked with the "View" function.
 View(df)
 ```
 
-Note, the columns in “df” should be named correctly. However, if the columns are not named correctly, MeltR cannot recognize them. You can rename the columns of a data frame using:
-
+Note, the columns in “df” must be named correctly. If the columns are not named correctly, MeltR cannot recognize them. You can rename the columns of a data frame using:
 
 ```{r}
-colnames(df1) = c("Helix", "Well", "Reading", "Temperature", "B", "A", "Emission")
+colnames(df) = c("Helix", "Well", "Reading", "Temperature", "B", "A", "Emission")
 ```
 
+### 4.1.3 Applying “meltR.F” to obtain thermodynamic parameters
 
-### Applying “meltR.F” to obtain thermodynamic parameters
-
-For this tutorial, we will use sample data included in MeltR. First check that it is in your memory and find out what is in the data.
+For this tutorial, we will use sample data included in MeltR. First check that MeltR is in your memory and find out what is in the sample data.
 
 ```{r}
 ?df.fluor.data
@@ -365,25 +364,21 @@ In general, it is a good idea to plot your data before you start fitting. First,
 
 ```{r}
 head(df)
-  Well Reading Temperature   A    B  Emission Helix  Condition
-1   A1       1    23.36537 200 1000 0.1671729     J Monovalent
-2   A1       2    23.83693 200 1000 0.1680626     J Monovalent
-3   A1       3    24.31056 200 1000 0.1687870     J Monovalent
-4   A1       4    24.78221 200 1000 0.1695139     J Monovalent
-5   A1       5    25.25150 200 1000 0.1703547     J Monovalent
-6   A1       6    25.72722 200 1000 0.1712532     J Monovalent
 ggplot(df %>% filter(Reading == 1), aes(x = B, y = Emission, label = Well)) +
   geom_point() +
   geom_text_repel()
 ```
 
-The result is a really nice binding isotherm (Figure X). One should check a few more readings by changing the value in the filter command, for example 20, 60, 80, etc... If you observe one or two ovious outliers in the data set, it is reasonable to remove them using the filter.
+The result is a really nice binding isotherm (Figure 4). One should check a few more readings by changing the value in the filter command, for example 20, 60, 80, etc... 
 
 ![Isotherm_example](https://user-images.githubusercontent.com/63312483/165367119-ed4e15df-4c08-46d7-82c6-03b386f61395.svg)
 
 
+If you observe one or two ovious outliers in the data set, it is reasonable to remove them using the filter. However, this data is excellent and needs no filtering.
+
+
 ```{r}
-df = df %>% filter(!Well %in% c("A1", "C3"))
+df %>% filter(!Well %in% c("A1", "C3"))
 ```
 
 If you are satified with the the data, we can move on to fitting. I will first inspect the help file for meltR.F.
@@ -395,18 +390,27 @@ If you are satified with the the data, we can move on to fitting. I will first i
 The only argument that needs set is data frame.
 
 ```{r}
-fit = meltR.F(df)
+meltR.F(df)
+```
+
+You will see the following output in your console.
+
+```{r}
+> meltR.F(df)
 [1] "Van't Hoff"
 [1] "accurate Ks = 16"
-        Method         H     SE.H         S      SE.S         G       SE.G   K_error         R   Kd.opt
-1    1 VH plot -48.37473 1.048500 -121.6157  3.357021 -10.65562 0.01033199 0.2916302 0.7797618 6.165553
-2 2 Global fit -48.88546 6.302188 -123.2438 20.157522 -10.66140 0.06564137 0.2916302 0.7797618 6.165553
+        Method         H     SE.H         S      SE.S         G       SE.G
+1    1 VH plot -48.37473 1.048500 -121.6157  3.357021 -10.65562 0.01033199
+2 2 Global fit -48.88546 6.302188 -123.2438 20.157522 -10.66140 0.06564137
+    K_error         R   Kd.opt
+1 0.2916302 0.7797618 6.165553
+2 0.2916302 0.7797618 6.165553
 [1] "Fractional error between methods"
            H        S           G
 1 0.01050236 0.013298 0.000542719
 ```
 
-Note, the concentration optimization algorithm, by default allowing the Kd.opt to float, identified an optimal R of ~0.78. Since the FAM-RNA strand in each well is estimated at 200 nM, the concentration optimization algorith will adjust the concentration to 200/0.78 = 256 nM. We will test the robustness of this estimate by constrianing the Kd.op range of KDs that are more than 10 times less than the FAM-RNA concentraion, using the "low_K" argument. For example, 1, 0.5, 0.1, and 0.05 nM. 
+Note, the concentration optimization algorithm, by default allowing the Kd.opt to float, identified an optimal R of ~0.78. Since the FAM-RNA strand in each well is estimated at 200 nM, the concentration optimization algorith will adjust the concentration to 200/0.78 = 256 nM. We will test the robustness of this estimate by constrianing the Kd.op range of KDs that are more than 10 times less than the FAM-RNA concentraion, using the "low_K" argument. For example, 1, 0.5, 0.1, and 0.05 nM. Note, the mole ratio "R" was labeled "X" in the theory section to avoid confusion with the gas constant.
 
 ```{r}
 > meltR.F(df, low_K = 1)
@@ -447,7 +451,7 @@ Note, the concentration optimization algorithm, by default allowing the Kd.opt t
 1 0.003112448 0.003688944 0.0003572172
 ```
 
-The concentration with constrained Kds optomization algorithm adjusts the FAM-RNA concentration to at most 281, about 10% varience with constrained Kds. Thus, the default concentration optimization is robust.
+The concentration with constrained Kds optomization algorithm adjusts the FAM-RNA concentration to at most 281, about 10% difference between constrained K<sub>d</sub>s and a floating K<sub>D</sub>. Thus, the default concentration optimization is robust. Note that there is considerable variance in the enthalpies, entropies, and free energies from the various constrained K<sub>D</sub>s and the unconstrained fit (about 20 kcal/mole in terms of the enthalpy). We will demonstrate how to refine these thermodynamic parameters independent of the concentration optimization algorithm in section 4.1.5.
 
 ### Saving meltR.F outputs
 
@@ -458,7 +462,7 @@ meltR.F(df,
         Save_results = "all")
 ```
 
-The "file_prefix" argument can be used to add a custom file name to the outputs
+The "file_prefix" argument can be used to add a custom file name to the outputs.
 
 ```{r}
 meltR.F(df,
@@ -466,15 +470,15 @@ meltR.F(df,
         file_prefix = "Helix_J")
 ```
 
-This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure XA). Points represent the Kd and error from fitting isotherms individually. The red line represents the fit to Equation X that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of Kd values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure XB). The third output is a .csv file containing the thermodynamic parameters from each method.
+This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure 5A). Points represent the Kd and error from fitting isotherms individually. The red line represents the fit to Equation 6 that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of Kd values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure 5B). The third output is a .csv file containing the thermodynamic parameters from each method Figure 5 C. Note that the fit line (red) in Figure 5A does not follow the trend at high temperatures and the helix folding energies from this line are thus unreliable. We will cover refining the fits in the next section.
 
-![meltR F_outputs](https://user-images.githubusercontent.com/63312483/165543584-0a15344b-9f9c-4b63-ba60-256a7fe2edd1.svg)
+![Pre-canned meltR.F outputs](https://user-images.githubusercontent.com/63312483/165543584-0a15344b-9f9c-4b63-ba60-256a7fe2edd1.svg)
 
 ### Refining meltR.F fits
 
-Two arguments are important for refining meltR.F fits. The first is, "Kd_range", which is the range of KDs in nM that will be fit to obtain thermodynamic parameters. By default, the "Kd_range" is set to 10 to 1000. The second is, "Kd_error_quantile", which controls the amount of error that is included in the KDs that will be fit to obtain thermodynamic parameters. By default, the "Kd_error_quantile" is 0.25, meaning only the 25% most accurate KDs in the "K_range" will be fit to obtain thermodynamic parameters. 
+Two arguments are important for refining meltR.F fits. The first is, "Kd_range", which is the range of K<sub>D</sub>s in nM that will be fit to obtain thermodynamic parameters. By default, the "Kd_range" is set to 10 to 1000. The second is, "Kd_error_quantile", which controls the amount of error that is included in the K<sub>D</sub>s that will be fit to obtain thermodynamic parameters. By default, the "Kd_error_quantile" is 0.25, meaning only the 25% most accurate KDs in the "K_range" will be fit to obtain thermodynamic parameters. 
 
-As a first guess, the Kd range should start about 10 times less than the Fluorophore labeled RNA strand concentration and end at about 10 times more than the Fluorophore labeled RNA strand, and the "Kd_error_quantile" should be conservative, near 0.25. After this, the Van't Hoff plot should be inspected. for how well the fit matches the linear range. The "Kd_range" should be constrained and the "Kd_error_quantile"  should be increased. For example, a "Kd_range" of 40 to 500 nM and a "Kd_error_quantile" of 0.5 works well for the sample data (Figure X).
+As a first guess, the K<sub>D</sub> range should start about 10 times less than the Fluorophore labeled RNA strand concentration and end at about 10 times more than the Fluorophore labeled RNA strand, and the "Kd_error_quantile" should be conservative, near 0.25. After this, the Van't Hoff plot should be inspected, for how well the fit matches the linear range. In general, constraining the "Kd_range" and loostening the "Kd_error_quantile" results in the best fits. For example, a "Kd_range" of 40 to 500 nM and a "Kd_error_quantile" of 0.5 works well for the sample data (Figure 6).
 
 ```{r}
 meltR.F(df,
@@ -483,7 +487,30 @@ meltR.F(df,
         Save_results = "all")
 ```
 
-![Refined_VH_plot](https://user-images.githubusercontent.com/63312483/165550513-87659c1c-0a43-4e79-a9ef-d2b22a53e673.svg)
+with an output of:
+
+```{r}
+> meltR.F(df,
++         Kd_range = c(40, 500),
++         Kd_error_quantile = 0.5,
++         Save_results = "all")
+[1] "Van't Hoff"
+[1] "accurate Ks = 18"
+        Method         H     SE.H         S      SE.S         G       SE.G
+1    1 VH plot -60.60235 0.964952 -160.5832  3.057177 -10.79747 0.01834264
+2 2 Global fit -59.90460 6.321305 -158.3554 20.049234 -10.79066 0.11245376
+   K_error         R   Kd.opt
+1 6.182951 0.7797618 6.165553
+2 6.182951 0.7797618 6.165553
+[1] "Fractional error between methods"
+           H          S            G
+1 0.01158036 0.01397017 0.0006300081
+> 
+```
+
+Note two things: (1) the refined fit uses more isotherms than the original iterations of the program, where we were checking the concentration optimization algorithm in Section 4.1.3, with an "accurate Ks" count of 18 instead of 14. (2) The the thermodynamic parameters are closer to the fits with constrained "low_Ks", with a difference of about 5% in terms of the enthalpy and 1% in terms of the free energy.   
+
+![Refined Van't Hoff plot](https://user-images.githubusercontent.com/63312483/165550513-87659c1c-0a43-4e79-a9ef-d2b22a53e673.svg)
 
 ### Advanced analysis of meltR.F outputs in R
 
@@ -500,6 +527,11 @@ The object, "MeltR.fit" is now a list of objects that can be passed to plotting 
 
 ```{r}
 names(MeltR.fit)
+```
+
+Which will print the names of the list "MeltR.fit".
+
+```{r}
 [1] "VantHoff"                         "K"                               
 [3] "VH_method_1_fit"                  "VH_method_2_fit"                 
 [5] "Raw_data"                         "First_derivative"                
@@ -512,125 +544,69 @@ names(MeltR.fit)
 
 ```{r}
 MeltR.fit$VantHoff
-        Method         H     SE.H         S      SE.S         G       SE.G  K_error         R   Kd.opt
-1    1 VH plot -60.60235 0.964952 -160.5832  3.057177 -10.79747 0.01834264 6.182951 0.7797618 6.165553
-2 2 Global fit -59.90460 6.321305 -158.3554 20.049234 -10.79066 0.11245376 6.182951 0.7797618 6.165553
 ```
 
 [2] K: is a data frame containing the results from fitting each isotherm individually. It can be called using:
 
 ```{r}
 MeltR.fit$K
-    Temperature            K        SE.K     Fmax       Fmin
-1      23.36537 126470651.49  43997717.6 1.339861 0.15790009
-2      23.83693 123142459.99  42167682.9 1.348603 0.15856410
-3      24.31056 119560930.01  41121008.6 1.357213 0.15915429
-4      24.78221 116170413.96  39360803.6 1.366129 0.16004967
-5      25.25150 112810595.89  38232221.2 1.373145 0.16095413
 ```
 
 [3] VH_method_1_fit: is a nls object containing the fit obtained from the Van't Hoff plot. It can be called using:
 
 ```{r}
 MeltR.fit$VH_method_1_fit
-Nonlinear regression model
-  model: lnK ~ Tmodel(H, S, Temperature)
-   data: indvfits.to.fit
-       H        S 
--60.6024  -0.1606 
- residual sum-of-squares: 0.04117
-
-Number of iterations to convergence: 1 
-Achieved convergence tolerance: 3.877e-07
 ```
 
 [4] VH_method_2_fit: is a nls object containing the fit obtained from the global fit. It can be called using:
 
 ```{r}
 MeltR.fit$VH_method_2_fit
-Nonlinear regression model
-  model: Emission ~ Global(H, S, Fmax, Fmin, Reading, A, B, Temperature)
-   data: df.gfit
-       H        S    Fmax1    Fmax2    Fmax3    Fmax4    Fmax5    Fmax6    Fmax7 
--59.9046  -0.1584   1.5799   1.5862   1.5919   1.5996   1.6050   1.6132   1.6187 
-   Fmax8    Fmax9   Fmax10   Fmax11   Fmax12   Fmax13   Fmax14   Fmax15   Fmax16 
-  1.6248   1.6325   1.6384   1.6440   1.6513   1.6586   1.6652   1.6706   1.6782 
-  Fmax17   Fmax18    Fmin1    Fmin2    Fmin3    Fmin4    Fmin5    Fmin6    Fmin7 
-  1.6847   1.6905   0.2683   0.2697   0.2712   0.2727   0.2749   0.2770   0.2803 
-   Fmin8    Fmin9   Fmin10   Fmin11   Fmin12   Fmin13   Fmin14   Fmin15   Fmin16 
-  0.2848   0.2887   0.2941   0.3004   0.3068   0.3147   0.3243   0.3386   0.3494 
-  Fmin17   Fmin18 
-  0.3623   0.3803 
- residual sum-of-squares: 3.212
-Number of iterations to convergence: 2 
 ```
 
 [5] Raw_data: The raw data passed back out of MeltR.F with no modifications. It can be called using:
 
 ```{r}
-Well Reading Temperature        A    B  Emission Helix  Condition
-1     A1       1    23.36537 256.4886 1000 0.1671729     J Monovalent
-2     A1       2    23.83693 256.4886 1000 0.1680626     J Monovalent
-3     A1       3    24.31056 256.4886 1000 0.1687870     J Monovalent
-4     A1       4    24.78221 256.4886 1000 0.1695139     J Monovalent
-5     A1       5    25.25150 256.4886 1000 0.1703547     J Monovalent
+MeltR.fit$Raw_data
 ```
 
 [6] First derivative: The dirst derivative of each sample. Useful for qualitative comparison of data between conditions. It can be called using:
 
 ```{r}
 MeltR.fit$First_derivative
-   Well        A    B       Tm        invT           Ct      lnCt
-1    A1 256.4886 1000 48.33123 0.003110601 8.717557e-07 -13.95276
-2    A2 256.4886  800 47.22254 0.003121366 6.717557e-07 -14.21337
-3    A3 256.4886  600 46.47811 0.003128636 4.717557e-07 -14.56680
-4    A4 256.4886  400 45.42207 0.003139007 2.717557e-07 -15.11836
-5    A5 256.4886  250 44.47293 0.003148387 1.217557e-07 -15.92125
 ```
 
-[7] Tms: The approximate Tm of each sample obtained from the maximum of the first derivative. Useful for qualitative comparison of data between solution conditions. It can be called using:
+[7] Tms: The approximate T<sub>m</sub> of each sample obtained from the maximum of the first derivative. Useful for qualitative comparison of data between solution conditions. It can be called using:
 
 ```{r}
 MeltR.fit$Tms
-   Well        A    B       Tm        invT
-1    A1 256.4886 1000 48.33123 0.003110601
-2    A2 256.4886  800 47.22254 0.003121366
-3    A3 256.4886  600 46.47811 0.003128636
-4    A4 256.4886  400 45.42207 0.003139007
-5    A5 256.4886  250 44.47293 0.003148387
 ```
 
-[8] R: the mole ratio of fluorophore and quencher labeled RNA, used in the concentration optimization algorithm. It can be called using:
+[8] R: the mole ratio of fluorophore and quencher labeled RNA, used in the concentration optimization algorithm. The mole ratio "R" was labeled "X" in the theory section to avoid confusion with the gas constant. It can be called using:
 
 ```{r}
 MeltR.fit$R
-        R 
-0.7797618 
 ```
 
 [9] Fractional error between Methods: The amount thermodynamic parameters vary between methods. It can be called using:
 
 ```{r}
 MeltR.fit$Fractional_error_between_methods
-           H          S            G
-1 0.01158036 0.01397017 0.0006300081
 ```
 
-## Fitting Absorbance Melting Curves in MeltR
+## 4.2 Fitting Absorbance Melting Curves in MeltR
 
-### Formatting absorbance data for MeltR
+### 4.2.1 Formatting absorbance data for MeltR
 
-Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure X). There should be a “Sample” column where numbers or character strings specify what sampe the absorbance data was collected. There should be one buffer blank in the data set for background subtraction. If no blank is availible, add data with an absorbance of 0 recorded at each temperature. A “Pathlength” column specifies the pathlength in cm of the cuvette the data was collected in. A “Temperature” column specifies the temperature where the data was recorded. Lastly, a “Absorbance” column specifies the absorbance collected at each temperature. 
+Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 7). There should be a “Sample” column where numbers or character strings specify what sampe the absorbance data was collected on. There should be one buffer blank in the data set for background subtraction. If no blank is availible, add data with an absorbance of 0 recorded at each temperature. A “Pathlength” column specifies the pathlength in cm of the cuvette the data was collected in. A “Temperature” column specifies the temperature in <span>&#176;</span>C where the data was recorded. Lastly, a “Absorbance” column specifies the absorbance collected at each temperature. 
 
-![Figure_4 1](https://user-images.githubusercontent.com/63312483/165771699-ce0ea0d0-79b5-40c8-8746-9f67b09be245.PNG)
+![Formatting absorbance melting curve data in a csv in Excel](https://user-images.githubusercontent.com/63312483/165771699-ce0ea0d0-79b5-40c8-8746-9f67b09be245.PNG)
 
+Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorperation of an extra space, so that MeltR cannot recognize data when it is read into R. The second is incorperation of characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
 
-Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorperation of an extra space, so that MeltR cannot recognize data when it is read into R. The second is incorperation of characters characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
+### 4.2.2 Reading data into a R data frame
 
-### Reading data into an R data frame
-
-
-Comma separated value (“.csv”) data can be read into an R data frame for MeltR using the “read.csv” function that is included in base R.
+Comma separated value (“.csv”) data can be read into a R data frame for MeltR using the “read.csv” function that is included in base R.
 
 ```{r}
 df = read.csv("path/file_name.csv")
@@ -642,16 +618,15 @@ Data can be checked with the "View" function.
 View(df)
 ```
 
-Note, the columns in “df” should be named correctly. However, if the columns are not named correctly, MeltR cannot recognize them. You can rename the columns of a data frame using:
-
+Note, the columns in “df” must be named correctly. If the columns are not named correctly, MeltR cannot recognize them. You can rename the columns of a data frame using:
 
 ```{r}
-colnames(df1) = c("Sample", "Pathlength", "Temperature", "Absorbance")
+colnames(df) = c("Sample", "Pathlength", "Temperature", "Absorbance")
 ```
 
-### Applying meltR.A to obtain thermodynamic parameters
+### 4.2.3 Applying meltR.A to obtain thermodynamic parameters
 
-Sample data is included in MeltR. Data can be loaded into your memory and checked.
+Sample data is included in MeltR and can be loaded into your memory and checked.
 
 ```{r}
 ?df.abs.data
@@ -976,5 +951,6 @@ Achieved convergence tolerance: 0.0002484
 [1] Biochemistry 1996, 35 (45), 14077–14089.
 [2] Methods in Enzymology, 1989; Vol. 180, pp 304-325.
 [3] Biochemistry 1998, 37 (42), 14719–14735.
-
+[4] Welcome | R for Data Science https://r4ds.had.co.nz/ (accessed 2022 -05 -02).
+[5] ggrepel: An R package https://ggrepel.slowkow.com/index.html (accessed 2022 -05 -02).
 
