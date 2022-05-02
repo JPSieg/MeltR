@@ -6,9 +6,9 @@ Automated fitting of RNA/DNA absorbance melting curves and fluorescence binding 
 
 # 1 Overview
 
-MeltR is a R package that fits nucleic acid folding data to molecular models to obtain thermodynamic parameters. MeltR automates the trivial but time-consuming tasks associated with fitting nucleic acids thermodenaturation data, and uses “nls” to fit the data to molecular models, leading to facile conversion of raw data into useful thermodynamic parameters.
+MeltR is a R package that fits nucleic acid folding data to molecular models to obtain thermodynamic parameters. MeltR automates the trivial but time-consuming tasks associated with fitting nucleic acids thermodenaturation data, leading to facile conversion of raw data into useful thermodynamic parameters.
 
-MeltR was inspired by Meltwin. MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R consol, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (5) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
+MeltR was inspired by Meltwin. MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R consol, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
 
 The core of MeltR is the “meltR.A” function for fitting absorbance melting curves and the “meltR.F” function for fitting fluorescence binding isotherms.
 
@@ -21,45 +21,45 @@ devtools::install_github("JPSieg/MeltR")
 
 # 3 Theory
 
-## Fitting fluorescence isotherms
+## 3.1 Fitting fluorescence isotherms
 
-MeltR can obtain thermodynamic parameters from fluorescence binding isotherms for heteroduplex DNA and RNA using the non-linear regression function in base R, "nls". In this strategy, a quencher labeled strand is titrated, at about 1 to 1000 nM concentrations, into different wells in a qPCR plate containing a constant concentration of fluorophore labeled strand. The fluorophore labeled strand binds to the quencher labeled strand resulting, reducing the fluorescence emmission (E) and resulting in an apparant fluorescence binding isotherm, where the shape of the curve is determined by Equation 1.
+MeltR can obtains thermodynamic parameters from fluorescence binding isotherms for heteroduplex DNA and RNA using the non-linear regression function in base R, "nls". In this strategy, a quencher labeled strand is titrated, at about 1 to 1000 nM concentrations, into different wells in a qPCR plate containing a constant concentration of fluorophore labeled strand. The fluorophore labeled strand binds to the quencher labeled strand, reducing the fluorescence emmission (E) and resulting in an apparant fluorescence binding isotherm, where the shape of the curve is determined by Equation 1.
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*F(Kd, [A]_{T}, [B]_{T}) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_max)*F(Kd, [A]_{T}, [B]_{T})\qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*F(K_{D}, [A]_{T}, [B]_{T}) \qquad (1)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_max)*F(K_{D}, [A]_{T}, [B]_{T}) \qquad (1)}#gh-dark-mode-only">
 
-Where Fmax is the fluorescence emission of unbound fluorophore labeled strand (A), Fmin is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and F(Kd, [A]T, [B]T) is the mole fraction of the bound fluorophore labeled strand to the total fluorophore labeled strand. 
+Where Fmax is the fluorescence emission of unbound fluorophore labeled strand (A), Fmin is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>) is the mole fraction of the bound fluorophore labeled strand to the total fluorophore labeled strand. 
 
-<img src= "https://render.githubusercontent.com/render/math?math={ F(Kd, [A]T, [B]T) = \frac{[AB]}{[A]_{T}} }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} F(Kd, [A]T, [B]T) = \frac{[AB]}{[A]_{T}} \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ F(K_{D}, [A]_{T}, [B]_{T}) = \frac{[AB]}{[A]_{T}} \qquad (2) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} F(K_{D}, [A]_{T}, [B]_{T}) = \frac{[AB]}{[A]_{T}} \qquad (2) }#gh-dark-mode-only">
 
-F(Kd, [A]T, [B]T) is a function controled experimental variables, the total fluorophore labled strandd ([A]T) and the total quenceher labeled strand ([B]), and the Kd is given by the the expression:
+F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>)  is a function controled experimental variables, the total fluorophore labled strandd ([A]<sub>T</sub>) and the total quenceher labeled strand ([B]<sub>T</sub>), and the K<sub>D</sub> is given by the the expression:
 
-<img src= "https://render.githubusercontent.com/render/math?math={K_{D} = \frac{[A][B]}{[AB]} }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} K_{D} = \frac{[A][B]}{[AB]} \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={K_{D} = \frac{[A][B]}{[AB]} \qquad (3) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} K_{D} = \frac{[A][B]}{[AB]} \qquad (3)}#gh-dark-mode-only">
 
-F(Kd, [A]T, [B]T) can be determined by solving the Kd expression to obtain:
+F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>) can be determined by solving the K<sub>D</sub> expression to obtain:
 
-<img src= "https://render.githubusercontent.com/render/math?math={F(Kd, [A]T, [B]T) = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} F(Kd, [A]T, [B]T) = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={F(K_{D}, [A]_{T}, [B]_{T})  = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} qquad (4) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} F(Kd, [A]T, [B]T) = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (4)}#gh-dark-mode-only">
 
-Thus, the Kd at each temperature was determined by fitting isotherms at each temperature to equation x, obtained by plugging equation y into equation z.
+Thus, the K<sub>D</sub> at each temperature was determined by fitting isotherms at each temperature to equation 5, obtained by plugging equation 4 into equation 1.
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2b[B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (5) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2b[B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (5)}#gh-dark-mode-only">
 
-Thermodynamic parameters for helix formation were extracted by the Van't hoff relationship between the Kd the temperature using the two methods described below.
+Thermodynamic parameters for helix formation were extracted by the Van't hoff relationship (Equation 6) between the K<sub>D</sub> the temperature using the two methods described below.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} \qquad (6) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} \qquad (6)}#gh-dark-mode-only">
 
 For a single experiment, all samples should be diluted from the same fluorophore and quencher stocks, so that MeltR can deal with systematic uncertainty in strand concentrations. 
 
-### Fluorescence data processing
+### 3.1.1 Fluorescence data preprocessing
 
-MeltR performs the data preprocessing steps before fitting:
+MeltR performs the following data preprocessing steps before fitting:
 
-1.) The fluorophore labeled strand concentration is optomized using the concentration optimization algorithm.
+1.) The fluorophore labeled strand concentration is optomized using the concentration optimization algorithm, described in more detail in section 3.1.3.
 
 2.) The Tm of each sample is estimated using the first derivative of fluorescence emission as a function of temperature. First derivatives are calculated using polynomial regression. The data are fit too a 20th order polynomial to aproximate the data. Then, the first derivative of the polynomial are recorded using calculus. The approximate Tm (where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve to a precision of less than 0.1 degC. These Tms are unreliable because fluorecence baselines vary wildly with temperature. However, Tms are useful for qualitative comparison of stability between conditions.  
 
