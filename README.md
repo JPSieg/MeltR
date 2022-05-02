@@ -8,7 +8,7 @@ Automated fitting of RNA/DNA absorbance melting curves and fluorescence binding 
 
 MeltR is a R package that fits nucleic acid folding data to molecular models to obtain thermodynamic parameters. MeltR automates the trivial but time-consuming tasks associated with fitting nucleic acids thermodenaturation data, leading to facile conversion of raw data into useful thermodynamic parameters.
 
-MeltR was inspired by Meltwin. MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R consol, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
+MeltR was inspired by Meltwin.<sup>[1]</sup> MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R consol, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
 
 The core of MeltR is the “meltR.A” function for fitting absorbance melting curves and the “meltR.F” function for fitting fluorescence binding isotherms.
 
@@ -82,8 +82,6 @@ MeltR uses a fluorecence binding isotherm from a temperature where the K<sub>D</
 
 ![Job_plot](https://user-images.githubusercontent.com/63312483/165352390-3e58a2df-1920-4cb4-9805-dee99d67eb6a.svg)
 
-### Figure 1 Concentration optimization algorithm
-
 The absolute concentration of [A]<sub>T</sub> and [B]<sub>T</sub> cannot be known with precicion. However, the mole ratio of the error (X) in the fluorophore and quencher stocks can be estimated from this data point at equation 8.
 
 <img src= "https://render.githubusercontent.com/render/math?math={ \frac{[A]_{T-estimated}}{X} = [B]_{T}  \qquad (8)}#gh-light-mode-only">
@@ -103,44 +101,43 @@ By default, the fit to determine X allows R and K<sub>D</sub> to float. The user
 
 [A]<sub>T</sub> is then corrected with Equation 11.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T}  = \frac{[A]_{T-estimated}}{R}  \qquad (11)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = \frac{[A]_{T-estimated}}{R} \qquad (11)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T}  = \frac{[A]_{T-estimated}}{X}  \qquad (11)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = \frac{[A]_{T-estimated}}{X} \qquad (11)}#gh-dark-mode-only">
 
-### Method 1 Van't Hoff plot
+### 3.1.3 Method 1 Van't Hoff plot
 
-Method 1 fits Kds that were passed from the preprocessing steps to equation x. The free energy of helix formation at 37 degC (dG) was calculated from the dH and dS values provided by the fit.
+Method 1 fits K<sub>D</sub>s that were passed from the preprocessing steps to Equation 6. The free energy of helix formation at 37 <span>&#176;</span>C (dG) was calculated from the dH and dS values provided by the fit.
 
 The standard error of the dG was propagated from the standartd error of dH and the dS from the fit, and the covariation between the two values.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (1) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}  \qquad (1) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (12) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}  \qquad (12) }#gh-dark-mode-only">
 
 Helix formation energies are traditionally reported in terms of the association constant.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ K = \frac{[AB]}{[A][B] = 1/K_{D}} \qquad (1)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} K = \frac{[AB]}{[A][B] = 1/K_{D}} \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ K = \frac{[AB]}{[A][B]} = 1/K_{D} \qquad (13) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} K = \frac{[AB]}{[A][B]} = 1/K_{D} \qquad (13) }#gh-dark-mode-only">
 
-Thus, dHs and dSs reported by MeltR are also reported in terms of the association constant, which is obtained by multiplying helix formation energies from fitting Kds by negative one. 
+Thus, dHs and dSs reported by MeltR are also reported in terms of the association constant, which is obtained by multiplying helix formation energies from fitting K<sub>D</sub> by negative one. 
 
-### Method 2 Global fit
+### 3.1.4 Method 2 Global fit
 
 Method 2 globally fits fluorescence data that were passed from the preprocessing to equation x, obtained by plugging equation y into equation z. Fmax and Fmin was allowed to float between temperatures and dH and dS were constant.
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (14) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (14)}#gh-dark-mode-only">
 
-Helix folding energies 
+The dG and the error in the dG were calculated as in method 1.
 
-## Fitting abosorbance melting curves
+## 3.2 Fitting abosorbance melting curves
 
-### Absorbance data preprocessing
+### 3.2.1 Absorbance data preprocessing
 
-MeltR can obtain thermodynamic parameters from absorbance melting curves for heteroduplex, homoduplex (selfcomplementary), and monomolecular self-structured DNA and RNA using the non-linear regression function in base R, "nls".
+MeltR can obtain thermodynamic parameters from absorbance melting curves for heteroduplex, homoduplex (selfcomplementary), and monomolecular self-structured DNA and RNA using the method pioneered by Tinoco and colleagues and refined by Turner and colleagues.<sup>[1-3]</sup>
 
-MeltR performs the data preprocessing steps before fitting:
+MeltR performs the following data preprocessing steps before fitting:
 
-1.) RNA and DNA extinction coefficients are calculated from the sequence using the data from (Methods in Enzymology, 1989; Vol. 180, pp 304-325).
-
+1.) RNA and DNA extinction coefficients are calculated from the sequence using the data from. 
 2.) The background absorbance of a user specified blank is scaled to the pathlength of the cuvette and subtracted from each curve.
 
 3.) The total strand concentration (Ct) is calculated at a user specified temperature (Default = 90 degC).
@@ -973,4 +970,10 @@ Number of iterations to convergence: 2
 Achieved convergence tolerance: 0.0002484
 ```
 
-# References
+# 5 References
+
+[1] Biochemistry 1996, 35 (45), 14077–14089.
+[2] Methods in Enzymology, 1989; Vol. 180, pp 304-325.
+[3] Biochemistry 1998, 37 (42), 14719–14735.
+
+
