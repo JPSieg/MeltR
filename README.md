@@ -61,50 +61,50 @@ MeltR performs the following data preprocessing steps before fitting:
 
 1.) The fluorophore labeled strand concentration is optomized using the concentration optimization algorithm, described in more detail in section 3.1.3.
 
-2.) The Tm of each sample is estimated using the first derivative of fluorescence emission as a function of temperature. First derivatives are calculated using polynomial regression. The data are fit too a 20th order polynomial to aproximate the data. Then, the first derivative of the polynomial are recorded using calculus. The approximate Tm (where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve to a precision of less than 0.1 degC. These Tms are unreliable because fluorecence baselines vary wildly with temperature. However, Tms are useful for qualitative comparison of stability between conditions.  
+2.) The T<sub>m</sub> of each sample is estimated using the first derivative of fluorescence emission as a function of temperature. First derivatives are calculated using polynomial regression, where the data are approximated with a 20th order polynomial. Then, the analytical first derivative of the polynomial was determined using calculus. The approximate T<sub>m</sub> (where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve to a precision of less than 0.1 degC. This T<sub>m</sub> is unreliable because fluorecence baselines vary wildly with temperature. However, the T<sub>m</sub> is useful for qualitative comparison of stability between conditions.  
 
-2.) Isotherms are fit to equation x to determine Kd and error in the Kd at each temperature using nls in base R. Initial values for Fmax, Fmin, and Kd are provided by the user. 
+2.) Isotherms are fit to Equation 5 to determine K<sub>D</sub> and error in the K<sub>D</sub> at each temperature using "nls" in base R. Initial values for F<sub>max</sub> and F<sub>min</sub> are estimated by taking the mean of the 20% highest readings in each isotherm and the 20% lowest readings respecyively. Initial values for the K<sub>D</sub> are provided by the user. 
 
-3.) Kds are filtered by Kd magnitude and error according to the users specifications to determine which isotherms are most reliable. First, Kds outside of a user specified range (1 to 250 nM by default) are thrown out. Second, Kds are ranked by the error in the Kd. Kds that are below a user specified error quantile are thrown out. The default Kd error quantile file is 0.25, meaning the algorithem with keep the to 25% most accurate Kds.  
+3.) K<sub>D</sub>s are filtered by K<sub>D</sub> magnitude and error according to the users specifications to determine which isotherms are most reliable. First, K<sub>D</sub>s outside of a user specified range (10 to 1000 nM by default) are thrown out. Second, K<sub>D</sub>s are ranked by the error in the K<sub>D</sub>. K<sub>D</sub>s that are below a user specified error quantile are thrown out. The default K<sub>D</sub> error quantile file is 0.25, meaning the algorithem with keep the to 25% most accurate K<sub>D</sub>s.  
 
-4.) The most reliable Kds and temperatures are passed to Method 1 to make Van't Hoff plots.
+4.) The most reliable K<sub>D</sub>s and temperatures are passed to Method 1 to make Van't Hoff plots and to calculate helix formation energies.
 
-5.) Fluorescence data from the most reliable Kds and temperatures are passed to Method 2 for global fitting. 
+5.) Fluorescence data from the most reliable K<sub>D</sub>s and temperatures are passed to Method 2 for global fitting and to calculate helix formation energies. 
 
-### Concentration optimization algorithm.
+### 3.1.2 Concentration optimization algorithm.
 
-We have determined that the accuracy of fit results is highly dependent on errors in the concentration of fluorophore and quencher RNA strands in stock solutions. Fit accuracy is dependent on the mole ratio of fluorophore and quencher labeled RNA in stock solutions, but not dependent on the total magnitude of both fluorophore and quencher labeled RNA concentrations in the stocks. Thus, the concentration optimization algorithm in MeltR does not need to find exact concentrations, just the mole ratio (R) of fluorophore and quencher labeled RNA in samples that should have equal concentrations of fluorophore and quencher, for example 200 nM FAM-RNA and 200 nM RNA-BHQ1.
+We have determined that the accuracy of fit results is highly dependent on errors in the predicted concentration of fluorophore and quencher RNA strands in stock solutions. Fit accuracy is dependent on the mole ratio of fluorophore and quencher labeled RNA in stock solutions, but not dependent on the total magnitude of both fluorophore and quencher labeled RNA concentrations in the stocks. Thus, the concentration optimization algorithm in MeltR does not need to find exact concentration to generate accurate helix formation energis, just the mole ratio (R) of fluorophore and quencher labeled RNA in samples that should have equal concentrations of fluorophore and quencher, for example predicted 200 nM FAM-RNA and 200 nM RNA-BHQ1.
 
-MeltR uses a fluorecence binding isotherm from a temperature where the Kd is more than 10 times less than the fluorophore labeled strand concentration, where binding to the quencher strand is over-determined. Under these conditions, the shape of the curve will be independent of the Kd, and the isotherm can be used as a Job plot. For example, at a 200 nM fluorophore labeled strand concentration, the shape of the binding curve will be indendent of Kd if the Kd is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straint lines. The first line, where [A]T > [B]T, will decrease as the [B]T is increased and the fluorophore labeled strand is saturated. The second line, where [A]T < [B]T, will be constant as the [B]T is increased because the fluorphore labeled strand is saturated. The intersection of the first and second line will occure at:
+MeltR uses a fluorecence binding isotherm from a temperature where the K<sub>D</sub> is more than 10 times less than the fluorophore labeled strand concentration. Under these conditions, the shape of the curve will be independent of the K<sub>D</sub> , and the isotherm can be used as a Job plot. For example, at a 200 nM fluorophore labeled strand concentration, the shape of the binding curve will be indendent of K<sub>D</sub>  if the K<sub>D</sub>  is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straint lines. The first line, where [A]<sub>T</sub> > [B]<sub>T</sub>, will decrease as the [B]<sub>T</sub> is increased and the fluorophore labeled strand is saturated. The second line, where [A]<sub>T</sub> < [B]T<sub>T</sub>, will be horizontal as the [B]<sub>T</sub> is increased because the fluorphore labeled strand is saturated. The intersection of the first and second line will occure at:
+
+<img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T} = [B]_{T}  \qquad (7)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = [B]_{T} \qquad (7)}#gh-dark-mode-only">
 
 ![Job_plot](https://user-images.githubusercontent.com/63312483/165352390-3e58a2df-1920-4cb4-9805-dee99d67eb6a.svg)
 
 ### Figure 1 Concentration optimization algorithm
 
-<img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T} = [B]_{T}  \qquad (1)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = [B]_{T} \qquad (1)}#gh-dark-mode-only">
+The absolute concentration of [A]<sub>T</sub> and [B]<sub>T</sub> cannot be known with precicion. However, the mole ratio of the error (X) in the fluorophore and quencher stocks can be estimated from this data point at equation 8.
 
-The absolute concentration of [A]T and [B]T cannot be known with precicion. However, the mole ratio of the error (R) in the fluorophore and quencher stocks can be estimated from this data point at equation x.
+<img src= "https://render.githubusercontent.com/render/math?math={ \frac{[A]_{T-estimated}}{X} = [B]_{T}  \qquad (8)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  \frac{[A]_{T-estimated}}{R} = [B]_{T} \qquad (8)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={ \frac{[A]_{T-estimated}}{R} = [B]_{T}  \qquad (1)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}  \frac{[A]_{T-estimated}}{R} = [B]_{T} \qquad (1)}#gh-dark-mode-only">
+Where [A]<sub>T-estimated</sub> is the estimated total A concentration, or the predicted concentration based on of the stock, and X is given by Equation 9 based on the actual concentration determined from the experiment.
 
-Where [A]T-estimated is the estimated total A concentration, or what it should be based on the concentration of the stock, and R is given by equation x.
+<img src= "https://render.githubusercontent.com/render/math?math={ X = \frac{[A]_{T}}{[B]_{T}}  \qquad (9)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  X = \frac{[A]_{T}}{[B]_{T}} \qquad (9)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={ R = \frac{[B]_{T}}{[A]_{T-estimated}}  \qquad (1)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}  R = \frac{[B]_{T}}{[A]_{T-estimated}} \qquad (1)}#gh-dark-mode-only">
+MeltR fits an overdetermined isotherm to a binding curve (selected by the user but by default the isotherm collected at the lowest temperature) to a modified version of Equation 5 to determine X (Figure 1 B).
 
-MeltR fits an overdetermined isotherm to a binding curve (selected by the user but by default the isotherm collected at the lowest temperature) to a modified version of Equation x to determine R (Figure 1 B).
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}%2b[B]_{T}X) - \sqrt{{(K_{D}%2b[A]_{T-estimated}%2bB]_{T}X)}^2 - 4[A]_{T-estimated}[B]_{T}X}}{2[A]_{T-estimated}}  \qquad (10)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}%2b[B]_{T}X) - \sqrt{{(K_{D}%2b[A]_{T-estimated}%2bB]_{T}X)}^2 - 4[A]_{T-estimated}[B]_{T}X}}{2[A]_{T-estimated}}  \qquad (10)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A]_{T-estimated}%2bB]_{T}R)}^2 - 4[A]_{T-estimated}[B]_{T}R}}{2[A]_{T-estimated}}  }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}%2b[B]_{T}R) - \sqrt{{(K_{D}%2b[A]_{T-estimated}%2bB]_{T}R)}^2 - 4[A]_{T-estimated}[B]_{T}R}}{2[A]_{T-estimated}}  \qquad (1)}#gh-dark-mode-only">
+By default, the fit to determine X allows R and K<sub>D</sub> to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several K<sub>D</sub> that are more than 10 times less than the fluorophore labeled strand concentrations. They should then inspect the R from several iterations of the optimization algorithm set to different "low_K" values to make sure it is similar to the iteration that allows the K<sub>D</sub> to float.
 
-By default, the fit to determine R allows R and KD to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several KDs that are more than 10 times less than the fluorophore labeled strand concentrations. They should then inspect the R from several iterations of the optimization algorithm set to different values to make sure it is similar to the iteration that allows the Kd to float.
+[A]<sub>T</sub> is then corrected with Equation 11.
 
-[A]T is then corrected with Equation x.
-
-<img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T}  = \frac{[A]_{T-estimated}}{R}  \qquad (1)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = \frac{[A]_{T-estimated}}{R} \qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T}  = \frac{[A]_{T-estimated}}{R}  \qquad (11)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = \frac{[A]_{T-estimated}}{R} \qquad (11)}#gh-dark-mode-only">
 
 ### Method 1 Van't Hoff plot
 
