@@ -40,7 +40,7 @@ F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>)  is a function controled expe
 
 F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>) can be determined by solving the K<sub>D</sub> expression to obtain:
 
-<img src= "https://render.githubusercontent.com/render/math?math={F(K_{D}, [A]_{T}, [B]_{T})  = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} qquad (4) }#gh-light-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={F(K_{D}, [A]_{T}, [B]_{T})  = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (4) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white} F(Kd, [A]T, [B]T) = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (4)}#gh-dark-mode-only">
 
 Thus, the K<sub>D</sub> at each temperature was determined by fitting isotherms at each temperature to equation 5, obtained by plugging equation 4 into equation 1.
