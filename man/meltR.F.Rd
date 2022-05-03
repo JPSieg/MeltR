@@ -9,6 +9,7 @@ meltR.F(
   Kd_error_quantile = 0.25,
   Kd_range = c(10, 1000),
   Start_K = 0.1,
+  vh_start = list(H = -70, S = -0.18),
   Optimize_conc = TRUE,
   Low_reading = "auto",
   low_K = FALSE,
@@ -27,6 +28,8 @@ meltR.F(
 \item{Kd_range}{A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom Kd_range or c(start, end) to set a Kd_range. Example: "Kd_range = c(5, 100)"}
 
 \item{Start_K}{A Kd value to start non-linear regression. Default = 0.1.}
+
+\item{vh_start}{A list of initial guesses for the helix folding enthalpy and entropy. By default vh_start = list(H = -70, S = -0.180)}
 
 \item{Optimize_conc}{Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the concentration for the fluorophore labeled strand based on the shape of low temperature isotherms.}
 

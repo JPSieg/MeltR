@@ -8,7 +8,7 @@ Automated fitting of RNA/DNA absorbance melting curves and fluorescence binding 
 
 MeltR is a R package that fits nucleic acid folding data to molecular models to obtain thermodynamic parameters. MeltR automates the trivial but time-consuming tasks associated with fitting nucleic acids thermodenaturation data, leading to facile conversion of raw data into useful thermodynamic parameters.
 
-MeltR was inspired by Meltwin.<sup>[1]</sup> MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R consol, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
+MeltR was inspired by Meltwin.<sup>[1]</sup> MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R console, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
 
 The core of MeltR is the “meltR.A” function for fitting absorbance melting curves and the “meltR.F” function for fitting fluorescence binding isotherms.
 
@@ -23,17 +23,17 @@ devtools::install_github("JPSieg/MeltR")
 
 ## 3.1 Fitting fluorescence isotherms
 
-MeltR can obtains thermodynamic parameters from fluorescence binding isotherms for heteroduplex DNA and RNA using the non-linear regression function in base R, "nls". In this strategy, a quencher labeled strand is titrated, at about 1 to 1000 nM concentrations, into different wells in a qPCR plate containing a constant concentration of fluorophore labeled strand. The fluorophore labeled strand binds to the quencher labeled strand, reducing the fluorescence emmission (E) and resulting in an apparant fluorescence binding isotherm, where the shape of the curve is determined by Equation 1.
+MeltR can obtains thermodynamic parameters from fluorescence binding isotherms for heteroduplex DNA and RNA using the non-linear regression function in base R, "nls". In this strategy, a quencher labeled strand is titrated into different wells in a qPCR plate containing a constant concentration of fluorophore labeled strand. The fluorophore labeled strand binds to the quencher labeled strand, reducing the fluorescence emission (E) and resulting in an apparent fluorescence binding isotherm, where the shape of the curve is determined by Equation 1.
 
 <img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*F(K_{D}, [A]_{T}, [B]_{T}) \qquad (1)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_max)*F(K_{D}, [A]_{T}, [B]_{T}) \qquad (1)}#gh-dark-mode-only">
 
-Where Fmax is the fluorescence emission of unbound fluorophore labeled strand (A), Fmin is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>) is the mole fraction of the bound fluorophore labeled strand to the total fluorophore labeled strand. 
+Where Fmax is the fluorescence emission of unbound fluorophore labeled strand (A), Fmin is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>) is the mole fraction of the bound fluorophore labeled strand (AB) to the total fluorophore labeled strand. 
 
 <img src= "https://render.githubusercontent.com/render/math?math={ F(K_{D}, [A]_{T}, [B]_{T}) = \frac{[AB]}{[A]_{T}} \qquad (2) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white} F(K_{D}, [A]_{T}, [B]_{T}) = \frac{[AB]}{[A]_{T}} \qquad (2) }#gh-dark-mode-only">
 
-F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>)  is a function controled experimental variables, the total fluorophore labled strandd ([A]<sub>T</sub>) and the total quenceher labeled strand ([B]<sub>T</sub>), and the K<sub>D</sub> is given by the the expression:
+F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>)  is a function controlled experimental variables, the total fluorophore labeled strand ([A]<sub>T</sub>) and the total quenceher labeled strand ([B]<sub>T</sub>), and the K<sub>D</sub> is given by the the expression:
 
 <img src= "https://render.githubusercontent.com/render/math?math={K_{D} = \frac{[A][B]}{[AB]} \qquad (3) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white} K_{D} = \frac{[A][B]}{[AB]} \qquad (3)}#gh-dark-mode-only">
@@ -43,29 +43,29 @@ F(K<sub>D</sub>, [A]<sub>T</sub>, [B]<sub>T</sub>) can be determined by solving 
 <img src= "https://render.githubusercontent.com/render/math?math={F(K_{D}, [A]_{T}, [B]_{T})  = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (4) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white} F(Kd, [A]T, [B]T) = \frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (4)}#gh-dark-mode-only">
 
-Thus, the K<sub>D</sub> at each temperature was determined by fitting isotherms at each temperature to equation 5, obtained by plugging Equation 4 into Equation 1.
+Thus, the K<sub>D</sub> at each temperature was determined by fitting isotherms at each temperature to Equation 5, obtained by plugging Equation 4 into Equation 1.
 
 <img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (5) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})\frac{(K_{D}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(K_{D}%2b[A]_{T}%2b[B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (5)}#gh-dark-mode-only">
 
-Thermodynamic parameters for helix formation were extracted by the Van't hoff relationship (Equation 6) between the K<sub>D</sub> the temperature using the two methods described below.
+Thermodynamic parameters for helix formation were extracted by the Van't Hoff relationship (Equation 6) between the K<sub>D</sub> the temperature using the two methods described below.
 
 <img src= "https://render.githubusercontent.com/render/math?math={ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} \qquad (6) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} \qquad (6)}#gh-dark-mode-only">
 
-For a single experiment, all samples should be diluted from the same fluorophore and quencher stocks, so that MeltR can deal with systematic uncertainty in strand concentrations. 
+The dS is the entropy of helix formation, the dH is enthalpy of helix formation, R is the gas constant, and T is the temperature in Kelvin. For a single experiment, all samples should be diluted from the same fluorophore and quencher stocks, so that MeltR can deal with systematic uncertainty in strand concentrations. 
 
 ### 3.1.1 Fluorescence data preprocessing
 
 MeltR performs the following data preprocessing steps before fitting:
 
-1.) The fluorophore labeled strand concentration is optomized using the concentration optimization algorithm, described in more detail in section 3.1.3.
+1.) The fluorophore labeled strand concentration is optimized using the concentration optimization algorithm, described in more detail in section 3.1.3.
 
 2.) The T<sub>m</sub> of each sample is estimated using the first derivative of fluorescence emission as a function of temperature. First derivatives are calculated using polynomial regression, where the data are approximated with a 20th order polynomial. Then, the analytical first derivative of the polynomial was determined using calculus. The approximate T<sub>m</sub> (where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve to a precision of less than 0.1 <span>&#176;</span>C. This T<sub>m</sub> is unreliable because fluorecence baselines vary wildly with temperature. However, the T<sub>m</sub> is useful for qualitative comparison of stability between conditions.  
 
-2.) Isotherms are fit to Equation 5 to determine K<sub>D</sub> and error in the K<sub>D</sub> at each temperature using "nls" in base R. Initial values for F<sub>max</sub> and F<sub>min</sub> are estimated by taking the mean of the 20% highest readings in each isotherm and the 20% lowest readings respecyively. Initial values for the K<sub>D</sub> are provided by the user. 
+2.) Isotherms are fit to Equation 5 to determine K<sub>D</sub> and error in the K<sub>D</sub> at each temperature using "nls" in base R. Initial values for F<sub>max</sub> and F<sub>min</sub> are estimated by taking the mean of the 20% highest readings in each isotherm and the 20% lowest readings respectively. Initial values for the K<sub>D</sub> are provided by the user, by default 0.1 nM. 
 
-3.) K<sub>D</sub>s are filtered by K<sub>D</sub> magnitude and error according to the users specifications to determine which isotherms are most reliable. First, K<sub>D</sub>s outside of a user specified range (10 to 1000 nM by default) are thrown out. Second, K<sub>D</sub>s are ranked by the error in the K<sub>D</sub>. K<sub>D</sub>s that are below a user specified error quantile are thrown out. The default K<sub>D</sub> error quantile file is 0.25, meaning the algorithem with keep the to 25% most accurate K<sub>D</sub>s.  
+3.) K<sub>D</sub>s are filtered by magnitude and error according to the users specifications to determine which isotherms are most reliable. First, K<sub>D</sub>s outside of a user specified range (10 to 1000 nM by default) are thrown out. Second, K<sub>D</sub>s are ranked by the error in the K<sub>D</sub>. K<sub>D</sub>s that are below a user specified error quantile are thrown out. The default K<sub>D</sub> error quantile file is 0.25, meaning the algorithm will keep the to 25% most accurate K<sub>D</sub>s.  
 
 4.) The most reliable K<sub>D</sub>s and temperatures are passed to Method 1 to make Van't Hoff plots and to calculate helix formation energies.
 
@@ -73,16 +73,16 @@ MeltR performs the following data preprocessing steps before fitting:
 
 ### 3.1.2 Concentration optimization algorithm.
 
-We have determined that the accuracy of fit results is highly dependent on errors in the predicted concentration of fluorophore and quencher RNA strands in stock solutions. Fit accuracy is dependent on the mole ratio of fluorophore and quencher labeled RNA in stock solutions, but not dependent on the total magnitude of both fluorophore and quencher labeled RNA concentrations in the stocks. Thus, the concentration optimization algorithm in MeltR does not need to find exact concentration to generate accurate helix formation energis, just the mole ratio (R) of fluorophore and quencher labeled RNA in samples that should have equal concentrations of fluorophore and quencher, for example predicted 200 nM FAM-RNA and 200 nM RNA-BHQ1.
+We have determined that the accuracy of fit results is highly dependent on errors in the predicted concentration of fluorophore and quencher RNA strands in stock solutions. Fit accuracy is dependent on the mole ratio of fluorophore and quencher labeled RNA in stock solutions, but not dependent on the total magnitude of both fluorophore and quencher labeled RNA concentrations in the stocks. Thus, the concentration optimization algorithm in MeltR does not need to find exact concentration to generate accurate helix formation energies, just the mole ratio (R) of fluorophore and quencher labeled RNA in samples that should have equal concentrations of fluorophore and quencher, for example predicted 200 nM FAM-RNA and 200 nM RNA-BHQ1.
 
-MeltR uses a fluorecence binding isotherm from a temperature where the K<sub>D</sub> is more than 10 times less than the fluorophore labeled strand concentration. Under these conditions, the shape of the curve will be independent of the K<sub>D</sub> , and the isotherm can be used as a Job plot. For example, at a 200 nM fluorophore labeled strand concentration, the shape of the binding curve will be indendent of K<sub>D</sub>  if the K<sub>D</sub>  is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straint lines. The first line, where [A]<sub>T</sub> > [B]<sub>T</sub>, will decrease as the [B]<sub>T</sub> is increased and the fluorophore labeled strand is saturated. The second line, where [A]<sub>T</sub> < [B]T<sub>T</sub>, will be horizontal as the [B]<sub>T</sub> is increased because the fluorphore labeled strand is saturated. The intersection of the first and second line will occure at:
+MeltR uses a fluorescence binding isotherm from a temperature where the K<sub>D</sub> is more than 10 times less than the fluorophore labeled strand concentration. Under these conditions, the shape of the curve will be independent of the K<sub>D</sub> , and the isotherm can be used as a Job plot. For example, at a 200 nM predicted fluorophore labeled strand concentration, the shape of the binding curve will be independent of K<sub>D</sub>  if the K<sub>D</sub>  is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straight lines. The first line, where [A]<sub>T</sub> > [B]<sub>T</sub>, will decrease as the [B]<sub>T</sub> is increased and the fluorophore labeled strand is saturated. The second line, where [A]<sub>T</sub> < [B]T<sub>T</sub>, will be horizontal as the [B]<sub>T</sub> is increased because the fluorophore labeled strand is saturated. The intersection of the first and second line will occur at:
 
 <img src= "https://render.githubusercontent.com/render/math?math={ [A]_{T} = [B]_{T}  \qquad (7)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white} [A]_{T} = [B]_{T} \qquad (7)}#gh-dark-mode-only">
 
-![Job_plot](https://user-images.githubusercontent.com/63312483/166313141-e3592b45-6b69-4791-940b-c05d9bc8dc12.svg)
+![Job plot used by the concentration algorithm. Data are modeled with a KD of 0.1 nM and a FAM-RNA strand concentration of 250 nM. (A) Isotherms resemble a job plot, where the intersection of Line 1 and Line 2 can be used to determine X. (B) The same modeled data with the concentration algorithm starting at X = 1 and ending at X = 0.8.](https://user-images.githubusercontent.com/63312483/166313141-e3592b45-6b69-4791-940b-c05d9bc8dc12.svg)
 
-The absolute concentration of [A]<sub>T</sub> and [B]<sub>T</sub> cannot be known with precicion. However, the mole ratio of the error (X) in the fluorophore and quencher stocks can be estimated from this data point at equation 8.
+The absolute concentration of [A]<sub>T</sub> and [B]<sub>T</sub> cannot be known with precicion. However, the mole ratio of the error (X) in the fluorophore and quencher stocks can be estimated from this data point at Equation 8.
 
 <img src= "https://render.githubusercontent.com/render/math?math={ \frac{[A]_{T-estimated}}{X} = [B]_{T}  \qquad (8)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}  \frac{[A]_{T-estimated}}{R} = [B]_{T} \qquad (8)}#gh-dark-mode-only">
@@ -97,7 +97,7 @@ MeltR fits an overdetermined isotherm to a binding curve (selected by the user b
 <img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}%2b[B]_{T}X) - \sqrt{{(K_{D}%2b[A]_{T-estimated}%2bB]_{T}X)}^2 - 4[A]_{T-estimated}[B]_{T}X}}{2[A]_{T-estimated}}  \qquad (10)}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(K_{D}%2b[A]_{T-estimated}%2b[B]_{T}X) - \sqrt{{(K_{D}%2b[A]_{T-estimated}%2bB]_{T}X)}^2 - 4[A]_{T-estimated}[B]_{T}X}}{2[A]_{T-estimated}}  \qquad (10)}#gh-dark-mode-only">
 
-By default, the fit to determine X allows R and K<sub>D</sub> to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several K<sub>D</sub> that are more than 10 times less than the fluorophore labeled strand concentrations. They should then inspect the R from several iterations of the optimization algorithm set to different "low_K" values to make sure it is similar to the iteration that allows the K<sub>D</sub> to float.
+By default, the fit to determine X allows R and K<sub>D</sub> to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several K<sub>D</sub> that are more than 10 times less than the fluorophore labeled strand concentrations, as described in Section 4.1.3. The user should then inspect the X from several iterations of the optimization algorithm set to different "low_K" values to make sure it is similar to the iteration that allows the K<sub>D</sub> to float.
 
 [A]<sub>T</sub> is then corrected with Equation 11.
 
@@ -106,25 +106,28 @@ By default, the fit to determine X allows R and K<sub>D</sub> to float. The user
 
 ### 3.1.3 Method 1 Van't Hoff plot
 
-Method 1 fits K<sub>D</sub>s that were passed from the preprocessing steps to Equation 6. Initial estimates for the dH and dS of helix formation are provided by the user in kcal as a list using the "vh_start" argument. The default is -70 kcal/mol and 0.180 kcal/mol/K for the enthalpy and entropy respectively, and will work for most helices. The free energy of helix formation at 37 <span>&#176;</span>C (dG) was calculated from the dH and dS values provided by the fit.
+Method 1 fits K<sub>D</sub>s that were passed from the preprocessing steps to Equation 6. Initial estimates for the dH and dS of helix formation are provided by the user in kcal as a list using the "vh_start" argument. The default is -70 kcal/mol and 0.180 kcal/mol/K for the enthalpy and entropy respectively, and will work for most helices. The free energy of helix formation at 37 <span>&#176;</span>C (dG) was calculated from the dH and dS values provided by the fit (Equation 12).
 
-The standard error of the dG was propagated from the standartd error of dH and the dS from the fit, and the covariation between the two values.
+<img src= "https://render.githubusercontent.com/render/math?math={ dG = dH - 310.15*dS \qquad (12) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} dG = dH - 310.15*dS  \qquad (12) }#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (12) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}  \qquad (12) }#gh-dark-mode-only">
+The standard error of the dG was propagated from the standard error of dH and the dS from the fit, and the covariation between the two values.
+
+<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (13) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 %2b 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}  \qquad (13) }#gh-dark-mode-only">
 
 Helix formation energies are traditionally reported in terms of the association constant.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ K = \frac{[AB]}{[A][B]} = 1/K_{D} \qquad (13) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} K = \frac{[AB]}{[A][B]} = 1/K_{D} \qquad (13) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ K = \frac{[AB]}{[A][B]} = 1/K_{D} \qquad (14) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} K = \frac{[AB]}{[A][B]} = 1/K_{D} \qquad (14) }#gh-dark-mode-only">
 
-Thus, dHs and dSs reported by MeltR are also reported in terms of the association constant, which is obtained by multiplying helix formation energies from fitting K<sub>D</sub> by negative one. 
+The dHs and dSs reported by MeltR are also reported in terms of the association constant, which is obtained by multiplying helix formation energies from fitting K<sub>D</sub> by negative one. 
 
 ### 3.1.4 Method 2 Global fit
 
-Method 2 globally fits fluorescence data that were passed from the preprocessing to equation x, obtained by plugging equation y into equation z. Fmax and Fmin was allowed to float between temperatures and dH and dS were constant. Starting values for F<sub>max</sub>, F<sub>min</sub>, dH, and dS are obtained from the results for individual fits. 
+Method 2 globally fits fluorescence data that were passed from the preprocessing to Equation 15, obtained by plugging Equation 6 into Equation 5. F<sub>max</sub> and F<sub>min</sub> is allowed to float between temperatures and dH and dS are fixed between temperatures. Starting values for F<sub>max</sub>, F<sub>min</sub>, dH, and dS are obtained from the results for individual fits. 
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (14) }#gh-light-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (15) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (14)}#gh-dark-mode-only">
 
 The dG and the error in the dG were calculated as in method 1.
@@ -137,7 +140,7 @@ MeltR can obtain thermodynamic parameters from absorbance melting curves for het
 
 MeltR performs the following data preprocessing steps before fitting:
 
-1.) RNA and DNA extinction coefficients are calculated from the sequence using the data from Tinoco and colleagues.<sup>[2]</sup>
+1.) RNA and DNA extinction coefficients are calculated from the sequence using the extinction coefficient data from Tinoco and colleagues.<sup>[2]</sup>
 
 2.) The background absorbance of a user specified blank is scaled to the pathlength of the cuvette and subtracted from each curve.
 
@@ -145,20 +148,20 @@ MeltR performs the following data preprocessing steps before fitting:
 
 4.) High and low temperature data are trimmed (to the users specification) to ensure linear baselines.
 
-5.) First and second derivatives are taken using polynomial regression. First, the data are approximated using a 20th order polynomial. Then, the first and second derivatives of the polynomial are determined analystically using calculus. The approximate T<sub>0.5</sub> (the approximate melting temperature T<sub>m</sub> where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve and the T<sub>0.75</sub> (the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the first derivative (Figure 2), to a precision of less than 0.1 <span>&#176;</span>C.
+5.) First and second derivatives are taken using polynomial regression. First, the data are approximated using a 20th order polynomial. Then, the first and second derivatives of the polynomial are determined analytically using calculus. The approximate T<sub>0.5</sub> (the approximate melting temperature T<sub>m</sub> where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve and the T<sub>0.75</sub> (the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the first derivative (Figure 2), to a precision of less than 0.1 <span>&#176;</span>C.
 
-![Melt_curve_derivative](https://user-images.githubusercontent.com/63312483/166296578-341d3aac-05a9-4176-9a72-0831dc0487cf.svg)
+![Melt curve derivative determined with polynomial regression.](https://user-images.githubusercontent.com/63312483/166296578-341d3aac-05a9-4176-9a72-0831dc0487cf.svg)
 
-6.) Initial parameter estimates are calculated for each curve. The initial values for slopes and intercepts of the baselines are estimated by fitting absorbance values that are greater than the 75th quantile for the uper baselines, and fitting aborbance values that are lower than the 25th quantile for the lower baseline, to y = mx + b. Initial values for the enthalpy are determined using the T<sub>0.5</sub> and T<sub>0.75</sub> (in Kelvin) from first and second derivative curves. MeltR uses equation 15, equation 16, and equation 17, for heteroduplex, homoduplex, and monomolecular self-structured DNA and RNA melting curves.   
+6.) Initial parameter estimates are calculated for each curve. The initial values for slopes and intercepts of the baselines are estimated by fitting absorbance values that are greater than the 75th quantile for the uper baselines, and fitting aborbance values that are lower than the 25th quantile for the lower baseline, to y = mx + b. Initial values for the enthalpy are determined using the T<sub>0.5</sub> and T<sub>0.75</sub> (in Kelvin) from first and second derivative curves. MeltR uses equation 16, equation 17, and equation 18, for heteroduplex, homoduplex, and monomolecular self-structured DNA and RNA melting curves.   
 
-<img src= "https://render.githubusercontent.com/render/math?math={ dH = -0.007*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (15)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} dH = -0.007*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (15)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ dH = -0.007*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (16)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} dH = -0.007*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (16)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={dH = -0.0044*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (16)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}dH = -0.0044*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (16)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={dH = -0.0044*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (17)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}dH = -0.0044*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (17)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={dH = -0.0032*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (17)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}dH = -0.0032*(\frac{1}{T0.5} - \frac{1}{T0.75})\qquad (17)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={dH = -0.0032*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (18)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}dH = -0.0032*(\frac{1}{T0.5} - \frac{1}{T0.75})\qquad (18)}#gh-dark-mode-only">
 
 The initial T<sub>m</sub} is estimated from the T<sub>0.5</sub>, determined in step 5.
 
@@ -166,138 +169,138 @@ The initial T<sub>m</sub} is estimated from the T<sub>0.5</sub>, determined in s
 
 Thermo-dynamic parameters for helix formation are obtained using a Van't Hoff model:
 
-<img src= "https://render.githubusercontent.com/render/math?math={lnK = \frac{dS}{R} - \frac{dH}{RT}\qquad (18)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}lnK = \frac{dS}{R} - \frac{dH}{RT}\qquad (18)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={lnK = \frac{dS}{R} - \frac{dH}{RT}\qquad (19)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}lnK = \frac{dS}{R} - \frac{dH}{RT}\qquad (19)}#gh-dark-mode-only">
 
-where dS is the entropy change, dH is the enthalpy change, R is the gas constant in kcal/mol, T is the temperature in Kelvin, and K is the equillibrium constant given by Equation 19, Equation 20, and Equation 21 for heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively.
+where dS is the entropy change, dH is the enthalpy change, R is the gas constant in kcal/mol, T is the temperature in Kelvin, and K is the equillibrium constant given by Equation 20, Equation 21, and Equation 22 for heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively.
 
-<img src= "https://render.githubusercontent.com/render/math?math={K = \frac{[AB]}{[A][B]} \qquad (19)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}K = \frac{[AB]}{[A][B]} \qquad (19)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={K = \frac{[AB]}{[A][B]} \qquad (20)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}K = \frac{[AB]}{[A][B]} \qquad (20)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={K = \frac{[AA]}{[A]^2} \qquad (20)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}K = \frac{[AB]}{[A]^2} \qquad (20)}\qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={K = \frac{[AA]}{[A]^2} \qquad (21)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}K = \frac{[AB]}{[A]^2} \qquad (20)}\qquad (21)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={K = \frac{[F]}{[U]}\qquad (21)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} K = \frac{[F]}{[U]} \qquad (21) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={K = \frac{[F]}{[U]}\qquad (22)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} K = \frac{[F]}{[U]} \qquad (22) }#gh-dark-mode-only">
 
-For Equation 19 and Equation 20, [A] and [B] are the concentration of different strands, [AB] is the concentration of strand A in a duplex with strand B, and [AA] is the concentration of a self complementary strand A in a duplex with another self complementary strand A. For Equation 21, [F] is the concentration of a monomolecular self-structured RNA in the folded state and [U] is the concentration of a monomolecular sel-structured RNA in the unfolded state.
+For Equation 20 and Equation 21, [A] and [B] are the concentration of different strands, [AB] is the concentration of strand A in a duplex with strand B, and [AA] is the concentration of a self complementary strand A in a duplex with another self complementary strand A. For Equation 22, [F] is the concentration of a monomolecular self-structured RNA in the folded state and [U] is the concentration of a monomolecular self-structured RNA in the unfolded state.
 
 MeltR uses three methods based on the Van't Hoff equation to calculate thermodynamic parameters: (1) fitting melting curves individually, (2) fitting the thermodenaturation point as a function of temperature, and (3) Global fitting melting curves.
 
 #### 3.2.3 Method 1 fitting melting curves individually
 
-Method 1 fits the absorbtion as a function of temperature for each sample individually. Base lines are modeled as y= mx + b for the absorbance of the unfolded-single standed and folded-duplex states (Equation 22). 
+Method 1 fits the absorption as a function of temperature for each sample individually. Base lines are modeled as y= mx + b for the absorbance of the unfolded-single stranded and folded-duplex states (Equation 23). 
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = mT %2b b\qquad (22)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = mT %2b b\qquad (22)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={A = mT %2b b\qquad (23)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}A = mT %2b b\qquad (23)}#gh-dark-mode-only">
 
-The absrorbtion of each sample as a function of temperature is also a function of the fraction of RNA in the folded-duplex state (DS), as a function of temperature f(T), given by Equation 23. SS represents the RNA in the single-stranded state.
+The absorption of each sample as a function of temperature is also a function of the fraction of RNA in the folded-duplex state (DS), as a function of temperature f(T), given by Equation 24. SS represents the RNA in the single-stranded state.
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})f(T) + (m_{SS}T %2b b_{SS})(1-f(T))\qquad (23)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})f(T) + (m_{SS}T %2b b_{SS})(1-f(T)) \qquad (23)}\qquad (23)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={A = (m_{DS}T %2b b_{DS})f(T) + (m_{SS}T %2b b_{SS})(1-f(T)) \qquad (24)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}A = (m_{DS}T %2b b_{DS})f(T) + (m_{SS}T %2b b_{SS})(1-f(T)) \qquad (24)}#gh-dark-mode-only">
 
-f(t) is variable, calculated by the analytic solution of the binding constant. MeltR uses Equation 24 for heteroduplexes, Equation 25 for homoduplexes, and Equation 26 monomolecular self-structured RNA.
+f(T) is variable, calculated by the analytic solution of the binding constant. MeltR uses Equation 25 for heteroduplexes, Equation 26 for homoduplexes, and Equation 27 monomolecular self-structured RNA.
 
-<img src= "https://render.githubusercontent.com/render/math?math={f(T) = \frac{\frac{2}{K(T)*Ct} %2b 2 - \sqrt{(\frac{2}{K(T)*Ct} %2b 2)^2 - 4}}{2} \qquad (24)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}f(T) = \frac{\frac{2}{K(T)*Ct} %2b 2 - \sqrt{(\frac{2}{K(T)*Ct} %2b 2)^2 - 4}}{2} \qquad (6)}\qquad (24)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={f(T) = \frac{\frac{2}{K(T)*Ct} %2b 2 - \sqrt{(\frac{2}{K(T)*Ct} %2b 2)^2 - 4}}{2} \qquad (25)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}f(T) = \frac{\frac{2}{K(T)*Ct} %2b 2 - \sqrt{(\frac{2}{K(T)*Ct} %2b 2)^2 - 4}}{2} \qquad (6)}\qquad (25)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={f(T) = \frac{\frac{1}{2*K(T)*Ct} %2b 2 - \sqrt{(\frac{1}{2*K(T)*Ct} %2b 2)^2 - 4}}{2} \qquad (25)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}f(T) = \frac{\frac{1}{2*K(T)*Ct} %2b 2 - \sqrt{(\frac{1}{2*K(T)*Ct} %2b 2)^2 - 4}}{2} \qquad (25)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={f(T) = \frac{\frac{1}{2*K(T)*Ct} %2b 2 - \sqrt{(\frac{1}{2*K(T)*Ct} %2b 2)^2 - 4}}{2} \qquad (26)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}f(T) = \frac{\frac{1}{2*K(T)*Ct} %2b 2 - \sqrt{(\frac{1}{2*K(T)*Ct} %2b 2)^2 - 4}}{2} \qquad (26)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={f(T) = \frac{K(T)}{1 %2b K(T)} \qquad (26)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}f(T) = \frac{K(T)}{1 %2b K(T)} \qquad (26)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={f(T) = \frac{K(T)}{1 %2b K(T)} \qquad (27)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}f(T) = \frac{K(T)}{1 %2b K(T)} \qquad (27)}#gh-dark-mode-only">
 
-Where C<sub>t</sub> is the total strand concentration. K(T) is the equillibrium constant as a function of temperature, given by Equation 27 for heteroduplexes, Equation 28 for homoduplexes, and Equation 29 for monomolecular self-structured RNA.
+Where C<sub>t</sub> is the total strand concentration. K(T) is the equilibrium constant as a function of temperature, given by Equation 28 for heteroduplexes, Equation 29 for homoduplexes, and Equation 30 for monomolecular self-structured RNA.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}\qquad (27) } #gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}\qquad (27) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}\qquad (28) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}\qquad (28) }#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))} \qquad (28)  }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))} \qquad (28) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))} \qquad (29)  }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))} \qquad (29) }#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))} \qquad (29) }#gh-light-mode-only">
-<img src= "https://render.githubusercontent.com/render/math?math={\color{white} K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))} \qquad (29) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))} \qquad (30) }#gh-light-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={\color{white} K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))} \qquad (30) }#gh-dark-mode-only">
 
-Note, K(T) has solved in terms of T<sub>m</sub> and C<sub>t</sub>, instead of the dS, to increase the ease of estimating initial parameters for non-linear regression and to increase the robustness of the nls algorithm. Briefly, the dS is replaced with T<sub>m</sub> and C<sub>t</t> by solving Equation 18 for the dS at the T<sub>m</sub>, where f(t) = 0.5.
+Note, K(T) is in terms of T<sub>m</sub> and C<sub>t</sub>, instead of the dS, to increase the ease of estimating initial parameters for non-linear regression and to increase the robustness of the nls algorithm. Briefly, the dS is replaced with T<sub>m</sub> and C<sub>t</sub> by solving Equation 19 for the dS at the T<sub>m</sub>, where f(T) = 0.5.
 
-Thus, method 1 fits absorbtion versus temperature for each sample to equations 30, 31, and 32 to determine thermodynamic prameters for heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively.
+Thus, method 1 fits absorbtion versus temperature for each sample to equations 31, 32, and 33 to determine thermodynamic prameters for heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively.
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2})\qquad (30)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2})\qquad (30)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2})\qquad (31)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{4}{Ct}))}*Ct} %2b 2)^2 - 4}}{2})\qquad (31)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2}) \qquad (31)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2}) \qquad (31) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2}) \qquad (32)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) %2b ln(\frac{1}{Ct}))}*Ct} %2b 2)^2 - 4}}{2}) \qquad (32) }#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 %2b \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 %2b \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}})\qquad (32)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 %2b \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 %2b \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}) \qquad (32) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 %2b \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 %2b \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}})\qquad (33)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 %2b \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 %2b \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}) \qquad (33) }#gh-dark-mode-only">
 
-Free energy at 37 degC (dG) is calculated from the dH and entropy (dS) of helix formation 
+Free energy at 37 <span>&#176;</span>C (dG) is calculated from the dH and entropy (dS) of helix formation 
 
-<img src= "https://render.githubusercontent.com/render/math?math={ dG = dS - 310.15*dS \qquad (33) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} dG = dS - 310.15*dS  \qquad (33) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ dG = dH - 310.15*dS \qquad (34) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} dG = dH - 310.15*dS  \qquad (34) }#gh-dark-mode-only">
 
 The dS of helix formation is calculated from the dH and the Tm.
 
 For heteroduplexes:
 
-<img src= "https://render.githubusercontent.com/render/math?math={ dS = \frac{dH}{Tm} %2b Rln(\frac{4}{Ct}) \qquad (34) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} dS = \frac{dH}{Tm} %2b Rln(\frac{4}{Ct}) \qquad (34) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ dS = \frac{dH}{Tm} %2b Rln(\frac{4}{Ct}) \qquad (35) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} dS = \frac{dH}{Tm} %2b Rln(\frac{4}{Ct}) \qquad (35) }#gh-dark-mode-only">
 
 For homoduplexes:
 
-<img src= "https://render.githubusercontent.com/render/math?math={ dS = \frac{dH}{Tm} %2b Rln(\frac{1}{Ct}) \qquad (35) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} dS = \frac{dH}{Tm} %2b Rln(\frac{1}{Ct}) \qquad (35) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ dS = \frac{dH}{Tm} %2b Rln(\frac{1}{Ct}) \qquad (36) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} dS = \frac{dH}{Tm} %2b Rln(\frac{1}{Ct}) \qquad (36) }#gh-dark-mode-only">
 
 For monomolecular self-structured RNA/DNA:
 
-<img src= "https://render.githubusercontent.com/render/math?math={ dS = \frac{dH}{Tm} \qquad (36) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} dS = \frac{dH}{Tm} \qquad (36) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ dS = \frac{dH}{Tm} \qquad (37) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} dS = \frac{dH}{Tm} \qquad (37) }#gh-dark-mode-only">
 
 Error in the dS and dG is calculated by propagating error in the fit terms dH and T<sub>m</sub>.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 %2b {(\frac{SE_{Tm}}{Tm})}^2 - 2\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (37) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 %2b {(\frac{SE_{Tm}}{Tm})}^2 - 2\frac{Covar_{dH, Tm}}{dH*Tm}}  \qquad (37) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 %2b {(\frac{SE_{Tm}}{Tm})}^2 - 2\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (38) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 %2b {(\frac{SE_{Tm}}{Tm})}^2 - 2\frac{Covar_{dH, Tm}}{dH*Tm}}  \qquad (38) }#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dH}}{dH})}^2 %2b {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (38) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dH}}{dH})}^2 %2b {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15\frac{Covar_{dH, Tm}}{dH*Tm}}  \qquad (38) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dH}}{dH})}^2 %2b {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (39) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dH}}{dH})}^2 %2b {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15\frac{Covar_{dH, Tm}}{dH*Tm}}  \qquad (39) }#gh-dark-mode-only">
 
 ### 3.2.4 Method 2 fitting the T<sub>m</sub> as a function of C<sub>t</sub>
 
-Method 2 fits the relationship between 1/T<sub>m</sub> and the total strand concentration C<sub>t</sub>. To avoid inaccuracies in T<sub>m</sub> determination from first derivative plots or covariation with the dH terms in method 1, T<sub>m</sub>s were determined for Method 2 using a semi-quantitative method. Slopes and intercepts from method 1 were used to calculate F(T) at each experimental temperature using the absorbance. 
+Method 2 fits the relationship between 1/T<sub>m</sub> and the total strand concentration C<sub>t</sub>. To avoid inaccuracies in T<sub>m</sub> determination from first derivative plots or covariation with the dH terms in method 1, T<sub>m</sub>s were determined for Method 2 using a semi-quantitative method. Slopes and intercepts from method 1 were used to calculate f(T) at each experimental temperature using the absorbance. 
 
-<img src= "https://render.githubusercontent.com/render/math?math={ F(T) = \frac{A -(m_{SS}T %2b b_{SS})}{(m_{DS}T %2b b_{DS}) %2b (m_{SS}T %2b b_{SS})}\qquad (39)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}F(T) = \frac{A -(m_{SS}T %2b b_{SS})}{(m_{DS}T %2b b_{DS}) %2b (m_{SS}T %2b b_{SS})}\qquad (39)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ f(T) = \frac{A -(m_{SS}T %2b b_{SS})}{(m_{DS}T %2b b_{DS}) %2b (m_{SS}T %2b b_{SS})}\qquad (40)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}F(T) = \frac{A -(m_{SS}T %2b b_{SS})}{(m_{DS}T %2b b_{DS}) %2b (m_{SS}T %2b b_{SS})}\qquad (40)}#gh-dark-mode-only">
 
-F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T <span>&#8712;</span> {0.4 to 0.6}) was fit with y = mT + b, and solved using y = 0.5 to accurately determine the melting temperature for each C<sub>t</sub>. To determine thermodynamic parameters, the relationship between 1/T<sub>m</sub> and the total strand concentration was then fit to Equations 40, and 41, for heteroduplexes and homoduplexes respectively. The T<sub>m</sub> of monomolecular, self-structured RNA is independent of C<sub>t</sub> so Method 2 cannot be used.
+F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T in {0.4 to 0.6}) was fit with y = mT + b, and solved using y = 0.5 to accurately determine the melting temperature for each C<sub>t</sub>. To determine thermodynamic parameters, the relationship between 1/T<sub>m</sub> and the total strand concentration was then fit to Equations 41, and 42, for heteroduplexes and homoduplexes respectively. The T<sub>m</sub> of monomolecular, self-structured RNA is independent of C<sub>t</sub> so Method 2 cannot be used.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} %2b \frac{dS}{dH} - R*ln(4) \qquad (40)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}  \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} %2b \frac{dS}{dH} - R*ln(4) \qquad (40) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} %2b \frac{dS}{dH} - R*ln(4) \qquad (41)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} %2b \frac{dS}{dH} - R*ln(4) \qquad (41) }#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={ \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} %2b \frac{dS}{dH}  \qquad (41)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} %2b \frac{dS}{dH}  \qquad (41)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} %2b \frac{dS}{dH}  \qquad (42)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} %2b \frac{dS}{dH}  \qquad (42)}#gh-dark-mode-only">
 
 Free energy at 37 <span>&#176;</span>C (dG) is calculated from the dH and entropy (dS) of helix formation directly from the fit.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ dG = dS - 310.15*dS \qquad (42) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white} dG = dS - 310.15*dS  \qquad (42) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ dG = dH - 310.15*dS \qquad (43) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white} dG = dH - 310.15*dS  \qquad (43) }#gh-dark-mode-only">
 
 Error in the dG is calculated by propagating error in the fit terms dH and dS.
 
-<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 - 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (43) }#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 - 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (43) }#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={ SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 - 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (44) }#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}  SE_{dG} = \sqrt{ {SE_{dH}}^2 %2b {(310.15*\frac{SE_{dS}}{dS})}^2 - 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (44) }#gh-dark-mode-only">
 
 ### 3.2.5 Method 3 Global fitting
 
-Method 3 fits all curves to Equations 44, 45, and 46, simultaneously in a global fit, for heteroduplexes, homoduplexes, and mono-molecular self-structured RNA/DNA respectively. In this global fit, Equations 30, 31, and 31, are rearranged to be in terms of the dS instead of the Tm. 
+Method 3 fits all curves to Equations 45, 46, and 47, simultaneously in a global fit, for heteroduplexes, homoduplexes, and mono-molecular self-structured RNA/DNA respectively. In this global fit, Equations 31, 32, and 33, are rearranged to be in terms of the dS instead of the Tm. 
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2})\qquad (44)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2}) \qquad (6)}\qquad (44)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2})\qquad (45)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2}) \qquad (6)}\qquad (45)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2})\qquad (45)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})})*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2}) \qquad (45)}\qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2})\qquad (46)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})})*Ct} %2b 2)^2 - 4}}{2} + (m_{SS}T %2b b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} %2b 2)^2 - 4}}{2}) \qquad (45)}\qquad (46)}#gh-dark-mode-only">
 
-<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b\exp{(\frac{dS}{R} - \frac{dH}{RT})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{dS}{R} - \frac{dH}{RT})}}{1 %2b \exp{(\frac{dS}{R} - \frac{dH}{RT})}})\qquad (46)}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b\exp{(\frac{dS}{R} - \frac{dH}{RT})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{dS}{R} - \frac{dH}{RT})}}{1 %2b \exp{(\frac{dS}{R} - \frac{dH}{RT})}})\qquad (46)\qquad (1)}#gh-dark-mode-only">
+<img src= "https://render.githubusercontent.com/render/math?math={E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b\exp{(\frac{dS}{R} - \frac{dH}{RT})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{dS}{R} - \frac{dH}{RT})}}{1 %2b \exp{(\frac{dS}{R} - \frac{dH}{RT})}})\qquad (47)}#gh-light-mode-only">
+<img src="https://render.githubusercontent.com/render/math?math={\color{white}E = (m_{DS}T %2b b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 %2b\exp{(\frac{dS}{R} - \frac{dH}{RT})}} + (m_{SS}T %2b b_{SS})(1-\frac{\exp{(\frac{dS}{R} - \frac{dH}{RT})}}{1 %2b \exp{(\frac{dS}{R} - \frac{dH}{RT})}})\qquad (47)\qquad (1)}#gh-dark-mode-only">
 
 The baselines are allowed to vary but dHs and dSs are constrained to a single value for all curves. For global fitting, the slopes and intercepts of the fits from Method 1 are used as initial parameter estimates for the slopes and intercepts of the global fit, and the average of the dHs and dSs from Method 1 are used as initial parameter estimates for the dH and dS.
 
@@ -305,8 +308,7 @@ The dG and error in the dG is calculated using the same equations as Method 2.
 
 # 4 Running MeltR
 
-In this section, we cover how to use MeltR in your R console. If you have not already, read section 3 to understand the theory underlying the results of MeltR. In constrast, section 4 will cover MeltR usage and how to avoid pitfalls. The most common error with MeltR is a user attempting to fit data that is inconsistent with the underlying model, either a fluorescence isotherm or a absorbance melting curve with a non-standard shape or specifying an incorrect molecular model. In the case of data-with a non-standard shape, the aberrant data will need to be subsetted out data set prior to fitting the set with MeltR. While MeltR has no dependencies other than base R 4.1.3, data wrangling and plotting functions in the "tidyverse" package<sup>[4]</sup> are highly recommended, along with the "ggrepel" package<sup>[5]</sup>, for data quality checks and filtering. To begin, open a new R session in the proper directory. Load relevant packages into your memory.
-
+In this section, we cover how to use MeltR in your R console. If you have not already, read section 3 to understand the theory underlying the results of MeltR. Section 4 will cover MeltR usage and how to avoid pitfalls. The most common error with MeltR is a user attempting to fit data that is inconsistent with the underlying model, either a fluorescence isotherm or a absorbance melting curve with a non-standard shape or specifying an incorrect molecular model. In the case of data with a non-standard shape, the aberrant data will need to be filtered out data set prior to fitting the set with MeltR. While MeltR has no dependencies other than base R 4.1.3, data wrangling and plotting functions in the "tidyverse" package<sup>[4]</sup> are highly recommended, along with the "ggrepel" package<sup>[5]</sup>, for data quality checks and filtering. To begin, open a new R session in the proper directory. Load relevant packages into your memory.
 
 ```{r}
 library(MeltR)
@@ -329,9 +331,9 @@ Data should be formatted into a comma separated value (“.csv”) text file wit
 
 ![Formatting fluorescence binding isotherm datat in a csv file for MeltR with Excel](https://user-images.githubusercontent.com/63312483/165355843-40b03fbc-7d89-429e-8252-1b65ea6fced1.png)
 
-Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorperation of an extra space, so that MeltR cannot recognize relevant data when it is read into R. The second is incorperation of characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
+Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorporation of an extra space, so that MeltR cannot recognize relevant data when it is read into R. The second is incorporation of characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
 
-### 4.2.3 Reading data into a R data frame
+### 4.1.2 Reading data into a R data frame
 
 Comma separated value (“.csv”) data can be read into a R data frame for MeltR using the “read.csv” function that is included in base R.
 
@@ -371,23 +373,21 @@ ggplot(df %>% filter(Reading == 1), aes(x = B, y = Emission, label = Well)) +
 
 The result is a really nice binding isotherm (Figure 4). One should check a few more readings by changing the value in the filter command, for example 20, 60, 80, etc... 
 
-![Isotherm_example](https://user-images.githubusercontent.com/63312483/165367119-ed4e15df-4c08-46d7-82c6-03b386f61395.svg)
+![Isotherm example from data included in MeltR. Labels represent the well in a 96 well plate.](https://user-images.githubusercontent.com/63312483/165367119-ed4e15df-4c08-46d7-82c6-03b386f61395.svg)
 
-
-If you observe one or two ovious outliers in the data set, it is reasonable to remove them using the filter. However, this data is excellent and needs no filtering.
-
+If you observe one or two obvious outliers in the data set, it is reasonable to remove them using the filter command. However, this data is excellent and needs no filtering.
 
 ```{r}
 df %>% filter(!Well %in% c("A1", "C3"))
 ```
 
-If you are satified with the the data, we can move on to fitting. I will first inspect the help file for meltR.F.
+If you are satisfied with the the data, we can move on to fitting. I will first inspect the help file for meltR.F.
 
 ```{r}
 ?meltR.F
 ```
 
-The only argument that needs set is data frame.
+The only argument that needs set is the data frame.
 
 ```{r}
 meltR.F(df)
@@ -396,7 +396,6 @@ meltR.F(df)
 You will see the following output in your console.
 
 ```{r}
-> meltR.F(df)
 [1] "Van't Hoff"
 [1] "accurate Ks = 16"
         Method         H     SE.H         S      SE.S         G       SE.G
@@ -470,7 +469,7 @@ meltR.F(df,
         file_prefix = "Helix_J")
 ```
 
-This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure 5A). Points represent the Kd and error from fitting isotherms individually. The red line represents the fit to Equation 6 that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of Kd values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure 5B). The third output is a .csv file containing the thermodynamic parameters from each method Figure 5 C. Note that the fit line (red) in Figure 5A does not follow the trend at high temperatures and the helix folding energies from this line are thus unreliable. We will cover refining the fits in the next section.
+This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure 5A). Points represent the Kd and error from fitting isotherms individually. The red line represents the fit to Equation 6 that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of Kd values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure 5B). The third output is a .csv file containing the thermodynamic parameters from each method Figure 5 C. Note that the fit line (red) in Figure 5A does not follow the trend at high temperatures and the helix folding energies from this line are thus unreliable. We will cover refining the fit in section 4.1.5.
 
 ![Pre-canned meltR.F outputs](https://user-images.githubusercontent.com/63312483/165543584-0a15344b-9f9c-4b63-ba60-256a7fe2edd1.svg)
 
@@ -490,10 +489,6 @@ meltR.F(df,
 with an output of:
 
 ```{r}
-> meltR.F(df,
-+         Kd_range = c(40, 500),
-+         Kd_error_quantile = 0.5,
-+         Save_results = "all")
 [1] "Van't Hoff"
 [1] "accurate Ks = 18"
         Method         H     SE.H         S      SE.S         G       SE.G
@@ -598,11 +593,11 @@ MeltR.fit$Fractional_error_between_methods
 
 ### 4.2.1 Formatting absorbance data for MeltR
 
-Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 7). There should be a “Sample” column where numbers or character strings specify what sampe the absorbance data was collected on. There should be one buffer blank in the data set for background subtraction. If no blank is availible, add data with an absorbance of 0 recorded at each temperature. A “Pathlength” column specifies the pathlength in cm of the cuvette the data was collected in. A “Temperature” column specifies the temperature in <span>&#176;</span>C where the data was recorded. Lastly, a “Absorbance” column specifies the absorbance collected at each temperature. 
+Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 7). There should be a “Sample” column where numbers or character strings specify what sample the absorbance data was collected on. There should be one buffer blank in the data set for background subtraction. If no blank is available, add data with an absorbance of 0 recorded at each temperature. A “Pathlength” column specifies the pathlength in cm of the cuvette the data was collected in. A “Temperature” column specifies the temperature in <span>&#176;</span>C where the data was recorded. Lastly, a “Absorbance” column specifies the absorbance collected at each temperature. 
 
-![Formatting absorbance melting curve data in a csv in Excel](https://user-images.githubusercontent.com/63312483/165771699-ce0ea0d0-79b5-40c8-8746-9f67b09be245.PNG)
+![Formatting absorbance melting curve data in a csv in Excel.](https://user-images.githubusercontent.com/63312483/165771699-ce0ea0d0-79b5-40c8-8746-9f67b09be245.PNG)
 
-Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorperation of an extra space, so that MeltR cannot recognize data when it is read into R. The second is incorperation of characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
+Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorporation of an extra space, so that MeltR cannot recognize data when it is read into R. The second is incorporation of characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
 
 ### 4.2.2 Reading data into a R data frame
 
@@ -642,7 +637,7 @@ ggplot(df, aes(x = Temperature, y = Absorbance, color = factor(Sample))) +
   theme_classic()
 ```
 
-![Check absorbance data](https://user-images.githubusercontent.com/63312483/165774624-39edee9d-8ab8-4ae7-8852-ace5c222303c.svg)
+![Absorbance data check.](https://user-images.githubusercontent.com/63312483/165774624-39edee9d-8ab8-4ae7-8852-ace5c222303c.svg)
 
 This data looks good (Figure 8), with a small and consistent blank absorbance and sigmoidal RNA melting curves. If one of the RNA melting curves does not resemble a sigmoid, it should be removed from the data set using:
 
@@ -690,7 +685,7 @@ The output looks like this.
 1 0.1482036 0.1649616 0.04885993
 ```
 
-Note that the fractional error between the methods is over about 15% in terms of the enthalpy. Section X.X discusses how to refine the fits by trimming the absorbance baselines. 
+Note that the fractional error between the methods is over about 15% in terms of the enthalpy. Section 4.2.4 discusses how to refine the fits by trimming the absorbance baselines. 
 
 ### 4.2.4 Saving meltR.A outputs
 
@@ -715,9 +710,9 @@ meltR.A(data_frame = df,
         file_prefix = "Helix")
 ```
 
-This will create seven pre-canned outputs. The first and second outputs are depictions of the fits in method Method 1, with the individual fits (red lines) overlayed on raw data (Figure 9A) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9B). The third output is a depiction of the fit in Method 2, with the fit overlayed on the Tm data at each strand concentration (Figure 9C). The fourth and fith outputs are depictions of the fit in method Method 3, with the global fits (red lines) overlayed on raw data (Figure 9D) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9E). The sixth output is a .csv file containing the thermodynamic parameters generated by individual fits (Figure 9F). The seventh output is a .csv file containing the thermodynamic parameters from each method (Figure 9G).
+This will create seven pre-canned outputs. The first and second outputs are depictions of the fits in method Method 1, with the individual fits (red lines) overlay-ed on raw data (Figure 9A) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9B). The third output is a depiction of the fit in Method 2, with the fit overlay-ed on the T<sub>m</sub> data at each strand concentration (Figure 9C). The fourth and fifth outputs are depictions of the fit in method Method 3, with the global fits (red lines) overlay-ed on raw data (Figure 9D) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9E). The sixth output is a .csv file containing the thermodynamic parameters generated by individual fits (Figure 9F). The seventh output is a .csv file containing the thermodynamic parameters from each method (Figure 9G).
 
-![Absorbance outputs](https://user-images.githubusercontent.com/63312483/165786859-fd0e921c-e943-44cf-ad12-7ffd8dd0c20d.svg)
+![Pre-canned meltR.A outputs](https://user-images.githubusercontent.com/63312483/165786859-fd0e921c-e943-44cf-ad12-7ffd8dd0c20d.svg)
 
 ### 4.2.5 Refining MeltR.A fits by trimming fluorescence baselines.
 
@@ -731,7 +726,7 @@ aes(x = Temperature, y = Absorbance, color = factor(Sample))) +
   geom_vline(xintercept = c(15, 70)) #will add horizontal lines to the plot at 15 and 70
 ```
 
-Thus, for Sample 2, baselines are approximately linear above 15 <span>&#176;</span>C and below 70 <span>&#176;</span>C (Figure X).
+Thus, for Sample 2, baselines are approximately linear above 15 <span>&#176;</span>C and below 70 <span>&#176;</span>C (Figure 10).
 
 ![Baseline trimming on Sample 10](https://user-images.githubusercontent.com/63312483/165791992-20b92819-5904-4287-9183-c4f489a1d1e7.svg)
 

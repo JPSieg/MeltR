@@ -11,6 +11,7 @@
 #'@param Kd_error_quantile Quantile for uncertainty in equilibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = 0.25 or the 25% most accurate binding constants in the Kd_range (See "Kd_range").
 #'@param Kd_range A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom Kd_range or c(start, end) to set a Kd_range. Example: "Kd_range = c(5, 100)"
 #'@param Start_K A Kd value to start non-linear regression. Default = 0.1.
+#'@param vh_start A list of initial guesses for the helix folding enthalpy and entropy. By default vh_start = list(H = -70, S = -0.180)
 #'@param Optimize_conc Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the concentration for the fluorophore labeled strand based on the shape of low temperature isotherms.
 #'@param Low_reading Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optimize the concentration. Default = "auto" will use the lowest temperature reading.
 #'@param low_K Used by the concentration optimization algorithm. A low Kd value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = FALSE to allow the low_K to float in the concentration optimization algorithm. It is best to use values between 0.1 and 10.
@@ -25,6 +26,7 @@ meltR.F = function(df,
                    Kd_error_quantile = 0.25,
                    Kd_range = c(10, 1000),
                    Start_K = 0.1,
+                   vh_start = list(H = -70, S = -0.180),
                    Optimize_conc = TRUE,
                    Low_reading = "auto",
                    low_K = FALSE,
@@ -229,7 +231,7 @@ meltR.F = function(df,
   indvfits.to.fit = indvfits[-c(which(indvfits$K <= Kd_range[1]), which(indvfits$K >= Kd_range[2])),]
 
 
-  vh_start = list(H = -70, S = -0.180)
+  vh_start = vh_start
 
   K_error = quantile(indvfits.to.fit$SE.lnK, Kd_error_quantile, na.rm = TRUE)
 
