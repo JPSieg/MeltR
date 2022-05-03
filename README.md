@@ -106,7 +106,7 @@ By default, the fit to determine X allows R and K<sub>D</sub> to float. The user
 
 ### 3.1.3 Method 1 Van't Hoff plot
 
-Method 1 fits K<sub>D</sub>s that were passed from the preprocessing steps to Equation 6. The free energy of helix formation at 37 <span>&#176;</span>C (dG) was calculated from the dH and dS values provided by the fit.
+Method 1 fits K<sub>D</sub>s that were passed from the preprocessing steps to Equation 6. Initial estimates for the dH and dS of helix formation are provided by the user in kcal as a list using the "vh_start" argument. The default is -70 kcal/mol and 0.180 kcal/mol/K for the enthalpy and entropy respectively, and will work for most helices. The free energy of helix formation at 37 <span>&#176;</span>C (dG) was calculated from the dH and dS values provided by the fit.
 
 The standard error of the dG was propagated from the standartd error of dH and the dS from the fit, and the covariation between the two values.
 
@@ -122,7 +122,7 @@ Thus, dHs and dSs reported by MeltR are also reported in terms of the associatio
 
 ### 3.1.4 Method 2 Global fit
 
-Method 2 globally fits fluorescence data that were passed from the preprocessing to equation x, obtained by plugging equation y into equation z. Fmax and Fmin was allowed to float between temperatures and dH and dS were constant.
+Method 2 globally fits fluorescence data that were passed from the preprocessing to equation x, obtained by plugging equation y into equation z. Fmax and Fmin was allowed to float between temperatures and dH and dS were constant. Starting values for F<sub>max</sub>, F<sub>min</sub>, dH, and dS are obtained from the results for individual fits. 
 
 <img src= "https://render.githubusercontent.com/render/math?math={E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (14) }#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}E = F_{max} %2b (F_{min} - F_{max})*\frac{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2b[B]_{T}) - \sqrt{{(\exp{\frac{dS}{R} - \frac{dH}{RT}}%2b[A]_{T}%2bB]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}  \qquad (14)}#gh-dark-mode-only">
@@ -453,7 +453,7 @@ Note, the concentration optimization algorithm, by default allowing the Kd.opt t
 
 The concentration with constrained Kds optomization algorithm adjusts the FAM-RNA concentration to at most 281, about 10% difference between constrained K<sub>d</sub>s and a floating K<sub>D</sub>. Thus, the default concentration optimization is robust. Note that there is considerable variance in the enthalpies, entropies, and free energies from the various constrained K<sub>D</sub>s and the unconstrained fit (about 20 kcal/mole in terms of the enthalpy). We will demonstrate how to refine these thermodynamic parameters independent of the concentration optimization algorithm in section 4.1.5.
 
-### Saving meltR.F outputs
+### 4.1.4 Saving meltR.F outputs
 
 meltR.F results can be saved to the disk using the "Save_results" argument.
 
@@ -474,7 +474,7 @@ This will create three pre-canned outputs. The first output, corresponding to Me
 
 ![Pre-canned meltR.F outputs](https://user-images.githubusercontent.com/63312483/165543584-0a15344b-9f9c-4b63-ba60-256a7fe2edd1.svg)
 
-### Refining meltR.F fits
+### 4.1.5 Refining meltR.F fits
 
 Two arguments are important for refining meltR.F fits. The first is, "Kd_range", which is the range of K<sub>D</sub>s in nM that will be fit to obtain thermodynamic parameters. By default, the "Kd_range" is set to 10 to 1000. The second is, "Kd_error_quantile", which controls the amount of error that is included in the K<sub>D</sub>s that will be fit to obtain thermodynamic parameters. By default, the "Kd_error_quantile" is 0.25, meaning only the 25% most accurate KDs in the "K_range" will be fit to obtain thermodynamic parameters. 
 
@@ -512,7 +512,7 @@ Note two things: (1) the refined fit uses more isotherms than the original itera
 
 ![Refined Van't Hoff plot](https://user-images.githubusercontent.com/63312483/165550513-87659c1c-0a43-4e79-a9ef-d2b22a53e673.svg)
 
-### Advanced analysis of meltR.F outputs in R
+### 4.1.6 Advanced analysis of meltR.F outputs in R
 
 meltR.F can pass a more extensive output to an object in R. 
 
@@ -642,12 +642,12 @@ ggplot(df, aes(x = Temperature, y = Absorbance, color = factor(Sample))) +
   theme_classic()
 ```
 
-![Check_absorbance_data](https://user-images.githubusercontent.com/63312483/165774624-39edee9d-8ab8-4ae7-8852-ace5c222303c.svg)
+![Check absorbance data](https://user-images.githubusercontent.com/63312483/165774624-39edee9d-8ab8-4ae7-8852-ace5c222303c.svg)
 
-This data looks good, with a small and consistent blank absorbance and sigmoidal RNA melting curves. If one of the RNA melting curves does not resemble a sigmoid, it should be removed from the data set using:
+This data looks good (Figure 8), with a small and consistent blank absorbance and sigmoidal RNA melting curves. If one of the RNA melting curves does not resemble a sigmoid, it should be removed from the data set using:
 
 ```{r}
-df = df %>% filter(Sample != "Sample you want to remove")
+df %>% filter(Sample != "Sample you want to remove")
 ```
 
 Data can now be fit using meltR.A. First we need to define the nucleic acid sequence using a vector that specifies the RNA or DNA sequences used in the experiment.
@@ -656,14 +656,19 @@ Data can now be fit using meltR.A. First we need to define the nucleic acid sequ
 helix = c("RNA", "CGAAAGGU", "ACCUUUCG")
 ```
 
-meltR.A requires information from 4 user defined arguments to fit the data: the data frame the absorbance data is stored in, the blank sample, the nucleic acid sequences, and the molecular model. Three molecular models are availible in MeltR, "Monomolecular.2State", "Heteroduplex.2State", and "Homoduplex.2State".
+meltR.A requires information from 4 user defined arguments to fit the data: the data frame the absorbance data is stored in, the blank sample, the nucleic acid sequences, and the molecular model. Three molecular models are availible in MeltR, "Monomolecular.2State", "Heteroduplex.2State", and "Homoduplex.2State". The absorbance sample data included in MeltR was collected on a heteroduplex. 
 
 ```{r}
 ?meltR.A
 meltR.A(data_frame = df,
         blank = 1,
         NucAcid = helix,
-        Mmodel = "Heteroduplex.2State")
+        Mmodel = "Heteroduplex.2State")     
+```
+
+The output looks like this.
+
+```{r}
 [1] "Individual curves"
   Sample           Ct     H       S     G   Tm
 1      2 2.832690e-06 -63.5 -0.1725  -9.9 43.1
@@ -687,7 +692,7 @@ meltR.A(data_frame = df,
 
 Note that the fractional error between the methods is over about 15% in terms of the enthalpy. Section X.X discusses how to refine the fits by trimming the absorbance baselines. 
 
-### Saving meltR.A outputs
+### 4.2.4 Saving meltR.A outputs
 
 meltR.F results can be saved to the disk using the "Save_results" argument.
 
@@ -710,38 +715,38 @@ meltR.A(data_frame = df,
         file_prefix = "Helix")
 ```
 
-This will create seven pre-canned outputs. The first and second outputs are depictions of the fits in method Method 1, with the individual fits (red lines) overlayed on raw data (Figure xA) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure XB). The third output is a depiction of the fit in Method 2, with the fit overlayed on the Tm data at each strand concentration (Figure XC). The fourth and fith outputs are depictions of the fit in method Method 3, with the global fits (red lines) overlayed on raw data (Figure xD) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure XE). The sixth output is a .csv file containing the thermodynamic parameters generated by individual fits (Figure XF). The seventh output is a .csv file containing the thermodynamic parameters from each method (Figure XG).
+This will create seven pre-canned outputs. The first and second outputs are depictions of the fits in method Method 1, with the individual fits (red lines) overlayed on raw data (Figure 9A) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9B). The third output is a depiction of the fit in Method 2, with the fit overlayed on the Tm data at each strand concentration (Figure 9C). The fourth and fith outputs are depictions of the fit in method Method 3, with the global fits (red lines) overlayed on raw data (Figure 9D) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9E). The sixth output is a .csv file containing the thermodynamic parameters generated by individual fits (Figure 9F). The seventh output is a .csv file containing the thermodynamic parameters from each method (Figure 9G).
 
-![Absorbance_outputs](https://user-images.githubusercontent.com/63312483/165786859-fd0e921c-e943-44cf-ad12-7ffd8dd0c20d.svg)
+![Absorbance outputs](https://user-images.githubusercontent.com/63312483/165786859-fd0e921c-e943-44cf-ad12-7ffd8dd0c20d.svg)
 
+### 4.2.5 Refining MeltR.A fits by trimming fluorescence baselines.
 
-### Refining MeltR.A fits by trimming fluorescence baselines.
-
-MeltR approximates absorbance baselines using a line (y = mx+b). Real absorbance data deviates from this linear behavior over wide temperature ranges. MeltR fits are thus improved by trimming the baselines so that they better approximate a line. First, the raw data should be inspected for linear baselines one sample at a time using the tidyverse.
+MeltR approximates absorbance baselines using a line (y = mx+b). Real absorbance data deviates from this linear behavior over wide temperature ranges. MeltR fits are thus improved by trimming the baselines so that baselines better approximate a line. First, the raw data should be inspected for linear baselines one sample at a time using the tidyverse.
 
 ```{r}
-ggplot(df %>% filter(Sample == 2), aes(x = Temperature, y = Absorbance, color = factor(Sample))) +
+ggplot(df %>% filter(Sample == 10), #Only plot sample 10
+aes(x = Temperature, y = Absorbance, color = factor(Sample))) +
   geom_point() +
   theme_classic() +
-  geom_vline(xintercept = c(15, 70))
+  geom_vline(xintercept = c(15, 70)) #will add horizontal lines to the plot at 15 and 70
 ```
 
-Thus, for Sample 2, baselines are approximately linear above 15 degrees C and below 70 degrees C (Figure X).
+Thus, for Sample 2, baselines are approximately linear above 15 <span>&#176;</span>C and below 70 <span>&#176;</span>C (Figure X).
 
-![Baseline_trimming](https://user-images.githubusercontent.com/63312483/165791992-20b92819-5904-4287-9183-c4f489a1d1e7.svg)
+![Baseline trimming on Sample 10](https://user-images.githubusercontent.com/63312483/165791992-20b92819-5904-4287-9183-c4f489a1d1e7.svg)
 
-This should be repeated for each sample that contains RNA). After identifying ranges where baselines are linear, ranges can be supplied to the "fitTs" argument as a list of vectors (in the order of the samples in the data set).
+This should be repeated for each sample that contains RNA). After identifying ranges where baselines are linear, ranges can be supplied to the "fitTs" argument as a list of vectors (in the order of the samples in the data set). Note, do not provide a temperature range for the blank. 
 
 ```{r}
-list.T.range = list(c(15, 70),
-                    c(15, 70),
-                    c(15, 80),
-                    c(15, 85),
-                    c(20, 78),
-                    c(20, 85),
-                    c(20, 85),
-                    c(25, 85),
-                    c(25, 85))
+list.T.range = list(c(15, 70), #Sample 2
+                    c(15, 70), #Sample 3
+                    c(15, 80), #Sample 4
+                    c(15, 85), #Sample 5
+                    c(20, 78), #Sample 6
+                    c(20, 85), #Sample 7
+                    c(20, 85), #Sample 8
+                    c(25, 85), #Sample 9
+                    c(25, 85)) #Sample 10
 
 meltR.A(data_frame = df,
         blank = 1,
@@ -750,6 +755,11 @@ meltR.A(data_frame = df,
         Save_results = "all",
         file_prefix = "Trimmed",
         fitTs = list.T.range)
+```
+
+Which will produce:
+
+```{r}
 [1] "Individual curves"
   Sample           Ct     H       S     G   Tm
 1      2 2.832690e-06 -67.2 -0.1849  -9.9 42.4
@@ -770,9 +780,9 @@ meltR.A(data_frame = df,
            H          S          G
 1 0.08805668 0.09829693 0.01993355
 ```
-The fitting trimmed baselines reduces the fractional error between the methods from 15% to 9%. 
+The fitting trimmed baselines reduces the fractional error between the methods from 15% to 9% in terms of the enthalpy. 
 
-### Advanced plotting meltR.A outputs using the "tidyverse"
+### 4.2.6 Advanced plotting meltR.A outputs using the "tidyverse"
 
 meltR.A can pass a more extensive output to an object in R. 
 
@@ -790,6 +800,11 @@ The object, "MeltR.fit" is now a list of objects that can be passed to plotting 
 
 ```{r}
 names(MeltR.fit)
+```
+
+Which will print a list of fit names:
+
+```{r}
  [1] "Summary"           "Method.1.indvfits" "Range"            
  [4] "Derivatives.data"  "Method.1.data"     "Method.1.fit"     
  [7] "Method.2.data"     "Method.2.fit"      "Method.3.data"    
@@ -800,72 +815,38 @@ names(MeltR.fit)
 
 ```{r}
 MeltR.fit$Summary
-              Method     H SE.H      S SE.S     G SE.G
-1  1 individual fits -68.0  3.2 -186.6  9.9 -10.1  0.2
-2 2 Tm versus ln[Ct] -62.2  1.4 -168.9  4.5  -9.9  0.1
-3       3 Global fit -67.4  0.3 -184.7  0.9 -10.1  0.0
 ```
 
 [2] Method.1.indfits: A data frame containint the thermodynamic parameters from the individual fits.It can be called using:
 
 ```{r}
 MeltR.fit$Method.1.indvfits
-  Sample           Ct     H       S     G   Tm
-1      2 2.832690e-06 -67.2 -0.1849  -9.9 42.4
-2      3 4.718659e-06 -71.6 -0.1984 -10.1 44.5
-3      4 7.439046e-06 -65.3 -0.1783 -10.0 46.1
-4      5 1.173670e-05 -61.9 -0.1676 -10.0 47.9
-5      6 2.049582e-05 -66.3 -0.1813 -10.0 49.3
-6      7 3.131297e-05 -71.2 -0.1964 -10.3 50.8
-7      8 5.533500e-05 -68.9 -0.1894 -10.1 52.3
-8      9 8.990554e-05 -68.4 -0.1879 -10.1 53.9
-9     10 1.439218e-04 -71.0 -0.1952 -10.4 56.1
 ```
 
 [3] Fractional error between Method 1, 2, and 3. It can be called using:
 
 ```{r}
 MeltR.fit$Range
-           H          S          G
-1 0.08805668 0.09829693 0.01993355
 ```
 
 [4] Derivatives.data: Contains the first and second derivatives for each sample containing RNA. It can be called and plotted using:
 
 ```{r}
 MeltR.fit$Derivatives.data
-    Sample Pathlength Temperature Absorbance           Ct         dA.dT        dA.dT2
-201      2          1       15.07  0.2717590 2.832690e-06  2.811276e-04 -1.803953e-04
-202      2          1       15.58  0.2713165 2.832690e-06  1.967808e-04 -1.463624e-04
-203      2          1       16.09  0.2723999 2.832690e-06  1.328851e-04 -1.061979e-04
-204      2          1       16.59  0.2719421 2.832690e-06  8.941285e-05 -6.758778e-05
-205      2          1       17.10  0.2721405 2.832690e-06  6.375680e-05 -3.442765e-05
-
 ggplot(MeltR.fit$Derivatives.data, aes(x = Temperature, y = dA.dT/(Pathlength*Ct), color = factor(Sample)))+
   geom_point() +
   theme_classic()
 ```
 
-![First_derivative_data](https://user-images.githubusercontent.com/63312483/165796260-5d6b9070-7b74-4323-b4d5-fafabbcef2e8.svg)
-
 [5] Method.1.data: Contains the raw data from method 1 and the model. It can be called and plotted using:
 
 ```{r}
 MeltR.fit$Method.1.data
-    Sample Pathlength Temperature Absorbance           Ct       Ext     Model
-201      2          1       15.07  0.2717590 2.832690e-06  95936.75 0.2717559
-202      2          1       15.58  0.2713165 2.832690e-06  95780.54 0.2717820
-203      2          1       16.09  0.2723999 2.832690e-06  96162.99 0.2718099
-204      2          1       16.59  0.2719421 2.832690e-06  96001.39 0.2718393
-205      2          1       17.10  0.2721405 2.832690e-06  96071.42 0.2718716
 ggplot(MeltR.fit$Method.1.data, aes(x = Temperature, color = factor(Sample), group = factor(Sample)))+
   geom_point(mapping = aes(y = Absorbance/(Pathlength*Ct))) +
   geom_line(mapping = aes(y = Model/(Pathlength*Ct)), color = "black") +
   theme_classic()
 ```
-
-![Method_1_data](https://user-images.githubusercontent.com/63312483/165797375-d9f7ab04-2749-43ff-962f-6e935cf0ace4.svg)
-
 [6] MeltR.fit$Method.1.fit: A list of nls objects containing the fits obtained from fitting melting curves individually. It can be called using:
 
 ```{r}
@@ -876,46 +857,21 @@ MeltR.fit$Method.1.fit
 
 ```{r}
 MeltR.fit$Method.2.data
-        lnCt       Tm        invT       Model
-1 -12.774284 42.45013 0.003168566 0.003165178
-2 -12.263986 44.43509 0.003148762 0.003148887
-3 -11.808768 46.09716 0.003132369 0.003134353
-4 -11.352790 47.81681 0.003115587 0.003119796
-5 -10.795290 49.12745 0.003102916 0.003101997
 ggplot(MeltR.fit$Method.2.data, aes(x = lnCt)) +
   geom_point(mapping = aes(y = invT)) +
   geom_line(mapping = aes(y = Model)) +
   theme_classic()
 ```
-
-![Method_2_data](https://user-images.githubusercontent.com/63312483/165801194-97d0934e-ce95-4de9-8ff0-75a236fd6659.svg)
-
 [8] Method.2.fit: A nls object containing the fit obtained from fitting the relationship of Tm and Ct. It can be called using:
 
 ```{r}
 MeltR.fit$Method.2.fit
-Nonlinear regression model
-  model: invT ~ TmModel(H, S, lnCt)
-   data: Tm_data
-       H        S 
--62.2438  -0.1689 
- residual sum-of-squares: 5.535e-11
-
-Number of iterations to convergence: 4 
-Achieved convergence tolerance: 2.206e-08
 ```
 
 [9] Method 3 data: Contains the raw data from method 2 and the model. It can be called and plotted using:
 
 ```{r}
 MeltR.fit$Method.3.data
-    Sample Pathlength Temperature Absorbance           Ct       Ext     Model
-201      1          1       15.07  0.2717590 2.832690e-06  95936.75 0.2711654
-202      1          1       15.58  0.2713165 2.832690e-06  95780.54 0.2712364
-203      1          1       16.09  0.2723999 2.832690e-06  96162.99 0.2713091
-204      1          1       16.59  0.2719421 2.832690e-06  96001.39 0.2713822
-205      1          1       17.10  0.2721405 2.832690e-06  96071.42 0.2714587
-
 ggplot(MeltR.fit$Method.3.data, aes(x = Temperature, color = factor(Sample), group = factor(Sample)))+
   geom_point(mapping = aes(y = Absorbance/(Pathlength*Ct))) +
   geom_line(mapping = aes(y = Model/(Pathlength*Ct)), color = "black") +
@@ -925,25 +881,6 @@ ggplot(MeltR.fit$Method.3.data, aes(x = Temperature, color = factor(Sample), gro
 
 ```{r}
 MeltR.fit$Method.3.fit
-Nonlinear regression model
-  model: Absorbance ~ GModel(H, S, mED, bED, mESS, bESS, Sample, Temperature,     Ct)
-   data: gfit_data
-         H          S       mED1       mED2       mED3       mED4       mED5 
--6.741e+01 -1.847e-01  1.083e-04  8.979e-05  2.023e-04  2.624e-05 -1.496e-04 
-      mED6       mED7       mED8       mED9       bED1       bED2       bED3 
--1.104e-04  2.011e-04  2.073e-04  2.026e-04  2.694e-01  4.634e-01  7.198e-01 
-      bED4       bED5       bED6       bED7       bED8       bED9      mESS1 
- 1.161e+00  1.016e+00  1.570e+00  5.321e-01  8.743e-01  1.436e+00  3.638e-04 
-     mESS2      mESS3      mESS4      mESS5      mESS6      mESS7      mESS8 
- 1.862e-04  5.775e-04  5.843e-04  4.111e-04  2.897e-04  1.899e-04  1.432e-04 
-     mESS9      bESS1      bESS2      bESS3      bESS4      bESS5      bESS6 
- 6.605e-05  3.046e-01  5.374e-01  8.315e-01  1.343e+00  1.178e+00  1.829e+00 
-     bESS7      bESS8      bESS9 
- 6.392e-01  1.053e+00  1.707e+00 
- residual sum-of-squares: 0.001631
-
-Number of iterations to convergence: 2 
-Achieved convergence tolerance: 0.0002484
 ```
 
 # 5 References
