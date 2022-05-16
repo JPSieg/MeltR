@@ -424,43 +424,56 @@ Note, the concentration optimization algorithm, by default allowing the Kd.opt t
 ```{r}
 > meltR.F(df, low_K = 1)
 [1] "Van't Hoff"
-[1] "accurate Ks = 14"
-        Method         H      SE.H         S      SE.S         G        SE.G  K_error         R Kd.opt
-1    1 VH plot -60.00212 0.7271876 -158.3742  2.317695 -10.88235 0.009438972 0.345963 0.7231654      1
-2 2 Global fit -60.25007 8.9451153 -159.1598 28.490520 -10.88665 0.120521827 0.345963 0.7231654      1
+[1] "accurate Ks = 11"
+        Method         H       SE.H         S      SE.S         G        SE.G
+1    1 VH plot -60.55018  0.7291223 -160.1005  2.322061 -10.89501 0.009578498
+2 2 Global fit -60.70845 12.4962966 -160.6024 39.782555 -10.89761 0.167951340
+    K_error         R Kd.opt
+1 0.3333168 0.7231654      1
+2 0.3333168 0.7231654      1
 [1] "Fractional error between methods"
             H           S            G
-1 0.004123788 0.004947968 0.0003951875
+1 0.002610529 0.003130137 0.0002389311
 > meltR.F(df, low_K = 0.5)
 [1] "Van't Hoff"
-[1] "accurate Ks = 14"
-        Method         H      SE.H         S      SE.S         G        SE.G   K_error         R Kd.opt
-1    1 VH plot -62.21273 0.6849323 -165.3667  2.179732 -10.92425 0.009800243 0.3552451 0.7153701    0.5
-2 2 Global fit -62.39456 9.1846917 -165.9409 29.214906 -10.92800 0.134594527 0.3552451 0.7153701    0.5
+[1] "Van't Hoff"
+[1] "accurate Ks = 11"
+        Method         H       SE.H         S      SE.S         G        SE.G
+1    1 VH plot -61.48056  0.7017499 -163.0171  2.234887 -10.92082 0.009218896
+2 2 Global fit -61.64895 12.7501200 -163.5512 40.589141 -10.92354 0.171775450
+    K_error         R Kd.opt
+1 0.3374478 0.7153701    0.5
+2 0.3374478 0.7153701    0.5
 [1] "Fractional error between methods"
-            H           S            G
-1 0.002918411 0.003466106 0.0003430056
+           H           S            G
+1 0.00273514 0.003271292 0.0002491787
 > meltR.F(df, low_K = 0.1)
 [1] "Van't Hoff"
 [1] "accurate Ks = 14"
-        Method         H      SE.H         S     SE.S         G        SE.G   K_error         R Kd.opt
-1    1 VH plot -63.08832 0.6549918 -168.1096  2.08445 -10.94912 0.009371838 0.3609151 0.7080886    0.1
-2 2 Global fit -63.28360 9.3633293 -168.7267 29.78152 -10.95302 0.137643619 0.3609151 0.7080886    0.1
-[1] "Fractional error between methods"
-            H           S            G
-1 0.003090634 0.003664033 0.0003556102
-> meltR.F(df, low_K = 0.05)
 [1] "Van't Hoff"
-[1] "accurate Ks = 14"
-        Method         H      SE.H         S     SE.S         G        SE.G   K_error         R Kd.opt
-1    1 VH plot -63.21087 0.6507751 -168.4935  2.07103 -10.95260 0.009311504 0.3617203 0.7070892   0.05
-2 2 Global fit -63.40791 9.3886281 -169.1162 29.86176 -10.95651 0.138076127 0.3617203 0.7070892   0.05
+[1] "accurate Ks = 10"
+        Method         H       SE.H         S      SE.S         G        SE.G
+1    1 VH plot -63.04998  0.6809662 -167.9641  2.167052 -10.95592 0.009325515
+2 2 Global fit -63.18785 14.8873698 -168.4012 47.361747 -10.95822 0.207758608
+    K_error         R Kd.opt
+1 0.3446286 0.7080886    0.1
+2 0.3446286 0.7080886    0.1
 [1] "Fractional error between methods"
             H           S            G
-1 0.003112448 0.003688944 0.0003572172
+1 0.002184357 0.002599086 0.0002100154
+> meltR.F(df, low_K = 0.05)
+        Method         H      SE.H         S      SE.S         G        SE.G
+1    1 VH plot -63.17200  0.677299 -168.3465  2.155382 -10.95934 0.009275292
+2 2 Global fit -63.31084 14.925896 -168.7867 47.484124 -10.96165 0.208349999
+    K_error         R Kd.opt
+1 0.3451437 0.7070892   0.05
+2 0.3451437 0.7070892   0.05
+[1] "Fractional error between methods"
+            H           S            G
+1 0.002195498 0.002611534 0.0002110328
 ```
 
-The concentration with constrained Kds optomization algorithm adjusts the FAM-RNA concentration to at most 281, about 10% difference between constrained K<sub>d</sub>s and a floating K<sub>D</sub>. Thus, the default concentration optimization is robust. Note that there is considerable variance in the enthalpies, entropies, and free energies from the various constrained K<sub>D</sub>s and the unconstrained fit (about 20 kcal/mole in terms of the enthalpy). We will demonstrate how to refine these thermodynamic parameters independent of the concentration optimization algorithm in section 4.1.5.
+The optimization algorithm, using a constrained K<sub>D</sub>, adjusts the FAM-RNA concentration to at most 281, about 10% difference from the optimization algorithm using a floating K<sub>D</sub>. Thus, the default concentration optimization is robust. Note that there is considerable variance in the enthalpies, entropies, and free energies from the various constrained K<sub>D</sub>s and the unconstrained fit (about 20 kcal/mole in terms of the enthalpy). We will demonstrate how to refine these thermodynamic parameters independent of the concentration optimization algorithm in section 4.1.5.
 
 ### 4.1.4 Saving meltR.F outputs
 
