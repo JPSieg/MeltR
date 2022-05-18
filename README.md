@@ -506,8 +506,6 @@ This will create three pre-canned outputs. The first output, corresponding to Me
 
 ##### Figure 9: Pre-canned meltR.F outputs.
 
-##### Figure 5: Pre-canned meltR.F outputs.
-
 ### 4.1.5 Refining meltR.F fits
 
 Two arguments are important for refining meltR.F fits. The first is, "Kd_range", which is the range of K<sub>D</sub>s in nM that will be fit to obtain thermodynamic parameters. By default, the "Kd_range" is set to 10 to 1000. The second is, "Kd_error_quantile", which controls the amount of error that is included in the K<sub>D</sub>s that will be fit to obtain thermodynamic parameters. By default, the "Kd_error_quantile" is 0.25, meaning only the 25% most accurate KDs in the "K_range" will be fit to obtain thermodynamic parameters. 
