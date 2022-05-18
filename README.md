@@ -540,7 +540,7 @@ Note two things: (1) the refined fit uses more isotherms than the original itera
 
 ![Refined Van't Hoff plot](https://user-images.githubusercontent.com/63312483/165550513-87659c1c-0a43-4e79-a9ef-d2b22a53e673.svg)
 
-##### Refined Van't Hoff plot to determine the dH and dS.
+##### Figure 6: Refined Van't Hoff plot to determine the dH and dS.
 
 ### 4.1.6 Advanced analysis of meltR.F outputs in R
 
