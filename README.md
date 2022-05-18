@@ -504,6 +504,8 @@ This will create three pre-canned outputs. The first output, corresponding to Me
 
 ![Pre-canned meltR.F outputs](https://user-images.githubusercontent.com/63312483/165543584-0a15344b-9f9c-4b63-ba60-256a7fe2edd1.svg)
 
+##### Figure 9: Pre-canned meltR.F outputs.
+
 ##### Figure 5: Pre-canned meltR.F outputs.
 
 ### 4.1.5 Refining meltR.F fits
