@@ -230,8 +230,17 @@ meltR.A = function(data_frame,
     a <- {}
     for (i in c(1:length(unique(no.background$Sample)))){
       a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-      a[[i]] <- a[[i]][ -which(a[[i]]$Temperature > ranges[[i]][2]) ,]
-      a[[i]] <- a[[i]][ -which(a[[i]]$Temperature < ranges[[i]][1]) ,]
+
+      if(length(which(a[[i]]$Temperature > ranges[[i]][2])) > 0){
+        a[[i]] <- a[[i]][ -which(a[[i]]$Temperature > ranges[[i]][2]) ,]
+      }
+
+      if(length(which(a[[i]]$Temperature < ranges[[i]][1])) > 0){
+        a[[i]] <- a[[i]][ -which(a[[i]]$Temperature < ranges[[i]][1]) ,]
+      }
+
+
+
     }
     b <- a[[1]]
     if (length(a) > 1){
