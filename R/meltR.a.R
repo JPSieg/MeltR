@@ -153,6 +153,7 @@ meltR.A = function(data_frame,
     }
   }
   ####Subtract out the blank####
+<<<<<<< HEAD
 
   if ("blank" == "mone"){ #routine for no blank in the data set
 
@@ -190,6 +191,13 @@ meltR.A = function(data_frame,
       }
       no.background <- subset(k, Sample != blank)
 
+=======
+  samples <- {}
+  for (i in c(1:length(unique(data_frame$Sample)))){
+    samples[[i]] <- subset(data_frame, Sample == unique(data_frame$Sample)[i])
+    for (j in c(1:length(samples[[i]]$Sample))){
+      samples[[i]]$Absorbance[j] <- samples[[i]]$Absorbance[j] - samples[[i]]$Pathlength[j]*(samples[[which(unique(data_frame$Sample) == blank)]]$Absorbance[j]/samples[[which(unique(data_frame$Sample) == blank)]]$Pathlength[j])
+>>>>>>> 785840f931e946be5f8a610b8c40b917502fc30e
     }
 
   }
@@ -248,19 +256,29 @@ meltR.A = function(data_frame,
     }
     names(extcoef) <- c("Total", NucAcid[c(2:length(NucAcid))])
   }
+
   ####Remove values not in fitTs####
+
   if (is.null(fitTs) == FALSE){
-    if (length(list(fitTs)) == 1){
+    if (is.list(fitTs) == FALSE){
       ranges <- rep(list(fitTs), length(unique(no.background$Sample)))
-    }
-    if (length(list(fitTs)) != 1){
+    }else{
       ranges <- fitTs
     }
     a <- {}
     for (i in c(1:length(unique(no.background$Sample)))){
       a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-      a[[i]] <- a[[i]][ -which(a[[i]]$Temperature > ranges[[i]][2]) ,]
-      a[[i]] <- a[[i]][ -which(a[[i]]$Temperature < ranges[[i]][1]) ,]
+
+      if(length(which(a[[i]]$Temperature > ranges[[i]][2])) > 0){
+        a[[i]] <- a[[i]][ -which(a[[i]]$Temperature > ranges[[i]][2]) ,]
+      }
+
+      if(length(which(a[[i]]$Temperature < ranges[[i]][1])) > 0){
+        a[[i]] <- a[[i]][ -which(a[[i]]$Temperature < ranges[[i]][1]) ,]
+      }
+
+
+
     }
     b <- a[[1]]
     if (length(a) > 1){
@@ -270,15 +288,17 @@ meltR.A = function(data_frame,
     }
     no.background <- b
   }
+
   ####Calculate Ct for each curve####
   samples <- {}
   if (length(extcoef) == 3){
     ct <- c()
     for (i in c(1:length(unique(no.background$Sample)))){
       samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-      for (j in c(length(samples[[i]]$Sample):1)){
-        if (samples[[i]]$Temperature[j] > concT){
-          ct[i] <- (samples[[i]]$Absorbance[j]/(extcoef$Total*samples[[i]]$Pathlength[j]))
+      df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
+      for (j in c(length(df.raw$Sample):1)){
+        if (df.raw$Temperature[j] > concT){
+          ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
         }
         samples[[i]]$Ct <- ct[i]
       }
@@ -288,9 +308,10 @@ meltR.A = function(data_frame,
     ct <- c()
     for (i in c(1:length(unique(no.background$Sample)))){
       samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-      for (j in c(length(samples[[i]]$Sample):1)){
-        if (samples[[i]]$Temperature[j] > concT){
-          ct[i] <- (samples[[i]]$Absorbance[j]/(extcoef$Total*samples[[i]]$Pathlength[j]))
+      df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
+      for (j in c(length(df.raw$Sample):1)){
+        if (df.raw$Temperature[j] > concT){
+          ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
         }
         samples[[i]]$Ct <- ct[i]
       }
@@ -310,20 +331,18 @@ meltR.A = function(data_frame,
   startH <- c()
   for (i in c(1:length(unique(no.background$Sample)))){
     first.derive[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-    y <- c()
-    x <- c()
-    for (j in c(10:length(first.derive[[i]]$Temperature))){
-      y[j] <- mean(first.derive[[i]]$Absorbance[j:(j-9)])
-      x[j] <- mean(first.derive[[i]]$Temperature[j:(j-9)])
-    }
-    a <- c()
-    b <- c()
-    for (j in c(8:length(first.derive[[i]]$Temperature))){
-      a[j] <- (y[j] - y[j-7])/(x[j] - x[j-7])
-      b[j] <- (x[j] + x[j-7])/2
-    }
-    T0.5[i] <- b[which.max(a)]
-    T0.75[i] <- min(b[which(a <= 0.5*max(a, na.rm = TRUE))][which(b[which(a <= 0.5*max(a, na.rm = TRUE))] > b[which.max(a)])], na.rm = TRUE)
+    fit.Em = lm(Absorbance ~ poly(Temperature, 20, raw=TRUE),
+                data = first.derive[[i]])
+
+    string.dE.dT = gsub("NA", "0", gsub(", ", " + ", toString(paste(0:20, "*", coef(fit.Em), "*x^", -1:19, sep =""))))
+    string.dE.dT2 = gsub("NA", "0", gsub(", ", " + ", toString(paste(0:20, "*", c(0,0:19),"*", coef(fit.Em), "*x^", -2:18, sep =""))))
+
+    dE.dT = function(x){eval(parse(text = string.dE.dT))}
+    dE.dT2 = function(x){eval(parse(text = string.dE.dT2))}
+
+    T0.5[i] = seq(min(first.derive[[i]]$Temperature) + 2, max(first.derive[[i]]$Temperature) - 2, length.out = 1000)[which.max(dE.dT(seq(min(first.derive[[i]]$Temperature) + 2, max(first.derive[[i]]$Temperature) - 2, length.out = 1000)))]
+    T0.75[i] = seq(min(first.derive[[i]]$Temperature) + 10, max(first.derive[[i]]$Temperature) - 10, length.out = 1000)[which.min(dE.dT2(seq(min(first.derive[[i]]$Temperature) + 10, max(first.derive[[i]]$Temperature) - 10, length.out = 1000)))]
+
     if (Mmodel == "Monomolecular.2State"){
       startH[i] <- -0.0032/((1/(273.15 + T0.5[i]))-(1/(273.15 + T0.75[i])))
     }
@@ -333,6 +352,27 @@ meltR.A = function(data_frame,
     if (Mmodel == "Homoduplex.2State"){
       startH[i] <- -0.0044/((1/(273.15 + T0.5[i]))-(1/(273.15 + T0.75[i])))
     }
+
+    #svg("~/Desktop/Melt_curve_derivative.svg")
+
+    #plot(first.derive[[i]]$Temperature, first.derive[[i]]$Absorbance,
+    #     xlab = Temperature ~ (degree ~ C), ylab = "Absorbance")
+    #lines(first.derive[[i]]$Temperature, predict(fit.Em), col = "red")
+    #lines(seq(min(first.derive[[i]]$Temperature) + 2, max(first.derive[[i]]$Temperature) - 2, length.out = 1000),
+    #  1.4 +10*dE.dT(seq(min(first.derive[[i]]$Temperature) + 2, max(first.derive[[i]]$Temperature) - 2, length.out = 1000)), col = "red")
+    #lines(seq(min(first.derive[[i]]$Temperature) + 2, max(first.derive[[i]]$Temperature) - 2, length.out = 1000),
+    #      1.475+10*dE.dT2(seq(min(first.derive[[i]]$Temperature) + 2, max(first.derive[[i]]$Temperature) - 2, length.out = 1000)), col = "blue")
+    #abline(v = T0.75[i])
+    #abline(v = T0.5[i])
+
+    #dev.off()
+
+    first.derive[[i]]$dA.dT = dE.dT(first.derive[[i]]$Temperature) + dE.dT(first.derive[[i]]$Temperature)*((first.derive[[i]]$Absorbance - predict(fit.Em))/first.derive[[i]]$Absorbance)
+    first.derive[[i]]$dA.dT2 = dE.dT2(first.derive[[i]]$Temperature) + dE.dT2(first.derive[[i]]$Temperature)*((first.derive[[i]]$Absorbance - predict(fit.Em))/first.derive[[i]]$Absorbance)
+
+    #plot(first.derive[[i]]$Temperature, first.derive[[i]]$dA.dT)
+    #plot(first.derive[[i]]$Temperature, first.derive[[i]]$dA.dT2)
+
   }
   ####Calculate starting baseline values for nls####
   a <-{}
@@ -664,6 +704,48 @@ meltR.A = function(data_frame,
   if (Save_results != "none"){
     write.table(indvfits, paste(file_path, "/", file_prefix, "_method_1_individual_fits.csv", sep = ""), sep = ",", row.names = FALSE)
   }
+
+  ####Assemble data for custom derivative plots####
+
+  df.deriv = first.derive[[1]]
+
+  if (length(first.derive) > 1){
+    for (i in 2:length(first.derive)){
+      #print(i)
+      df.deriv = rbind(df.deriv, first.derive[[i]])
+    }
+  }
+
+  ####Assemble data for custom individual fit plots####
+
+  df.method.1 = subset(no.background, Sample == unique(no.background$Sample)[1])
+  df.method.1$Model = predict(fit[[1]])
+
+  if (length(unique(no.background$Sample)) >1){
+    for (i in 2:length(unique(no.background$Sample))){
+      df.method.1.i = subset(no.background, Sample == unique(no.background$Sample)[i])
+      df.method.1.i$Model = predict(fit[[i]])
+      df.method.1 = rbind(df.method.1, df.method.1.i)
+    }
+  }
+
+
+  ####Assemble data for custom 1/Tm versus lnCt plots####
+
+  if (Mmodel != "Monomolecular.2State"){
+    if (methods[2] == TRUE){
+      Tm_data$Model = predict(Tm_vs_lnCt_fit)
+    }
+  }
+
+  ####Assemble global fit data for custom fit plots####
+
+  if (methods[3] == TRUE){
+    gfit_data$Model = predict(gfit)
+  }
+
+  ####Assemble final output####
+
   print("Individual curves")
   print(indvfits)
   print("Summary")
@@ -675,13 +757,18 @@ meltR.A = function(data_frame,
   print(range)
   output <- list("Summary" = comparison,
                  "Method.1.indvfits" = indvfits,
-                 "Range" = range)
+                 "Range" = range,
+                 "Derivatives.data" = df.deriv,
+                 "Method.1.data" = df.method.1,
+                 "Method.1.fit" = fit)
   if (Mmodel != "Monomolecular.2State"){
     if (methods[2] == TRUE){
+      output$Method.2.data = Tm_data
       output$Method.2.fit <- Tm_vs_lnCt_fit
     }
   }
   if (methods[3] == TRUE){
+    output$Method.3.data = gfit_data
     output$Method.3.fit <- gfit
   }
   output <- output
