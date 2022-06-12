@@ -11,7 +11,7 @@
 #'optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
 #'
 #'@param data_frame data_frame containing absorbance melting data
-#'@param blank the blank sample
+#'@param blank The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, The identity of the blank, for example, blank = 1 or blanke = "blank". If there are multiple blanks in the data, blank = list(c("blank 1", "Sample 1"), c("blank 2", "sample 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.
 #'@param NucAcid A vector containing the Nucleic acid type and the sequences you are fitting.
 #'@param Mmodel The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".
 #'@param Tmodel The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".
@@ -24,7 +24,7 @@
 #'@return A list of data frames containing parameters from the fits and data for ploting the results with ggplot2.
 #' @export
 meltR.A = function(data_frame,
-                   blank,
+                   blank = "none",
                    NucAcid,
                    concT = 90,
                    fitTs = NULL,
@@ -41,7 +41,7 @@ meltR.A = function(data_frame,
                     "Homoduplex.2State")
   Mmodels <- list(function(K){ (K/(1+K)) },
                   function(K1, K2, Ct){ 1/(1 + K1 + (K1*K2)) },
-                  function(K, Ct){ ((2/(K*Ct)) + 2 - sqrt(((((2/(K*Ct)) + 2)^2) - 4)))/2 },
+                  function(K, Ct){ ( (2/(K*Ct)) + 2 - sqrt(((((2/(K*Ct)) + 2)^2) - 4)))/2 },
                   function(K, Ct){ ((1/(2*K*Ct)) + 2 - sqrt(((((1/(2*K*Ct)) + 2)^2) - 4)))/2 })
   names(Mmodels) <- Mmodel_names
   ####List of thermodynamics models to fit to####
@@ -153,18 +153,48 @@ meltR.A = function(data_frame,
     }
   }
   ####Subtract out the blank####
-  samples <- {}
-  for (i in c(1:length(unique(data_frame$Sample)))){
-    samples[[i]] <- subset(data_frame, Sample == unique(data_frame$Sample)[i])
-    for (j in c(1:length(samples[[i]]$Sample))){
-      samples[[i]]$Absorbance[j] <- samples[[i]]$Absorbance[j] - (samples[[blank]]$Absorbance[j]*samples[[blank]]$Pathlength[j])
+
+  if ("blank" == "mone"){ #routine for no blank in the data set
+
+    no.background = data_frame
+
+  }else{
+
+    if (length(blank) == 1){ #routine for a single blank in the data set
+
+      samples <- {}
+      for (i in c(1:length(unique(data_frame$Sample)))){
+        samples[[i]] <- subset(data_frame, Sample == unique(data_frame$Sample)[i])
+        for (j in c(1:length(samples[[i]]$Sample))){
+          samples[[i]]$Absorbance[j] <- samples[[i]]$Absorbance[j] - (samples[[blank]]$Absorbance[j]*samples[[blank]]$Pathlength[j])
+        }
+      }
+      k <- samples[[1]]
+      for (i in c(2:length(samples))){
+        k <- rbind(k, samples[[i]])
+      }
+      no.background <- subset(k, Sample != blank)
+
+    }else{ #routine for multiple blanks in a data set
+
+      samples <- {}
+      for (i in c(1:length(unique(data_frame$Sample)))){
+        samples[[i]] <- subset(data_frame, Sample == unique(data_frame$Sample)[i])
+        for (j in c(1:length(samples[[i]]$Sample))){
+          samples[[i]]$Absorbance[j] <- samples[[i]]$Absorbance[j] - (samples[[blank]]$Absorbance[j]*samples[[blank]]$Pathlength[j])
+        }
+      }
+      k <- samples[[1]]
+      for (i in c(2:length(samples))){
+        k <- rbind(k, samples[[i]])
+      }
+      no.background <- subset(k, Sample != blank)
+
     }
+
   }
-  k <- samples[[1]]
-  for (i in c(2:length(samples))){
-    k <- rbind(k, samples[[i]])
-  }
-  no.background <- subset(k, Sample != blank)
+
+
   ####Calculate extinction coefficients####
   RNA <- list(15340, 7600, 12160, 10210, 13650, 10670, 12790, 12140, 10670, 7520, 9390, 8370, 12920, 9190, 11430, 10960, 12520, 8900, 10400, 10110)
   names(RNA) <- c("Ap", "Cp", "Gp", "Up", "ApA", "ApC", "ApG", "ApU", "CpA", "CpC", "CpG", "CpU", "GpA", "GpC", "GpG", "GpU", "UpA", "UpC", "UpG", "UpU")
