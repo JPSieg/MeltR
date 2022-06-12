@@ -7,27 +7,29 @@
 #'between isotherms and the Fmax and Fmin are allowed to float. Also includes an algorithm that
 #'optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
 #'
-#'@param df df containing fluorescence binding data
-#'@param Tmodel The thermodynamic model you want to fit the data to. Options are "VantHoff" and "Kirchoff".
-#'@param K_error Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = c(0.25, 0.25).
-#'@param K-range A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom K_range or c(start, end) to set a K_range. Example: "K_range = c(5, 100)"
-#'@param Start_K A K value to start non-linear regression. Default = 0.1.
-#'@param Optomize_B_conc Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the quencher labeled strand based on the shape of low temperature isotherms with K values < 0.1.
-#'@param Low_reading Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optomize the concentration. Default = "auto" will use the lowest temperature reading.
-#'@param low_K Used by the concentration optimization algorithm. A low K value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = 0.01.
+#'@param df data frame containing fluorescence binding data
+#'@param Kd_error_quantile Quantile for uncertainty in equilibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = 0.25 or the 25% most accurate binding constants in the Kd_range (See "Kd_range").
+#'@param Kd_range A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom Kd_range or c(start, end) to set a Kd_range. Example: "Kd_range = c(5, 100)"
+#'@param Start_K A Kd value to start non-linear regression. Default = 0.1.
+#'@param vh_start A list of initial guesses for the helix folding enthalpy and entropy. By default vh_start = list(H = -70, S = -0.180)
+#'@param Optimize_conc Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the concentration for the fluorophore labeled strand based on the shape of low temperature isotherms.
+#'@param Low_reading Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optimize the concentration. Default = "auto" will use the lowest temperature reading.
+#'@param low_K Used by the concentration optimization algorithm. A low Kd value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = FALSE to allow the low_K to float in the concentration optimization algorithm. It is best to use values between 0.1 and 10.
 #'@param B.conc.Tm Only use quencher (or B strands) higher than this threshold in the 1/Tm versus lnCt fitting method, method 3
-#'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
+#'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formatted tables of parameters, "some" to save ".csv" formatted tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
+#'@param silent Set to TRUE to run in silent mode (which does not print results in the console). Good for running in loops. Default is TRUE.
 #'@return
 #' @export
 meltR.F = function(df,
-                   K_range = c(1,150),
-                   K_error_quantile = 0.25,
-                   Start_K = 1,
+                   Kd_error_quantile = 0.25,
+                   Kd_range = c(10, 1000),
+                   Start_K = 0.1,
+                   vh_start = list(H = -70, S = -0.180),
                    Optimize_conc = TRUE,
                    Low_reading = "auto",
-                   low_K = 0.1,
+                   low_K = FALSE,
                    B.conc.Tm = 250,
                    Save_results = "none",
                    file_prefix = "Fit",
@@ -98,14 +100,26 @@ meltR.F = function(df,
       Low_reading = df$Reading[which.min(df$Temperature)]
     }else{Low_reading = df$Reading[Low_reading]}
 
-    optomize_start = list(R = 1, K = 0.01, Fmax = Fmax.start[Low_reading], Fmin = Fmin.start[Low_reading])
-    hockey_stick = subset(df, Reading == Low_reading)
-    hockey_stick$low_K = low_K
-    hockey_stick_fit = nls(Emission ~ Optimize(R, K, A, B, Fmax, Fmin),
-                            low = 0, algorithm = 'port',
-                            start = optomize_start, data = hockey_stick)
-    R = coef(hockey_stick_fit)[1]
-    K.opt = coef(hockey_stick_fit)[2]
+    if (low_K == FALSE){
+      optomize_start = list(R = 1, K = 0.01, Fmax = Fmax.start[Low_reading], Fmin = Fmin.start[Low_reading])
+      hockey_stick = subset(df, Reading == Low_reading)
+      hockey_stick$low_K = low_K
+      hockey_stick_fit = nls(Emission ~ Optimize(R, K, A, B, Fmax, Fmin),
+                             low = 0, algorithm = 'port',
+                             start = optomize_start, data = hockey_stick)
+      R = coef(hockey_stick_fit)[1]
+      K.opt = coef(hockey_stick_fit)[2]
+    }else{
+      optomize_start = list(R = 1, Fmax = Fmax.start[Low_reading], Fmin = Fmin.start[Low_reading])
+      hockey_stick = subset(df, Reading == Low_reading)
+      hockey_stick$low_K = low_K
+      hockey_stick_fit = nls(Emission ~ Optimize(R, K = low_K, A, B, Fmax, Fmin),
+                             low = 0, algorithm = 'port',
+                             start = optomize_start, data = hockey_stick)
+      R = coef(hockey_stick_fit)[1]
+      K.opt = low_K
+    }
+
   }
 
   #plot(hockey_stick$B, hockey_stick$Emission)
@@ -214,12 +228,12 @@ meltR.F = function(df,
     indvfits = indvfits[-which(is.na(indvfits$K)),]
   }
 
-  indvfits.to.fit = indvfits[-c(which(indvfits$K <= K_range[1]), which(indvfits$K >= K_range[2])),]
+  indvfits.to.fit = indvfits[-c(which(indvfits$K <= Kd_range[1]), which(indvfits$K >= Kd_range[2])),]
 
 
-  vh_start = list(H = -70, S = -0.180)
+  vh_start = vh_start
 
-  K_error = quantile(indvfits.to.fit$SE.lnK, K_error_quantile, na.rm = TRUE)
+  K_error = quantile(indvfits.to.fit$SE.lnK, Kd_error_quantile, na.rm = TRUE)
 
   indvfits.to.fit = indvfits.to.fit[-which(indvfits.to.fit$SE.lnK >= K_error),]
 
@@ -230,7 +244,7 @@ meltR.F = function(df,
     pdf(paste(file_path, "/", file_prefix, "_method_1_VH_plot.pdf", sep = ""),
         width = 3, height = 3, pointsize = 0.25)
     plot(indvfits$invT, indvfits$lnK,
-         xlab = "1/Temperature" ~ (degree ~ C), ylab = "ln[ K ]",
+         xlab = "1/Temperature (K)", ylab = "ln[ KD (M)]",
          cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     for(i in c(1:length(indvfits$Temperature))){
       arrows(y0 = indvfits$lnK[i] - indvfits$SE.lnK[i], y1 = indvfits$lnK[i] + indvfits$SE.lnK[i],
@@ -238,8 +252,8 @@ meltR.F = function(df,
              length=0.02, angle=90, code = 3)
     }
     lines(indvfits$invT, Tmodel(H = coef(vh_plot_fit)[1], S = coef(vh_plot_fit)[2], Temperature = indvfits$Temperature), col = "red")
-    abline(h = log((10^-9)*K_range[1]), col = "blue")
-    abline(h = log((10^-9)*K_range[2]), col = "orange")
+    abline(h = log((10^-9)*Kd_range[1]), col = "blue")
+    abline(h = log((10^-9)*Kd_range[2]), col = "orange")
     dev.off()
   }
 
@@ -308,6 +322,8 @@ meltR.F = function(df,
 
   df.Tm$Ct = (10^-9)*df.Tm$B - (10^-9)*0.5*df.Tm$A
 
+  df.Tm = subset(df.Tm, df.Tm$Ct > 0)
+
   df.Tm$lnCt = log(df.Tm$Ct)
 
   fit = nls(invT ~ (S/H) + (0.00198720425864083/H)*lnCt,
@@ -325,22 +341,22 @@ meltR.F = function(df,
 
   colnames(df.Tm.result) = c("H", "SE.H", "S", "SE.S", "G", "SE.G")
 
-  if (Save_results == "all"){
-    pdf(paste(file_path, "/", file_prefix, "_method_3_Tm_vs_lnCt_plot.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    plot(df.Tm$lnCt, df.Tm$invT,
-         xlab = "ln[Ct (M)]", ylab = "1/Tm (1/K)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-    abline(a = S/H, b = 0.00198720425864083/H, col = "red")
-    dev.off()
-  }
+  #if (Save_results == "all"){
+  #  pdf(paste(file_path, "/", file_prefix, "_method_3_Tm_vs_lnCt_plot.pdf", sep = ""),
+  #      width = 3, height = 3, pointsize = 0.25)
+  #  plot(df.Tm$lnCt, df.Tm$invT,
+  #       xlab = "ln[Ct (M)]", ylab = "1/Tm (1/K)",
+   #      cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+   # abline(a = S/H, b = 0.00198720425864083/H, col = "red")
+  #  dev.off()
+  #}
 
   ####Save results####
   output = {}
-  output[[1]] = rbind(VH_plot_summary, Gfit_summary, df.Tm.result)
-  row.names(output[[1]]) = c(1:3)
-  output[[1]] = cbind(data.frame("Method" =c("1 VH plot", "2 Global fit", "3 1/Tm vs lnCT")), output)
-  output[[1]]$K_error = c(K_error, K_error, NA)
+  output[[1]] = rbind(VH_plot_summary, Gfit_summary)
+  row.names(output[[1]]) = c(1:2)
+  output[[1]] = cbind(data.frame("Method" =c("1 VH plot", "2 Global fit")), output)
+  output[[1]]$K_error = c(K_error, K_error)
   output[[1]]$R = R
   output[[1]]$Kd.opt = K.opt
   if (silent == FALSE){

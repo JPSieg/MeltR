@@ -9,8 +9,8 @@
 #'@param S The entropy of folding in kcal/mol/K.
 #'@param fmax The approximate fluorescence maximum of the fluorophore labeled strand in its single stranded state
 #'@param fmin The approximate fluorescence minimum for the double stranded state where the fluorophore labeled strand is base paired with the quencher labeled strand.
-#'@param FAM_error
-#'@param BHQ1_error
+#'@param FAM_error The error in FAM concentrations
+#'@param BHQ1_error The error in BHQ1 concentrations
 #'@param Emission_SD The approximate experimental error for each emission reading.
 #'@return A dataframe containing the modeled data. Ready to feed into meltR.F.
 #' @export

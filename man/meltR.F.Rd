@@ -6,12 +6,13 @@
 \usage{
 meltR.F(
   df,
-  K_range = c(1, 150),
-  K_error_quantile = 0.25,
-  Start_K = 1,
+  Kd_error_quantile = 0.25,
+  Kd_range = c(10, 1000),
+  Start_K = 0.1,
+  vh_start = list(H = -70, S = -0.18),
   Optimize_conc = TRUE,
   Low_reading = "auto",
-  low_K = 0.1,
+  low_K = FALSE,
   B.conc.Tm = 250,
   Save_results = "none",
   file_prefix = "Fit",
@@ -20,29 +21,31 @@ meltR.F(
 )
 }
 \arguments{
-\item{df}{df containing fluorescence binding data}
+\item{df}{data frame containing fluorescence binding data}
 
-\item{Start_K}{A K value to start non-linear regression. Default = 0.1.}
+\item{Kd_error_quantile}{Quantile for uncertainty in equilibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = 0.25 or the 25\% most accurate binding constants in the Kd_range (See "Kd_range").}
 
-\item{Low_reading}{Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optomize the concentration. Default = "auto" will use the lowest temperature reading.}
+\item{Kd_range}{A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom Kd_range or c(start, end) to set a Kd_range. Example: "Kd_range = c(5, 100)"}
 
-\item{low_K}{Used by the concentration optimization algorithm. A low K value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = 0.01.}
+\item{Start_K}{A Kd value to start non-linear regression. Default = 0.1.}
+
+\item{vh_start}{A list of initial guesses for the helix folding enthalpy and entropy. By default vh_start = list(H = -70, S = -0.180)}
+
+\item{Optimize_conc}{Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the concentration for the fluorophore labeled strand based on the shape of low temperature isotherms.}
+
+\item{Low_reading}{Used by the concentration optimization algorithm. The isotherm, or reading, that you want to use to optimize the concentration. Default = "auto" will use the lowest temperature reading.}
+
+\item{low_K}{Used by the concentration optimization algorithm. A low Kd value in nanomolar, that is used to find an optimum ration between A and B strands in the experiment. Default = FALSE to allow the low_K to float in the concentration optimization algorithm. It is best to use values between 0.1 and 10.}
 
 \item{B.conc.Tm}{Only use quencher (or B strands) higher than this threshold in the 1/Tm versus lnCt fitting method, method 3}
 
-\item{Save_results}{What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.}
+\item{Save_results}{What results to save. Options: "all" to save PDF plots and ".csv" formatted tables of parameters, "some" to save ".csv" formatted tables of parameters, or "none" to save nothing.}
 
 \item{file_prefix}{Prefix that you want on the saved files.}
 
 \item{file_path}{Path to the directory you want to save results in.}
 
-\item{Tmodel}{The thermodynamic model you want to fit the data to. Options are "VantHoff" and "Kirchoff".}
-
-\item{K_error}{Acceptable uncetainty in equillibrium constants for fitting to thermodynamic models. K_error = K standard error/K. Default = c(0.25, 0.25).}
-
-\item{K-range}{A custom acceptable nM Kd range to fit for your experiment. Options FALSE for no custom K_range or c(start, end) to set a K_range. Example: "K_range = c(5, 100)"}
-
-\item{Optomize_B_conc}{Deals with a fundamental experimental uncertainty in determination of A =fluorophore and B = Quencher concentrations in the experiment. If TRUE, meltR.f will optimize the quencher labeled strand based on the shape of low temperature isotherms with K values < 0.1.}
+\item{silent}{Set to TRUE to run in silent mode (which does not print results in the console). Good for running in loops. Default is TRUE.}
 }
 \value{
 
