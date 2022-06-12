@@ -153,13 +153,32 @@ meltR.A = function(data_frame,
     }
   }
   ####Subtract out the blank####
-  if ("blank" == "mone"){ #routine for no blank in the data set
 
-    no.background = data_frame
+  if (is.list(blank)){ #routine for multiple blanks in a data set
+
+    df.samples <- {}
+    df.blank <- {}
+
+    for (i in c(1:length(blank))){
+      df.samples[[i]] = subset(data_frame, Sample == blank[[i]][1])
+      df.blank[[i]] = subset(data_frame, Sample == blank[[i]][2])
+      df.samples[[i]]$Absorbance = df.samples[[i]]$Absorbance - df.blank[[i]]$Absorbance
+    }
+    k <- df.samples[[1]]
+    if (length(blank) > 1){
+      for (i in c(2:length(df.samples))){
+        k <- rbind(k, df.samples[[i]])
+      }
+    }
+
+    no.background = k
 
   }else{
+    if (blank == "none"){ #routine for no blank in the data set
 
-    if (length(blank) == 1){ #routine for a single blank in the data set
+      no.background = data_frame
+
+    }else{  #routine for a single blank in the data set
 
       samples <- {}
       for (i in c(1:length(unique(data_frame$Sample)))){
@@ -172,16 +191,15 @@ meltR.A = function(data_frame,
       for (i in c(2:length(samples))){
         k <- rbind(k, samples[[i]])
       }
+
       no.background <- subset(k, Sample != blank)
 
-    }else{ #routine for multiple blanks in a data set
-
     }
-
   }
 
 
   ####Calculate extinction coefficients####
+
   RNA <- list(15340, 7600, 12160, 10210, 13650, 10670, 12790, 12140, 10670, 7520, 9390, 8370, 12920, 9190, 11430, 10960, 12520, 8900, 10400, 10110)
   names(RNA) <- c("Ap", "Cp", "Gp", "Up", "ApA", "ApC", "ApG", "ApU", "CpA", "CpC", "CpG", "CpU", "GpA", "GpC", "GpG", "GpU", "UpA", "UpC", "UpG", "UpU")
   DNA <- list(15340, 7600, 12160, 8700, 13650, 10670, 12790, 11420, 10670, 7520, 9390, 7660, 12920, 9190, 11430, 10220, 11780, 8150, 9700, 8610)

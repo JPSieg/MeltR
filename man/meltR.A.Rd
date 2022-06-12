@@ -6,7 +6,7 @@
 \usage{
 meltR.A(
   data_frame,
-  blank,
+  blank = "none",
   NucAcid,
   concT = 90,
   fitTs = NULL,
@@ -21,7 +21,7 @@ meltR.A(
 \arguments{
 \item{data_frame}{data_frame containing absorbance melting data}
 
-\item{blank}{the blank sample}
+\item{blank}{The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, The identity of the blank, for example, blank = 1 or blanke = "blank". If there are multiple blanks in the data, blank = list(c("blank 1", "Sample 1"), c("blank 2", "sample 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.}
 
 \item{NucAcid}{A vector containing the Nucleic acid type and the sequences you are fitting.}
 
