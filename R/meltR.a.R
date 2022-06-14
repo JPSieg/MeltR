@@ -200,6 +200,13 @@ meltR.A = function(data_frame,
 
   ####Calculate extinction coefficients####
 
+  if (NucAcid[1] == "Custom"){
+    extcoef = sum(as.numeric(NucAcid[2:length(NucAcid)]))
+    names(extcoef) <- "Total"
+  }else{
+
+  }
+
   RNA <- list(15340, 7600, 12160, 10210, 13650, 10670, 12790, 12140, 10670, 7520, 9390, 8370, 12920, 9190, 11430, 10960, 12520, 8900, 10400, 10110)
   names(RNA) <- c("Ap", "Cp", "Gp", "Up", "ApA", "ApC", "ApG", "ApU", "CpA", "CpC", "CpG", "CpU", "GpA", "GpC", "GpG", "GpU", "UpA", "UpC", "UpG", "UpU")
   DNA <- list(15340, 7600, 12160, 8700, 13650, 10670, 12790, 11420, 10670, 7520, 9390, 7660, 12920, 9190, 11430, 10220, 11780, 8150, 9700, 8610)
