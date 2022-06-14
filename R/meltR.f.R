@@ -392,7 +392,6 @@ meltR.F = function(df,
     print(output[[9]])
   }
 
-
   names(output) = c("VantHoff",
                      "K",
                      "VH_method_1_fit",

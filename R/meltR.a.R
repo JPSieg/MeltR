@@ -197,6 +197,7 @@ meltR.A = function(data_frame,
     }
   }
 
+  raw.df = no.background
 
   ####Calculate extinction coefficients####
 
@@ -407,6 +408,7 @@ meltR.A = function(data_frame,
     mED <- c()
     bSS <- c()
     mSS <- c()
+    Ind.model = Model
     for (i in c(1:length(unique(no.background$Sample)))){
       tryCatch({
         a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
@@ -519,6 +521,7 @@ meltR.A = function(data_frame,
     Tm_data$invT <- 1/(Tm_data$Tm + 273.15)
     if (Mmodel != "Monomolecular.2State"){
       if (Mmodel != "Monomolecular.3State"){
+        Tm.model = TmModel
         Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
                               data = Tm_data,
                               start = list(H = -70, S = -0.17))
@@ -536,7 +539,11 @@ meltR.A = function(data_frame,
           lines(x = Tm_data$lnCt, predict(Tm_vs_lnCt_fit), col = "red")
           dev.off()
         }
+      }else{
+        Tm.model = NA
       }
+    }else{
+      Tm.model = NA
     }
     if (Mmodel == "Monomolecular.2State"){
       if (Mmodel == "Monomolecular.3State"){
@@ -747,6 +754,12 @@ meltR.A = function(data_frame,
     gfit_data$Model = predict(gfit)
   }
 
+  ####Compile data for the BLTrimmer####
+
+  BLTrimmer = list(raw.df, #background subtracted raw data
+                   Ind.model,
+                   Tm.model)
+
   ####Assemble final output####
 
   print("Individual curves")
@@ -763,7 +776,8 @@ meltR.A = function(data_frame,
                  "Range" = range,
                  "Derivatives.data" = df.deriv,
                  "Method.1.data" = df.method.1,
-                 "Method.1.fit" = fit)
+                 "Method.1.fit" = fit,
+                 "BLTrimmer.data" = BLTrimmer)
   if (Mmodel != "Monomolecular.2State"){
     if (methods[2] == TRUE){
       output$Method.2.data = Tm_data
