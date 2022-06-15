@@ -15,7 +15,8 @@ meltR.A(
   Tmodel = "VantHoff",
   Save_results = "none",
   file_prefix = "Fit",
-  file_path = getwd()
+  file_path = getwd(),
+  auto.trimmed = FALSE
 )
 }
 \arguments{

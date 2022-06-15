@@ -33,7 +33,8 @@ meltR.A = function(data_frame,
                    Tmodel = "VantHoff",
                    Save_results = "none",
                    file_prefix = "Fit",
-                   file_path = getwd()) {
+                   file_path = getwd(),
+                   auto.trimmed = FALSE) {
   ####List of molecular models to fit####
   Mmodel_names <- c("Monomolecular.2State",
                     "Monomolecular.3State",
@@ -379,6 +380,7 @@ meltR.A = function(data_frame,
 
   }
   ####Calculate starting baseline values for nls####
+
   a <-{}
   uppbl_fit <- {}
   lowbl_fit <- {}
@@ -412,9 +414,13 @@ meltR.A = function(data_frame,
     for (i in c(1:length(unique(no.background$Sample)))){
       tryCatch({
         a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-        fitstart <- list(H = startH[i], Tm = T0.5[i],
-                         mED = lowbl_fit[[i]]$coefficients[2], bED = lowbl_fit[[i]]$coefficients[1],
-                         mESS = uppbl_fit[[i]]$coefficients[2], bESS = uppbl_fit[[i]]$coefficients[1])
+        if (is.list(auto.trimmed)){
+          fitstart = auto.trimmed[[i]]
+        }else{
+          fitstart <- list(H = startH[i], Tm = T0.5[i],
+                           mED = lowbl_fit[[i]]$coefficients[2], bED = lowbl_fit[[i]]$coefficients[1],
+                           mESS = uppbl_fit[[i]]$coefficients[2], bESS = uppbl_fit[[i]]$coefficients[1])
+        }
         if (Mmodel == "Monomolecular.2State"){
           fit[[i]] <- nls(Absorbance ~ Model(H, Tm, mED, bED, mESS, bESS, Temperature),
                           data = a[[i]],
@@ -506,13 +512,15 @@ meltR.A = function(data_frame,
     Tm <- c()
     lnCt <- c()
     for (i in c(1:length(unique(no.background$Sample)))){
+      #print(i)
       a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i]) #Pull out data
       #calculate f at each temp
       a[[i]]$f <- (a[[i]]$Absorbance - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))/((coef(fit[[i]])[3]*a[[i]]$Temperature + coef(fit[[i]])[4]) - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))
       Tm_range[[i]] <- data.frame( #Pull out data where f >= 0.4 and f <= 0.6
-        "Temperature" = a[[i]]$Temperature[which(a[[i]]$f >= 0.4)][which(a[[i]]$f[which(a[[i]]$f >= 0.4)] <= 0.6)],
-        "f" = a[[i]]$f[which(a[[i]]$f >= 0.4)][which(a[[i]]$f[which(a[[i]]$f >= 0.4)] <= 0.6)]
+        "Temperature" = a[[i]]$Temperature,
+        "f" = a[[i]]$f
       )
+
       Tm_fit[[i]] <- lm(f~Temperature, data = Tm_range[[i]]) #fit data where f >= 0.4 and f <= 0.6
       Tm[i] <- (0.5 - coef(Tm_fit[[i]])[1])/coef(Tm_fit[[i]])[2]
       lnCt[i] <- log(a[[i]]$Ct[1])
@@ -757,8 +765,22 @@ meltR.A = function(data_frame,
   ####Compile data for the BLTrimmer####
 
   BLTrimmer = list(raw.df, #background subtracted raw data
-                   Ind.model,
-                   Tm.model)
+                   Mmodel,
+                   Tmodel)
+
+  ####Make a list of MeltR A settings####
+
+  settings = list(data_frame,
+                  blank,
+                  NucAcid,
+                  concT,
+                  fitTs,
+                  methods,
+                  Mmodel,
+                  Tmodel,
+                  Save_results,
+                  file_prefix,
+                  file_path)
 
   ####Assemble final output####
 
@@ -777,7 +799,8 @@ meltR.A = function(data_frame,
                  "Derivatives.data" = df.deriv,
                  "Method.1.data" = df.method.1,
                  "Method.1.fit" = fit,
-                 "BLTrimmer.data" = BLTrimmer)
+                 "BLTrimmer.data" = BLTrimmer,
+                 "meltR.A.settings" = settings)
   if (Mmodel != "Monomolecular.2State"){
     if (methods[2] == TRUE){
       output$Method.2.data = Tm_data
