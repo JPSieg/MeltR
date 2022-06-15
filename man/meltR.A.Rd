@@ -8,6 +8,7 @@ meltR.A(
   data_frame,
   blank = "none",
   NucAcid,
+  wavelength = 260,
   concT = 90,
   fitTs = NULL,
   methods = c(TRUE, TRUE, TRUE),
@@ -22,9 +23,11 @@ meltR.A(
 \arguments{
 \item{data_frame}{data_frame containing absorbance melting data}
 
-\item{blank}{The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, The identity of the blank, for example, blank = 1 or blanke = "blank". If there are multiple blanks in the data, blank = list(c("blank 1", "Sample 1"), c("blank 2", "sample 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.}
+\item{blank}{The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, he identity of the blank, for example, blank = 1 or blank = "blank". If there are multiple blanks in the data, blank = list(c("Sample 1", "Blank 1"), c("Sample 2", "Blank 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.}
 
-\item{NucAcid}{A vector containing the Nucleic acid type and the sequences you are fitting.}
+\item{NucAcid}{A vector containing the Nucleic acid type and the sequences you are fitting for calculating extinction coefficients. Examples: c("RNA", "UUUUUU", "AAAAAA"), c("DNA", "GCTAGC"), etc... . For a custom extinction coefficient enter "Custom" followed by the molar extinction coefficients for every nucleic acid in the sample. For example, c("Custom", 10000, 20000).}
+
+\item{wavelength}{The wavelength you are using in the data set in nm. Options for RNA: 300, 295, 290, 285, 280, 275, 270, 265, 260, 255, 250, 245, 240, 235, and 230 nm. Options for DNA 260 nm. Most accurate at pH 7.0.}
 
 \item{concT}{The temperature used to calculate the NucAcid concentration. Default = 90.}
 

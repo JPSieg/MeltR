@@ -1,5 +1,5 @@
 ## code to prepare `df.fluor.data` dataset goes here
 
-df.fluor.data = read.csv("data/js5060_Helix_J_formatted.csv")
+df.ext.data = read.csv("data/Ext_coef_data.csv")
 
-usethis::use_data(df.fluor.data, overwrite = TRUE)
+usethis::use_data(df.ext.data, overwrite = TRUE)

@@ -4,7 +4,7 @@
 \alias{calc.extcoeff}
 \title{Calculates extinction coefficents}
 \usage{
-calc.extcoeff(NucAcid)
+calc.extcoeff(NucAcid, wavelength = 260)
 }
 \arguments{
 \item{NucAcid}{A vector containing RNA or DNA sequences. Example "c("RNA", "ACCUUUCG", "CGAAAGGU")"}

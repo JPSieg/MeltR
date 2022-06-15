@@ -7,14 +7,14 @@
 \format{
 A data frame with 4114 rows and 8 variables:
 \describe{
-\item{\code{Well}}{double Well location in a microplate}
-\item{\code{Reading}}{double Plate reading on the same sample}
-\item{\code{Temperature}}{double Temperature in degrees Celcius}
-\item{\code{A}}{double total FAM-CGUAUGUA concentration in nM}
-\item{\code{B}}{double total UACAUACG-BHQ1 concentration in nM}
-\item{\code{Emission}}{double Fluorecence emission}
-\item{\code{Helix}}{double Helix ID}
-\item{\code{Conditition}}{double Buffer condition in the description}
+\item{\code{Well}}{ Well location in a microplate}
+\item{\code{Reading}}{ Plate reading on the same sample}
+\item{\code{Temperature}}{ Temperature in degrees Celcius}
+\item{\code{A}}{ total FAM-CGUAUGUA concentration in nM}
+\item{\code{B}}{ total UACAUACG-BHQ1 concentration in nM}
+\item{\code{Emission}}{ Fluorecence emission}
+\item{\code{Helix}}{ Helix ID}
+\item{\code{Conditition}}{ Buffer condition in the description}
 }
 }
 \usage{

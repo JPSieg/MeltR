@@ -11,8 +11,9 @@
 #'optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
 #'
 #'@param data_frame data_frame containing absorbance melting data
-#'@param blank The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, The identity of the blank, for example, blank = 1 or blanke = "blank". If there are multiple blanks in the data, blank = list(c("blank 1", "Sample 1"), c("blank 2", "sample 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.
-#'@param NucAcid A vector containing the Nucleic acid type and the sequences you are fitting.
+#'@param blank The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, he identity of the blank, for example, blank = 1 or blank = "blank". If there are multiple blanks in the data, blank = list(c("Sample 1", "Blank 1"), c("Sample 2", "Blank 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.
+#'@param NucAcid A vector containing the Nucleic acid type and the sequences you are fitting for calculating extinction coefficients. Examples: c("RNA", "UUUUUU", "AAAAAA"), c("DNA", "GCTAGC"), etc... . For a custom extinction coefficient enter "Custom" followed by the molar extinction coefficients for every nucleic acid in the sample. For example, c("Custom", 10000, 20000).
+#'@param wavelength The wavelength you are using in the data set in nm. Options for RNA: 300, 295, 290, 285, 280, 275, 270, 265, 260, 255, 250, 245, 240, 235, and 230 nm. Options for DNA 260 nm. Most accurate at pH 7.0.
 #'@param Mmodel The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".
 #'@param Tmodel The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".
 #'@param concT The temperature used to calculate the NucAcid concentration. Default = 90.
@@ -26,6 +27,7 @@
 meltR.A = function(data_frame,
                    blank = "none",
                    NucAcid,
+                   wavelength = 260,
                    concT = 90,
                    fitTs = NULL,
                    methods = c(TRUE, TRUE, TRUE),
@@ -73,6 +75,10 @@ meltR.A = function(data_frame,
       calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
       calcG = function(H, Tm){H - (310*((H/(273.15 + Tm))))}
       calcG.SE = function(H, Tm, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*(H/(273.15 + Tm)))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
+      calcTM = function(H, S, Ct){(H/(S/1000)) - 273.15}
+      calcTM.SE = function(H, S, SE.H, SE.S, Ct){
+        ((H/(S/1000)) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2)
+      }
     }
   }
   if (Mmodel == "Monomolecular.3State"){
@@ -97,6 +103,10 @@ meltR.A = function(data_frame,
       }
       calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) }
       calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
+      calcTM = function(H, S, Ct){NA}
+      calcTM.SE = function(H, S, SE.H, SE.S, Ct){
+        NA
+      }
     }
   }
   if (Mmodel == "Heteroduplex.2State"){
@@ -124,6 +134,10 @@ meltR.A = function(data_frame,
       calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
       calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct)))) }
       calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
+      calcTM = function(H, S, Ct){(H/((S/1000) - 0.0019872*log(4/Ct))) - 273.15}
+      calcTM.SE = function(H, S, SE.H, SE.S, Ct){
+        ((H/((S/1000) - 0.0019872*log(4/Ct))) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2)
+      }
     }
   }
   if (Mmodel == "Homoduplex.2State"){
@@ -151,6 +165,10 @@ meltR.A = function(data_frame,
       calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
       calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct)))) }
       calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2)}
+      calcTM = function(H, S, Ct){(H/((S/1000) - 0.0019872*log(1/Ct))) - 273.15}
+      calcTM.SE = function(H, S, SE.H, SE.S, Ct){
+        ((H/((S/1000) - 0.0019872*log(1/Ct))) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2)
+      }
     }
   }
   ####Subtract out the blank####
@@ -203,63 +221,40 @@ meltR.A = function(data_frame,
   ####Calculate extinction coefficients####
 
   if (NucAcid[1] == "Custom"){
-    extcoef = sum(as.numeric(NucAcid[2:length(NucAcid)]))
-    names(extcoef) <- "Total"
+    extcoef = c(sum(as.numeric(NucAcid[2:length(NucAcid)])), as.numeric(NucAcid[2:length(NucAcid)]))
+    names(extcoef) <- c("Total", as.character(2:length(NucAcid)))
   }else{
+    tryCatch({
 
-  }
-
-  RNA <- list(15340, 7600, 12160, 10210, 13650, 10670, 12790, 12140, 10670, 7520, 9390, 8370, 12920, 9190, 11430, 10960, 12520, 8900, 10400, 10110)
-  names(RNA) <- c("Ap", "Cp", "Gp", "Up", "ApA", "ApC", "ApG", "ApU", "CpA", "CpC", "CpG", "CpU", "GpA", "GpC", "GpG", "GpU", "UpA", "UpC", "UpG", "UpU")
-  DNA <- list(15340, 7600, 12160, 8700, 13650, 10670, 12790, 11420, 10670, 7520, 9390, 7660, 12920, 9190, 11430, 10220, 11780, 8150, 9700, 8610)
-  names(DNA) <- c("Ap", "Cp", "Gp", "Tp", "ApA", "ApC", "ApG", "ApT", "CpA", "CpC", "CpG", "CpT", "GpA", "GpC", "GpG", "GpT", "TpA", "TpC", "TpG", "TpT")
-  if (NucAcid[1] == "RNA"){
-    b <- c()
-    b <- strsplit(NucAcid[-which(NucAcid == NucAcid[1])], split = "")
-    c <- {}
-    d <- {}
-    e <- c()
-    for (i in c(1:length(b))){
-      c[[i]] <- c(1:(length(b[[i]])-1))
-      d[[i]] <- c(1:(length(b[[i]])))
-      for (j in c(1:(length(b[[i]])-1))){
-        c[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", b[[i]][j+1], sep = ""))]]
+      df.ext = subset(df.ext.data, Wavelength.nm == wavelength)
+      RNA = df.ext$Absorbtivity.M
+      names(RNA) = df.ext$Nucleotide
+      b <- c()
+      b <- strsplit(NucAcid[-which(NucAcid == NucAcid[1])], split = "")
+      c <- {}
+      d <- {}
+      e <- c()
+      for (i in c(1:length(b))){
+        #print(i)
+        c[[i]] <- c(1:(length(b[[i]])-1))
+        d[[i]] <- c(1:(length(b[[i]])))
+        for (j in c(1:(length(b[[i]])-1))){
+          #print(j)
+          c[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", b[[i]][j+1], sep = ""))]]
+        }
+        for (j in c(1:(length(b[[i]])))){
+          d[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", sep = ""))]]
+        }
+        e[i] <- 2*sum(c[[i]]) - sum(d[[i]])
       }
-      for (j in c(1:(length(b[[i]])))){
-        d[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", sep = ""))]]
+      extcoef <- list()
+      extcoef[[1]] <- sum(e)
+      for (i in c(1:length(b))){
+        extcoef[[i+1]] <- e[i]
       }
-      e[i] <- 2*sum(c[[i]]) - sum(d[[i]])
-    }
-    extcoef <- list()
-    extcoef[[1]] <- sum(e)
-    for (i in c(1:length(b))){
-      extcoef[[i+1]] <- e[i]
-    }
-    names(extcoef) <- c("Total", NucAcid[c(2:length(NucAcid))])
-  }
-  if (NucAcid[1] == "DNA"){
-    b <- c()
-    b <- strsplit(NucAcid[-which(NucAcid == NucAcid[1])], split = "")
-    c <- {}
-    d <- {}
-    e <- c()
-    for (i in c(1:length(b))){
-      c[[i]] <- c(1:(length(b[[i]])-1))
-      d[[i]] <- c(1:(length(b[[i]])))
-      for (j in c(1:(length(b[[i]])-1))){
-        c[[i]][j] <- RNA[[which(names(DNA) == paste(b[[i]][j], "p", b[[i]][j+1], sep = ""))]]
-      }
-      for (j in c(1:(length(b[[i]])))){
-        d[[i]][j] <- RNA[[which(names(DNA) == paste(b[[i]][j], "p", sep = ""))]]
-      }
-      e[i] <- 2*sum(c[[i]]) - sum(d[[i]])
-    }
-    extcoef <- list()
-    extcoef[[1]] <- sum(e)
-    for (i in c(1:length(b))){
-      extcoef[[i+1]] <- e[i]
-    }
-    names(extcoef) <- c("Total", NucAcid[c(2:length(NucAcid))])
+      names(extcoef) <- c("Total", NucAcid[c(2:length(NucAcid))])
+    },
+             error = function(e){print("There is no nucleotide extinction coefficient at this wavelength for a nucleotide you specified in your sequence. You will need to provide your own custom extinction coefficient")})
   }
 
   ####Remove values not in fitTs####
@@ -303,7 +298,11 @@ meltR.A = function(data_frame,
       df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
       for (j in c(length(df.raw$Sample):1)){
         if (df.raw$Temperature[j] > concT){
-          ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
+          if (is.atomic(extcoef)){
+            ct[i] <- (df.raw$Absorbance[j]/(extcoef[[1]]*df.raw$Pathlength[j]))
+          }else{
+            ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
+          }
         }
         samples[[i]]$Ct <- ct[i]
       }
@@ -316,7 +315,11 @@ meltR.A = function(data_frame,
       df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
       for (j in c(length(df.raw$Sample):1)){
         if (df.raw$Temperature[j] > concT){
-          ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
+          if (is.atomic(extcoef)){
+            ct[i] <- (df.raw$Absorbance[j]/(extcoef[[1]]*df.raw$Pathlength[j]))
+          }else{
+            ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
+          }
         }
         samples[[i]]$Ct <- ct[i]
       }
@@ -328,6 +331,7 @@ meltR.A = function(data_frame,
       k <- rbind(k, samples[[i]])
     }
   }
+
   no.background <- subset(k, Sample != blank)
   ####Calculate starting thermo parameters for nls####
   first.derive <- {}
@@ -716,6 +720,22 @@ meltR.A = function(data_frame,
     comparison <- cbind(data.frame("Method" = c("1 individual fits", "2 Tm versus ln[Ct]", "3 Global fit")), comparison)
     row.names(comparison) <- c(1:3)
   }
+
+  Tm_at_0.1mM = c()
+  SE.Tm_at_0.1mM = c()
+
+  for (i in 1:nrow(comparison)){
+    Tm_at_0.1mM[i] =  calcTM(H = comparison$H[i], S = comparison$S[i],
+                             Ct = 10^-4)
+    SE.Tm_at_0.1mM[i] = calcTM.SE(H = comparison$H[i], S = comparison$S[i],
+                            SE.H = comparison$SE.H[i], SE.S = comparison$SE.S[i],
+                            Ct = 10^-4)
+  }
+
+  comparison$Tm_at_0.1mM = Tm_at_0.1mM
+  comparison$SE.Tm_at_0.1mM = SE.Tm_at_0.1mM
+
+
   if (Save_results != "none"){
     write.table(comparison, paste(file_path, "/", file_prefix, "_summary.csv", sep = ""), sep = ",", row.names = FALSE)
   }
@@ -793,6 +813,7 @@ meltR.A = function(data_frame,
                       "G" = abs((range(comparison$G)[1]-range(comparison$G)[2])/mean(comparison$G)))
   print("fractional error between methods")
   print(range)
+  print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
   output <- list("Summary" = comparison,
                  "Method.1.indvfits" = indvfits,
                  "Range" = range,

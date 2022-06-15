@@ -390,6 +390,7 @@ meltR.F = function(df,
   if (silent == FALSE){
     print("Fractional error between methods")
     print(output[[9]])
+    print("dH and dG are reporterd in kcal/mol and dS is in cal/mol/K. Tms are in deg Celcius")
   }
 
   names(output) = c("VantHoff",

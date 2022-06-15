@@ -1,16 +1,16 @@
 #'Auto-trim absorbance melting curves to obtain more accurate meltR.A fits
 #'
-#'Automates #'
+#'Automates absorbance data baseline trimming and testing. Generates random permutations of trimmed baseline combinations, fits the data using Method 1 and Method 2, compares the enthalpy difference, and chooses an optimum set of trimmed absorbance melting curves.
 #'
-#'@param meltR.A.fit data_frame containing absorbance melting data
-#'@param n.combinations The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, The identity of the blank, for example, blank = 1 or blanke = "blank". If there are multiple blanks in the data, blank = list(c("blank 1", "Sample 1"), c("blank 2", "sample 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.
-#'@param n.ranges A vector containing the Nucleic acid type and the sequences you are fitting.
-#'@param range.step The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".
-#'@param no.trim.range The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".
-#'@param parallel The temperature used to calculate the NucAcid concentration. Default = 90.
-#'@param n.core Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit.
-#'@param Save_results what methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Can be true or false. Note, method 1 must be set to TRUE or the subsequent steps will not work.
-#'@param file_path What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
+#'@param meltR.A.fit A object produced by fitting data with MeltR.A.
+#'@param n.combinations Number of baseline combinations to test. The program will produce n.ranges^Samples combinations of baselines. It will require a large amount of computational time to test these. In general, testing 1000 combinations will produce a reliable result (plus or minus 5% in terms on enthalpy). For an exhaustive testing, set this parameter to n.ranges^Samples.
+#'@param n.ranges Number of trimmed baselines to generate per sample. It is not recommended to increase this parameter past 6 because of how long it will take the computer to generate all of these combinations.
+#'@param range.step Temperature difference between each range that is generated for each sample. Default = 5 deg Celsius works well.
+#'@param no.trim.range Determines the range where the absorbance data will not be trimmed. By default, no.trim.range = c(0.2, 0.8), meaning that the data will not be trimmed at a mode fraction double stranded greater than 0.2 and less than 0.8. Determined using the global fit from the input object created by meltR.A.
+#'@param parallel Set to "on" if you want to use multiple cores to fit baselines. You will need to run library(doParallel) to load doParallel and its dependencies. You will also need to specify the number of cores in the n.cores argument, which should not exceed the number of cores your computer has. There will be no benefit for running in parallel mode for a single core machine. Default = "none".
+#'@param n.core How many cores do you want to designate for this task.
+#'@param Save_results "all" to save results to the disk or "none" to not save results to the disk.
+#'@param file_path A path to the folder you want your results saved in.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@return A list of data frames containing parameters from the fits and data for plotting the results with ggplot2.
 #' @export
@@ -503,18 +503,18 @@ BLTrimmer = function(meltR.A.fit,
 
   print("Using autotrimmed baselines in MeltR")
 
-  meltR.A.fit = meltR.A(meltR.A.fit$meltR.A.settings[[1]],
-                        meltR.A.fit$meltR.A.settings[[2]],
-                        meltR.A.fit$meltR.A.settings[[3]],
-                        meltR.A.fit$meltR.A.settings[[4]],
-                        list.T.range,
-                        meltR.A.fit$meltR.A.settings[[6]],
-                        meltR.A.fit$meltR.A.settings[[7]],
-                        meltR.A.fit$meltR.A.settings[[8]],
-                        Save_results,
-                        file_prefix,
-                        file_path,
-                        fitstart)
+  meltR.A.fit = meltR.A(data_frame = meltR.A.fit$meltR.A.settings[[1]],
+                        blank = meltR.A.fit$meltR.A.settings[[2]],
+                        NucAcid = meltR.A.fit$meltR.A.settings[[3]],
+                        concT = meltR.A.fit$meltR.A.settings[[4]],
+                        fitTs = list.T.range,
+                        methods = meltR.A.fit$meltR.A.settings[[6]],
+                        Mmodel = meltR.A.fit$meltR.A.settings[[7]],
+                        Tmodel = meltR.A.fit$meltR.A.settings[[8]],
+                        Save_results = Save_results,
+                        file_prefix = file_prefix,
+                        file_path = file_path,
+                        auto.trimmed = fitstart)
 
   output = list(list.T.range,
                 meltR.A.fit,

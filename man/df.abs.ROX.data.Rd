@@ -7,10 +7,10 @@
 \format{
 A data frame with 1800 rows and 4 variables:
 \describe{
-\item{\code{Sample}}{double The sample melted in different cuvettes. Sample 1 is a buffer blank and other samples contain different concentrations of RNA}
-\item{\code{Pathlength}}{double The pathlength of the cuvette for each sample in cm}
-\item{\code{Temperature}}{double The temperature where the absorbance was recorded, in degrees Celcius}
-\item{\code{Absorbance}}{double The absorbance at 260 nm}
+\item{\code{Sample}}{ The sample melted in different cuvettes. Sample 1 is a buffer blank and other samples contain different concentrations of RNA}
+\item{\code{Pathlength}}{ The pathlength of the cuvette for each sample in cm}
+\item{\code{Temperature}}{ The temperature where the absorbance was recorded, in degrees Celcius}
+\item{\code{Absorbance}}{ The absorbance at 260 nm}
 }
 }
 \usage{
