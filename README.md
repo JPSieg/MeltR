@@ -16,7 +16,7 @@ Last update, 05/16/2022
 
 MeltR is a R package, written by Jacob Sieg, that fits nucleic acid folding data to molecular models to obtain thermodynamic parameters. MeltR automates the trivial but time-consuming tasks associated with fitting nucleic acids thermodenaturation data, leading to facile conversion of raw data into useful thermodynamic parameters.
 
-MeltR was inspired by Meltwin.<sup>[1]</sup> MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R console, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
+MeltR was inspired by Meltwin.<sup>[1]</sup> MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R console, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) MeltR can be run on any oporating system that is compatible with R. (5) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
 
 The core of MeltR is the “meltR.A” function for fitting absorbance melting curves and the “meltR.F” function for fitting fluorescence binding isotherms.
 
@@ -174,11 +174,11 @@ MeltR performs the following data preprocessing steps before fitting:
 
 2.) The background absorbance of a user specified blank is scaled to the pathlength of the cuvette and subtracted from each curve.
 
-3.) The total strand concentration (C<sub>t</sub>) is calculated at a user specified temperature (Default = 90 <span>&#176;</span>C).
+3.) The total strand concentration (C<sub>t</sub>) is calculated at a user specified temperature (Default = 90 <span>&#176;</span>C). For homoduplexes and monomolecular-self structured RNA, where there is only one nucleic acid in the sample, the C<sub>t</sub> is the total concentration of the single strand. For heteroduplexes, the C<sub>t</sub> is the total concentration of strand 1 plus the total concentration of strand 2.
 
 4.) High and low temperature data are trimmed (to the users specification) to ensure linear baselines.
 
-5.) First and second derivatives are taken using polynomial regression. First, the data are approximated using a 20th order polynomial. Then, the first and second derivatives of the polynomial are determined analytically using calculus. The approximate T<sub>0.5</sub> (the approximate melting temperature, T<sub>m</sub>, where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve and the T<sub>0.75</sub> (the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the first derivative (Figure 2), to a precision of less than 0.1 <span>&#176;</span>C.
+5.) First and second derivatives are taken using polynomial regression. First, the data are approximated using a 20th order polynomial. Then, the first and second derivatives of the polynomial are determined analytically using calculus. The approximate T<sub>0.5</sub> (the approximate melting temperature, T<sub>m</sub>, where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve and the T<sub>0.75</sub> (the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the second derivative (Figure 2), to a precision of less than 0.1 <span>&#176;</span>C.
 
 ![Melt curve derivative determined with polynomial regression.](https://user-images.githubusercontent.com/63312483/166296578-341d3aac-05a9-4176-9a72-0831dc0487cf.svg)
 
@@ -885,7 +885,7 @@ meltR.A(data_frame = df.FAM.C.BHQ1.data,
         concT = 75)
 ```
 
-### 4.2.7 Refining meltR.A fits by trimming fluorescence baselines.
+### 4.2.7 Refining meltR.A fits by trimming absorbance baselines.
 
 MeltR approximates absorbance baselines using a line (y = mx+b). Real absorbance data deviates from this linear behavior over wide temperature ranges. MeltR fits are thus improved by trimming the baselines so that baselines better approximate a line. First, the raw data should be inspected for linear baselines one sample at a time using the tidyverse. Then, data are fit with meltR.A using a manually optimized baseline trim. After this, the manually optimized fit can be passed to an automated baseline trimmer, which tests combinations of randomly trimmed baselines and identifies an optimum set of trimmed baselines.
 
@@ -897,11 +897,11 @@ aes(x = Temperature, y = Absorbance, color = factor(Sample))) +
   geom_vline(xintercept = c(15, 70)) #will add horizontal lines to the plot at 15 and 70
 ```
 
-Thus, for Sample 2, baselines are approximately linear above 15 <span>&#176;</span>C and below 70 <span>&#176;</span>C (Figure 10).
+Thus, for Sample 2, baselines are approximately linear above 80 <span>&#176;</span>C and below 80 <span>&#176;</span>C (Figure 10).
 
 ![Baseline trimming on Sample 10](https://user-images.githubusercontent.com/63312483/165791992-20b92819-5904-4287-9183-c4f489a1d1e7.svg)
 
-##### Figure 10: Baseline trimming on Sample 10. Vertical lines represent 25 and 70 <span>&#176;</span>C.
+##### Figure 10: Baseline trimming on Sample 10. Vertical lines represent 25 and 80 <span>&#176;</span>C.
 
 This should be repeated for each sample that contains RNA. After identifying ranges where baselines are linear, ranges can be supplied to the "fitTs" argument as a list of vectors (in the order of the samples in the data set). Note, do not provide a temperature range for the blank. 
 
