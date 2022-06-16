@@ -24,10 +24,28 @@ The creators of MeltR are interested in improving MeltR by adding new molecular 
 
 # 2 MeltR installation
 
+MeltR is written in R. You can find instructions for installing R here: "https://www.r-project.org/".
+
+MeltR can be installed from "https://github.com/JPSieg/MeltR" by typing two lines into your R console.
+
 ```{r}
 install.packages("devtools")
 devtools::install_github("JPSieg/MeltR")
 ```
+
+Most of MeltR is written entirely in base R and requires no other dependencies. However, if you want to use the BLTrimmer (see section 4.2.7) in parallel mode, you will need to install "doParallel" and its dependencies. In your R console:
+
+```{r}
+install.packages("doParallel")
+```
+
+Lastly, Rstudio, the tidyverse, and ggrepel, are recommended software and packages for running MeltR. You can find instructions for installing Rstudio here: "https://www.rstudio.com/products/rstudio/download/". The free version is excellent. Tidyverse and ggrepel can be installed from your R console.
+
+```{r}
+install.packages("tidyverse")
+install.packages("ggrepel")
+```
+
 
 # 3 Theory
 
@@ -755,9 +773,121 @@ This will create seven pre-canned outputs. The first and second outputs are depi
 
 ##### Figure 9: Pre-canned meltR.A outputs.
 
-### 4.2.5 Refining MeltR.A fits by trimming fluorescence baselines.
+### 4.2.5 Specifying blanks with meltR.A
 
-MeltR approximates absorbance baselines using a line (y = mx+b). Real absorbance data deviates from this linear behavior over wide temperature ranges. MeltR fits are thus improved by trimming the baselines so that baselines better approximate a line. First, the raw data should be inspected for linear baselines one sample at a time using the tidyverse.
+In this section, we will describe usage for the blank argument, which controls background subtraction. There is a single blank in the data set we fit in section 4.2.3. The identity of the blank sample specified in the "blank" argument, must match the identity of the blank sample in the data frame. If the blank sample is labeled with a character, the "blank" argument needs to be a character string, "Blank 1" for example. In the example in section 4.2.3, the blank sample is represented by a integer. We can check this using the "str" function in base R.
+
+```{r}
+str(df.abs.data)
+'data.frame':	1800 obs. of  4 variables:
+ $ Sample     : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Pathlength : num  1 1 1 1 1 1 1 1 1 1 ...
+ $ Temperature: num  4.78 5.5 6.03 6.52 7.03 7.53 8.02 8.54 9.04 9.54 ...
+ $ Absorbance : num  0.004395 -0.00058 0.000778 0.001038 0.001068 ...
+ ```
+
+As you can see, the Sample column in the data frame, which is why we specified the blank as:
+
+```{r}
+blank = 1
+```
+
+You may have already performed the background subtraction on your data. In this case, blanks should be removed from the data set and background subtraction can be turned off in meltR.A by setting the blank argument to "none". There is a data set in MeltR that is already background subtracted.
+
+```{r}
+?df.FAM.C.BHQ1.data
+meltR.A(data_frame = df.FAM.C.BHQ1.data,
+        blank = "none",
+        NucAcid = c("RNA", "CUGAGUC", "GACUCAG"),
+        Mmodel = "Heteroduplex.2State")
+```
+
+Thus, setting blank = "none" turns off background subtraction.
+
+If there are multiple blanks in the data set, different blanks can be assigned to different blanks by supplying sample-blank pairs to the "blank" argument using a list of vectors. For example, the df.abs.ROX.data data set, included in MeltR, contains variable concentrations of ROX fluorophore. The ROX absorbance must be subtracted out. We first check the Sample identities.
+
+```{r}
+?df.abs.ROX.data
+unique(df.abs.ROX.data$Sample)
+ [1] "0 uM ROX 0 uM Helix A"     "0 uM ROX 5 uM Helix A"    
+ [3] "0.032 uM ROX 5 uM Helix A" "0.1 uM ROX 5 uM Helix A"  
+ [5] "0.32 uM ROX 5 uM Helix A"  "3.2 uM ROX 5 uM Helix A"  
+ [7] "10 uM ROX 5 uM Helix A"    "32 uM ROX 5 uM Helix A"   
+ [9] "0.032 uM ROX 0 uM Helix A" "0.1 uM ROX 0 uM Helix A"  
+[11] "0.32 uM ROX 0 uM Helix A"  "3.2 uM ROX 0 uM Helix A"  
+[13] "10 uM ROX 0 uM Helix A"    "32 uM ROX 0 uM Helix A"  
+```
+
+We then create a list of samples specifying sample-blank pairs. Samples are specified first and blanks are specified second.
+
+```{r}
+list.blanks = list(c("0 uM ROX 5 uM Helix A", "0 uM ROX 0 uM Helix A"),
+              c("0.032 uM ROX 5 uM Helix A", "0.032 uM ROX 0 uM Helix A"),
+              c("0.1 uM ROX 5 uM Helix A", "0.1 uM ROX 0 uM Helix A"),
+              c("0.32 uM ROX 5 uM Helix A", "0.32 uM ROX 0 uM Helix A"),
+              c("3.2 uM ROX 5 uM Helix A", "3.2 uM ROX 0 uM Helix A"),
+              c("10 uM ROX 5 uM Helix A", "10 uM ROX 0 uM Helix A"),
+              c("32 uM ROX 5 uM Helix A", "32 uM ROX 0 uM Helix A"))
+```
+
+We can then supply the list "list.blanks" to the "blank" argument.
+
+```{r}
+meltR.A(df.abs.ROX.data,
+        blank = list.blanks,
+        NucAcid = c("RNA", "CGAAAGGU", "ACCUUUCG"),
+        methods = c(TRUE, FALSE, FALSE),
+        Mmodel = "Heteroduplex.2State",
+        fitTs = c(25, 75))
+```
+
+Note: I turned of methods 2 and 3 because the data set is not set up for these methods and it would likely cause the algorithm to fail because the data are inappropriate. Also, baselines are trimmed using the fitTs argument. This baseline trimming is discussed in more detail in section 4.2.7.
+
+### 4.2.6 Specifying extinction coefficients
+
+This section will describe how to specify extinction coefficients using the "NucAcid"" argument. In section 4.2.3, we supplied meltR.A with a nucleic acid sequence, and MeltR used extinction coefficient data to calculate an extinction coefficient at 260 nm, which meltR.A then uses to calculate C<sub>t</sub>. MeltR contains data to calculate extinction coefficients at 300, 295, 290, 285, 280, 275, 270, 265, 260, 255, 250, 245, 240, 235, and 230 nm for RNA. MeltR contains data to calculate extinction coefficients at 260 nm for DNA. Extinction coefficient calculations assume pH 7.0.
+
+You can change the wavelength that extinction coefficients are calculated at using the "wavelength" argument. We can test on the df.abs.ROX.data, even though this data was collected at 260 nm.
+
+```{r}
+meltR.A(df.abs.ROX.data,
+        wavelength = 280,
+        blank = blanks,
+        NucAcid = c("RNA", "CGAAAGGU", "ACCUUUCG"),
+        methods = c(TRUE, FALSE, FALSE),
+        Mmodel = "Heteroduplex.2State",
+        fitTs = c(25, 75))
+```
+
+You can check what values meltR.A is calculating using "calc.extcoeff".
+
+```{r}
+calc.extcoeff(c("RNA", "CGAAAGGU", "ACCUUUCG"))
+$Total
+[1] 115200
+
+$CGAAAGGU
+[1] 66120
+
+$ACCUUUCG
+[1] 49080
+```
+
+Custom molar extinction coefficients can be supplied to the NucAcid condition, if data is not included to calculate extinction coefficients for your specific nucleic acid. This is important for modified nucleic acids or extreme solution conditions. For example, the df.FAM.C.BHQ1.data set was collected on a fluorophore and quencher labeled helix. Thus, I need to use extinction coefficients that include the fluorophore and quencher.
+
+```{r}
+?df.FAM.C.BHQ1.data
+FAM.BHQ1 = c("Custom", 105860, 82300)
+meltR.A(data_frame = df.FAM.C.BHQ1.data,
+        blank = "none",
+        NucAcid = FAM.BHQ1,
+        Mmodel = "Heteroduplex.2State",
+        concT = 75)
+```
+
+### 4.2.7 Refining meltR.A fits by trimming fluorescence baselines.
+
+MeltR approximates absorbance baselines using a line (y = mx+b). Real absorbance data deviates from this linear behavior over wide temperature ranges. MeltR fits are thus improved by trimming the baselines so that baselines better approximate a line. First, the raw data should be inspected for linear baselines one sample at a time using the tidyverse. Then, data are fit with meltR.A using a manually optimized baseline trim. After this, the manually optimized fit can be passed to an automated baseline trimmer, which tests combinations of randomly trimmed baselines and identifies an optimum set of trimmed baselines.
 
 ```{r}
 ggplot(df %>% filter(Sample == 10), #Only plot sample 10
@@ -786,7 +916,7 @@ list.T.range = list(c(15, 70), #Sample 2
                     c(25, 85), #Sample 9
                     c(25, 85)) #Sample 10
 
-meltR.A(data_frame = df,
+fit = meltR.A(data_frame = df,
         blank = 1,
         NucAcid = helix,
         Mmodel = "Heteroduplex.2State",
@@ -800,27 +930,144 @@ Which will produce:
 ```{r}
 [1] "Individual curves"
   Sample           Ct     H       S     G   Tm
-1      2 2.832690e-06 -67.2 -0.1849  -9.9 42.4
-2      3 4.718659e-06 -71.6 -0.1984 -10.1 44.5
-3      4 7.439046e-06 -65.3 -0.1783 -10.0 46.1
-4      5 1.173670e-05 -61.9 -0.1676 -10.0 47.9
-5      6 2.049582e-05 -66.3 -0.1813 -10.0 49.3
-6      7 3.131297e-05 -71.2 -0.1964 -10.3 50.8
-7      8 5.533500e-05 -68.9 -0.1894 -10.1 52.3
-8      9 8.990554e-05 -68.4 -0.1879 -10.1 53.9
-9     10 1.439218e-04 -71.0 -0.1952 -10.4 56.1
+1      2 2.913343e-06 -67.2 -0.1850  -9.9 42.4
+2      3 4.853010e-06 -71.6 -0.1985 -10.1 44.5
+3      4 7.650852e-06 -65.3 -0.1784 -10.0 46.1
+4      5 1.207087e-05 -61.9 -0.1676  -9.9 47.9
+5      6 2.107938e-05 -66.3 -0.1814 -10.0 49.3
+6      7 3.220452e-05 -71.2 -0.1964 -10.3 50.8
+7      8 5.691051e-05 -68.9 -0.1894 -10.1 52.3
+8      9 9.246535e-05 -68.4 -0.1879 -10.1 53.9
+9     10 1.480195e-04 -71.0 -0.1953 -10.4 56.1
 [1] "Summary"
-              Method     H SE.H      S SE.S     G SE.G
-1  1 individual fits -68.0  3.2 -186.6  9.9 -10.1  0.2
-2 2 Tm versus ln[Ct] -62.2  1.4 -168.9  4.5  -9.9  0.1
-3       3 Global fit -67.4  0.3 -184.7  0.9 -10.1  0.0
+              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
+1  1 individual fits -68.0  3.2 -186.7  9.9 -10.1  0.2    54.15446      3.8393625
+2 2 Tm versus ln[Ct] -62.1  2.8 -168.9  8.7  -9.8  0.1    53.76500      3.6805415
+3       3 Global fit -67.4  0.3 -184.8  0.9 -10.1  0.0    54.26074      0.3579972
+[1] "fractional error between methods"
+           H          S    G
+1 0.08962025 0.09881569 0.03
+[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
+```
+
+Fitting manually trimmed baselines reduces the fractional error between the methods from 15% to 9% in terms of the enthalpy.
+
+Next, the "fit" from meltR.A can be fit using the "BLTrimmer".
+
+```{r}
+BLTrimmer(fit)
+```
+
+Which will yeild something like this:
+
+```{r}
+[1] "You are trying to test 100 baseline combinations"
+[1] "Do you think this is possible?"
+[1] "Fitting 100 combinations of 5 different baselines per sample"
+  |=========================================================================| 100%[1] "Testing baselines took 4.00400000000036 seconds"
+[1] "Using autotrimmed baselines in MeltR"
+[1] "Individual curves"
+  Sample           Ct     H       S     G   Tm
+1      2 2.913343e-06 -65.8 -0.1802  -9.9 42.6
+2      3 4.853010e-06 -59.2 -0.1588  -9.9 45.2
+3      4 7.650852e-06 -63.7 -0.1735  -9.9 45.7
+4      5 1.207087e-05 -67.4 -0.1852 -10.0 47.2
+5      6 2.107938e-05 -43.1 -0.1090  -9.3 50.5
+6      7 3.220452e-05 -72.6 -0.2010 -10.3 50.6
+7      8 5.691051e-05 -66.8 -0.1836  -9.9 51.7
+8      9 9.246535e-05 -71.9 -0.1987 -10.3 53.9
+9     10 1.480195e-04 -70.0 -0.1926 -10.3 55.8
+[1] "Summary"
+              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
+1  1 individual fits -64.5  9.0 -175.8 28.2 -10.0  0.3    54.49795     11.5865784
+2 2 Tm versus ln[Ct] -65.4  3.6 -179.2 11.0  -9.9  0.1    53.42931      4.4052573
+3       3 Global fit -68.2  0.4 -187.3  1.2 -10.1  0.0    54.17182      0.4705376
+[1] "fractional error between methods"
+           H          S    G
+1 0.05603231 0.06361792 0.02
+[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
+```
+
+In this example, the BLTrimmer reduces the fractional error between methods from 9% to 5.6%. Note, your answer when you run this code will be different, because the BLTrimmer tests 100 random baseline combinations. By, default, there are n.ranges^n.samples = 5^9 baseline combinations (5 different trimmed baselines per sample and 9 samples). If you want to get a more similar answer, you will need to do a more exaustive testing of baseline combinations. For example,
+
+```{r}
+BLTrimmer(fit, n.combinations = 1000)
+[1] "You are trying to test 1000 baseline combinations"
+[1] "Do you think this is possible?"
+[1] "Fitting 1000 combinations of 5 different baselines per sample"
+  |========================================================================| 100%[1] "Testing baselines took 36.1050000000005 seconds"
+[1] "Using autotrimmed baselines in MeltR"
+[1] "Individual curves"
+  Sample           Ct     H       S     G   Tm
+1      2 2.913343e-06 -65.8 -0.1802  -9.9 42.6
+2      3 4.853010e-06 -59.2 -0.1588  -9.9 45.2
+3      4 7.650852e-06 -65.5 -0.1792  -9.9 45.8
+4      5 1.207087e-05 -66.5 -0.1822  -9.9 47.2
+5      6 2.107938e-05 -43.1 -0.1090  -9.3 50.5
+6      7 3.220452e-05 -72.3 -0.1998 -10.3 50.8
+7      8 5.691051e-05 -69.3 -0.1911 -10.1 51.9
+8      9 9.246535e-05 -71.7 -0.1980 -10.2 53.7
+9     10 1.480195e-04 -70.0 -0.1926 -10.3 55.8
+[1] "Summary"
+              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
+1  1 individual fits -64.8  9.1 -176.8 28.3 -10.0  0.3    54.35821     11.5749687
+2 2 Tm versus ln[Ct] -65.4  3.4 -179.0 10.6  -9.9  0.1    53.75580      4.2359722
+3       3 Global fit -65.8  0.5 -180.0  1.4 -10.0  0.0    54.11935      0.5884726
 [1] "fractional error between methods"
            H          S          G
-1 0.08805668 0.09829693 0.01993355
+1 0.01530612 0.01791713 0.01003344
+[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
 ```
-The fitting trimmed baselines reduces the fractional error between the methods from 15% to 9% in terms of the enthalpy. 
 
-### 4.2.6 Advanced plotting meltR.A outputs using the "tidyverse"
+Note, that this produces a different answer, that is more reproducible, but requires more computational time, in this case 36.1 seconds. If you have a multicore machine, you can test baselines in parallel. First, you must install the "doParallel" package and its dependencies, and load them into your memory.
+
+```{r}
+install.packages("doParallel")
+library(doParallel)
+```
+
+Now, you can turn on the parallelization and specify the number of cores.
+
+!!!!!Warning. Copying and pasting this code into your console could hurt your computer. Make sure you know how many cores your computer has and make sure you know how many cores can be designated to run this task!!!!!
+
+```{r}
+BLTrimmer(fit, n.combinations = 1000,
+          parallel = "on", n.core = 3,
+          Save_results = "all")
+[1] "You are trying to test 1000 baseline combinations"
+[1] "Do you think this is possible?"
+[1] "Fitting 1000 combinations of 5 different baselines per sample"
+[1] "Testing baselines took 13.3319999999994 seconds"
+[1] "Using autotrimmed baselines in MeltR"
+[1] "Individual curves"
+  Sample           Ct     H       S     G   Tm
+1      2 2.913343e-06 -65.8 -0.1802  -9.9 42.6
+2      3 4.853010e-06 -59.2 -0.1588  -9.9 45.2
+3      4 7.650852e-06 -65.0 -0.1777  -9.9 45.9
+4      5 1.207087e-05 -66.5 -0.1822  -9.9 47.2
+5      6 2.107938e-05 -43.1 -0.1090  -9.3 50.5
+6      7 3.220452e-05 -72.3 -0.1998 -10.3 50.8
+7      8 5.691051e-05 -68.4 -0.1880 -10.1 52.1
+8      9 9.246535e-05 -68.8 -0.1892 -10.1 53.8
+9     10 1.480195e-04 -70.9 -0.1951 -10.4 55.9
+[1] "Summary"
+              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
+1  1 individual fits -64.4  8.9 -175.6 27.6 -10.0  0.3    54.32267     11.3692822
+2 2 Tm versus ln[Ct] -65.6  3.5 -179.8 10.7  -9.9  0.1    53.44949      4.2719888
+3       3 Global fit -66.7  0.3 -182.7  1.0 -10.0  0.0    54.19970      0.3839714
+[1] "fractional error between methods"
+          H          S          G
+1 0.0350788 0.03958372 0.01003344
+[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
+```
+
+Note, this obtained a similar answer to running the code with no parallelization but required 13.6 seconds instead of 36.1 seconds.
+
+Lastly, we can check the quality of the BLTrimmer results using some precanned outputs which are generated by setting  Save_results = "all". See section 4.2.4 for details on saving results.
+
+The BLTrimmer produces, three precanned plots. The first is a histogram of the difference in enthalpies obtained by method 1 and method 2 obtained by fitting all of the baseline  (Figure 11 A). The peak of this distribution is occurring at about 6% enthalpy error, indicating that the helices are likely two state. The second is the enthalpy produced by methods 1 and 2 versus the fractional error between the two methods. The enthalpies should converge on a single enthalpy value, plus or minus 1 kcal/mol, at low fractional error values. The third is a depiction of the trimmed baselines, where the blue points are the no trim range, red points are the baselines that are fit, and black points are points that are removed from the data set by the BLTrimmer.
+
+### 4.2.8 Advanced plotting meltR.A outputs using the "tidyverse"
 
 meltR.A can pass a more extensive output to an object in R. 
 
