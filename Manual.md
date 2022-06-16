@@ -2,13 +2,13 @@
 
 Automated fitting of RNA/DNA absorbance melting curves and fluorescence binding isotherms in R
 
-Jacob P. Sieg	extsuperscript{[1],[2]}, Philip C. Bevilacqua	extsuperscript{[1],[2],[3]}
+Jacob P. Sieg\textsuperscript{[1],[2]}, Philip C. Bevilacqua\textsuperscript{[1],[2],[3]}
 
-	extsuperscript{[1]}Department of Chemistry, Pennsylvania State University, University Park, PA 16802.
+\textsuperscript{[1]}Department of Chemistry, Pennsylvania State University, University Park, PA 16802.
 
-	extsuperscript{[2]}Center for RNA Molecular Biology, Pennsylvania State University, University Park, PA 16802.
+\textsuperscript{[2]}Center for RNA Molecular Biology, Pennsylvania State University, University Park, PA 16802.
 
-	extsuperscript{[3]}Department of Biochemistry and Molecular Biology, Pennsylvania State University, University Park, PA 16802.
+\textsuperscript{[3]}Department of Biochemistry and Molecular Biology, Pennsylvania State University, University Park, PA 16802.
 
 Last update, 05/16/2022
 
@@ -16,7 +16,7 @@ Last update, 05/16/2022
 
 MeltR is a R package, written by Jacob Sieg, that fits nucleic acid folding data to molecular models to obtain thermodynamic parameters. MeltR automates the trivial but time-consuming tasks associated with fitting nucleic acids thermodenaturation data, leading to facile conversion of raw data into useful thermodynamic parameters.
 
-MeltR was inspired by Meltwin.	extsuperscript{[1]} MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R console, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
+MeltR was inspired by Meltwin.\textsuperscript{[1]} MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R console, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) MeltR can be run on any oporating system that is compatible with R. (5) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
 
 The core of MeltR is the “meltR.A” function for fitting absorbance melting curves and the “meltR.F” function for fitting fluorescence binding isotherms.
 
@@ -24,10 +24,28 @@ The creators of MeltR are interested in improving MeltR by adding new molecular 
 
 # 2 MeltR installation
 
+MeltR is written in R. You can find instructions for installing R here: "https://www.r-project.org/".
+
+MeltR can be installed from "https://github.com/JPSieg/MeltR" by typing two lines into your R console.
+
 ```{r}
 install.packages("devtools")
 devtools::install_github("JPSieg/MeltR")
 ```
+
+Most of MeltR is written entirely in base R and requires no other dependencies. However, if you want to use the BLTrimmer (see section 4.2.7) in parallel mode, you will need to install "doParallel" and its dependencies. In your R console:
+
+```{r}
+install.packages("doParallel")
+```
+
+Lastly, Rstudio, the tidyverse, and ggrepel, are recommended software and packages for running MeltR. You can find instructions for installing Rstudio here: "https://www.rstudio.com/products/rstudio/download/". The free version is excellent. Tidyverse and ggrepel can be installed from your R console.
+
+```{r}
+install.packages("tidyverse")
+install.packages("ggrepel")
+```
+
 
 # 3 Theory
 
@@ -37,23 +55,23 @@ MeltR can obtains thermodynamic parameters from fluorescence binding isotherms f
 
 $$E = F_{max} + (F_{min} - F_{max})*F(K_{D}, [A]_{T}, [B]_{T}) \qquad (1)$$
 
-Where F	extsubscript{max} is the fluorescence emission of unbound fluorophore labeled strand (A), F	extsubscript{min</min> is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and f(K	extsubscript{D}, [A]	extsubscript{T}, [B]	extsubscript{T}) is the mole fraction of the bound fluorophore labeled strand (AB) to the total fluorophore labeled strand. 
+Where F\textsubscript{max} is the fluorescence emission of unbound fluorophore labeled strand (A), F\textsubscript{min</min> is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and f(K\textsubscript{D}, [A]\textsubscript{T}, [B]\textsubscript{T}) is the mole fraction of the bound fluorophore labeled strand (AB) to the total fluorophore labeled strand. 
 
 $$ f(K_{D}, [A]_{T}, [B]_{T}) = \frac{[AB]}{[A]_{T}} \qquad (2) $$
 
-f(K	extsubscript{D}, [A]	extsubscript{T}, [B]	extsubscript{T})  is a function of the total fluorophore labeled strand ([A]	extsubscript{T}) and the total quenceher labeled strand ([B]	extsubscript{T}), and the K	extsubscript{D} is given by the the expression:
+f(K\textsubscript{D}, [A]\textsubscript{T}, [B]\textsubscript{T})  is a function of the total fluorophore labeled strand ([A]\textsubscript{T}) and the total quenceher labeled strand ([B]\textsubscript{T}), and the K\textsubscript{D} is given by the the expression:
 
 $$K_{D} = \frac{[A][B]}{[AB]} \qquad (3) $$
 
-F(K	extsubscript{D}, [A]	extsubscript{T}, [B]	extsubscript{T}) can be determined by solving the K	extsubscript{D} expression to obtain:
+F(K\textsubscript{D}, [A]\textsubscript{T}, [B]\textsubscript{T}) can be determined by solving the K\textsubscript{D} expression to obtain:
 
 $$F(K_{D}, [A]_{T}, [B]_{T})  = \frac{(K_{D}+[A]_{T}+[B]_{T}) - \sqrt{{(K_{D}+[A]_{T}+B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (4) $$
 
-Thus, the K	extsubscript{D} at each temperature was determined by fitting isotherms at each temperature to Equation 5, obtained by plugging Equation 4 into Equation 1.
+Thus, the K\textsubscript{D} at each temperature was determined by fitting isotherms at each temperature to Equation 5, obtained by plugging Equation 4 into Equation 1.
 
 $$E = F_{max} + (F_{min} - F_{max})\frac{(K_{D}+[A]_{T}+[B]_{T}) - \sqrt{{(K_{D}+[A]_{T}+B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (5) $$
 
-Thermodynamic parameters for helix formation were extracted by the Van't Hoff relationship (Equation 6) between the K	extsubscript{D} and the temperature using the two methods described below.
+Thermodynamic parameters for helix formation were extracted by the Van't Hoff relationship (Equation 6) between the K\textsubscript{D} and the temperature using the two methods described below.
 
 $$ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} \qquad (6) $$
 
@@ -65,33 +83,31 @@ MeltR performs the following data preprocessing steps before fitting:
 
 1.) The fluorophore labeled strand concentration is optimized using the concentration optimization algorithm, described in more detail in section 3.1.3.
 
-2.) The T	extsubscript{m} of each sample is estimated using the first derivative of fluorescence emission as a function of temperature. First derivatives are calculated using polynomial regression, where the data are approximated with a 20th order polynomial. Then, the analytical first derivative of the polynomial was determined using calculus. The approximate T	extsubscript{m} (where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve to a precision of less than 0.1 <span>&#176;</span>C. This T	extsubscript{m} is unreliable because fluorescence baselines vary unpredictable with temperature. However, the T	extsubscript{m} is useful for qualitative comparison of stability between conditions.  
+2.) The T\textsubscript{m} of each sample is estimated using the first derivative of fluorescence emission as a function of temperature. First derivatives are calculated using polynomial regression, where the data are approximated with a 20th order polynomial. Then, the analytical first derivative of the polynomial was determined using calculus. The approximate T\textsubscript{m} (where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve to a precision of less than 0.1 <span>&#176;</span>C. This T\textsubscript{m} is unreliable because fluorescence baselines vary unpredictable with temperature. However, the T\textsubscript{m} is useful for qualitative comparison of stability between conditions.  
 
-2.) Isotherms are fit to Equation 5 to determine K	extsubscript{D} and error in the K	extsubscript{D} at each temperature using "nls" in base R. Initial values for F	extsubscript{max} and F	extsubscript{min} are estimated by taking the mean of the 20% highest readings in each isotherm and the 20% lowest readings respectively. Initial values for the K	extsubscript{D} are provided by the user, by default 0.1 nM. 
+2.) Isotherms are fit to Equation 5 to determine K\textsubscript{D} and error in the K\textsubscript{D} at each temperature using "nls" in base R. Initial values for F\textsubscript{max} and F\textsubscript{min} are estimated by taking the mean of the 20% highest readings in each isotherm and the 20% lowest readings respectively. Initial values for the K\textsubscript{D} are provided by the user, by default 0.1 nM. 
 
-3.) K	extsubscript{D}s are filtered by magnitude and error, according to user specifications, to determine which isotherms are most reliable. First, K	extsubscript{D}s outside of a user specified range (10 to 1000 nM by default) are thrown out. Second, K	extsubscript{D}s are ranked by the error in the K	extsubscript{D}. K	extsubscript{D}s that are below a user specified error quantile are thrown out. The default K	extsubscript{D} error quantile file is 0.25, meaning the algorithm will keep the to 25% most accurate K	extsubscript{D}s, after filtering by magnitude.  
+3.) K\textsubscript{D}s are filtered by magnitude and error, according to user specifications, to determine which isotherms are most reliable. First, K\textsubscript{D}s outside of a user specified range (10 to 1000 nM by default) are thrown out. Second, K\textsubscript{D}s are ranked by the error in the K\textsubscript{D}. K\textsubscript{D}s that are below a user specified error quantile are thrown out. The default K\textsubscript{D} error quantile file is 0.25, meaning the algorithm will keep the to 25% most accurate K\textsubscript{D}s, after filtering by magnitude.  
 
-4.) The most reliable K	extsubscript{D}s and temperatures are passed to Method 1 to make Van't Hoff plots and to calculate helix formation energies.
+4.) The most reliable K\textsubscript{D}s and temperatures are passed to Method 1 to make Van't Hoff plots and to calculate helix formation energies.
 
-5.) Fluorescence data from the most reliable K	extsubscript{D}s and temperatures are passed to Method 2 for global fitting and to calculate helix formation energies. 
+5.) Fluorescence data from the most reliable K\textsubscript{D}s and temperatures are passed to Method 2 for global fitting and to calculate helix formation energies. 
 
 ### 3.1.2 Concentration optimization algorithm.
 
 We have determined that the accuracy of fit results is highly dependent on errors in the predicted concentration of fluorophore and quencher RNA strands in stock solutions. Fit accuracy is dependent on the mole ratio of fluorophore and quencher labeled RNA in stock solutions, but not dependent on the total magnitude of both fluorophore and quencher labeled RNA concentrations in the stocks. Thus, the concentration optimization algorithm in MeltR does not need to find exact concentrations to generate accurate helix formation energies, just the mole ratio (X) of fluorophore and quencher labeled RNA in samples that are predicted to have equal concentrations of fluorophore and quencher, for example predicted 200 nM FAM-RNA and 200 nM RNA-BHQ1.
 
-MeltR uses a fluorescence binding isotherm from a temperature where the K	extsubscript{D} is more than 10 times less than the fluorophore labeled strand concentration. Under these conditions, the shape of the curve will be independent of the K	extsubscript{D} , and the isotherm can be used as a Job plot. For example, at a 200 nM predicted fluorophore labeled strand concentration, the shape of the binding curve will be independent of K	extsubscript{D}  if the K	extsubscript{D}  is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straight lines. The first line, where [A]	extsubscript{T} > [B]	extsubscript{T}, will decrease as the [B]	extsubscript{T} is increased and the fluorophore labeled strand is saturated. The second line, where [A]	extsubscript{T} < [B]T	extsubscript{T}, will be horizontal as the [B]	extsubscript{T} is increased because the fluorophore labeled strand is saturated. The intersection of the first and second line will occur at:
+MeltR uses a fluorescence binding isotherm from a temperature where the K\textsubscript{D} is more than 10 times less than the fluorophore labeled strand concentration. Under these conditions, the shape of the curve will be independent of the K\textsubscript{D} , and the isotherm can be used as a Job plot. For example, at a 200 nM predicted fluorophore labeled strand concentration, the shape of the binding curve will be independent of K\textsubscript{D}  if the K\textsubscript{D}  is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straight lines. The first line, where [A]\textsubscript{T} > [B]\textsubscript{T}, will decrease as the [B]\textsubscript{T} is increased and the fluorophore labeled strand is saturated. The second line, where [A]\textsubscript{T} < [B]T\textsubscript{T}, will be horizontal as the [B]\textsubscript{T} is increased because the fluorophore labeled strand is saturated. The intersection of the first and second line will occur at:
 
 $$ [A]_{T} = [B]_{T}  \qquad (7)$$
 
 ![Job plot used by the concentration algorithm. Data are modeled with a KD of 0.1 nM and a FAM-RNA strand concentration of 250 nM. (A) Isotherms resemble a job plot, where the intersection of Line 1 and Line 2 can be used to determine X. (B) The same modeled data with the concentration algorithm starting at X = 1 and ending at X = 0.8.](https://user-images.githubusercontent.com/63312483/166508109-8337d818-6eed-4b08-a33c-92794a14a95a.svg)
 
-##### Figure 1: Job plot used by the concentration algorithm. Data are modeled with a KD of 0.1 nM and a FAM-RNA strand concentration of 250 nM. (A) Isotherms resemble a job plot, where the intersection of Line 1 and Line 2 can be used to determine X. (B) The same modeled data with the concentration algorithm starting at X = 1 and ending at X = 0.8.
-
-The absolute concentration of [A]	extsubscript{T} and [B]	extsubscript{T} cannot be known with precicion. However, the mole ratio of the error (X) in the fluorophore and quencher stocks can be estimated from this data point at Equation 8.
+The absolute concentration of [A]\textsubscript{T} and [B]\textsubscript{T} cannot be known with precicion. However, the mole ratio of the error (X) in the fluorophore and quencher stocks can be estimated from this data point at Equation 8.
 
 $$ \frac{[A]_{T-estimated}}{X} = [B]_{T}  \qquad (8)$$
 
-Where [A]	extsubscript{T-estimated} is the estimated total A concentration, or the predicted concentration based on of the stock, and X is given by Equation 9 based on the actual concentration determined from the experiment.
+Where [A]\textsubscript{T-estimated} is the estimated total A concentration, or the predicted concentration based on of the stock, and X is given by Equation 9 based on the actual concentration determined from the experiment.
 
 $$ X = \frac{[A]_{T}}{[B]_{T}}  \qquad (9)$$
 
@@ -99,15 +115,15 @@ MeltR fits an overdetermined isotherm to a binding curve (selected by the user b
 
 $$E = F_{max} + (F_{min} - F_{max})*\frac{(K_{D}+[A]_{T-estimated}+[B]_{T}X) - \sqrt{{(K_{D}+[A]_{T-estimated}+B]_{T}X)}^2 - 4[A]_{T-estimated}[B]_{T}X}}{2[A]_{T-estimated}}  \qquad (10)$$
 
-By default, the fit to determine X allows X and K	extsubscript{D} to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several K	extsubscript{D} that are more than 10 times less than the fluorophore labeled strand concentrations, as described in Section 4.1.3. The user should then inspect X from several iterations of the optimization algorithm set to different "low_K" values to make sure it is similar to the iteration that allows the K	extsubscript{D} to float.
+By default, the fit to determine X allows X and K\textsubscript{D} to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several K\textsubscript{D} that are more than 10 times less than the fluorophore labeled strand concentrations, as described in Section 4.1.3. The user should then inspect X from several iterations of the optimization algorithm set to different "low_K" values to make sure it is similar to the iteration that allows the K\textsubscript{D} to float.
 
-[A]	extsubscript{T} is then corrected with Equation 11.
+[A]\textsubscript{T} is then corrected with Equation 11.
 
 $$ [A]_{T}  = \frac{[A]_{T-estimated}}{X}  \qquad (11)$$
 
 ### 3.1.3 Method 1 Van't Hoff plot
 
-Method 1 fits K	extsubscript{D}s that were passed from the preprocessing steps to Equation 6. Initial estimates for the dH and dS of helix formation are provided by the user in kcal as a list using the "vh_start" argument. The default is -70 kcal/mol and -0.180 kcal/mol/K for the enthalpy and entropy respectively, and will work for most helices. The free energy of helix formation at 37 <span>&#176;</span>C (dG) was calculated from the dH and dS values provided by the fit (Equation 12).
+Method 1 fits K\textsubscript{D}s that were passed from the preprocessing steps to Equation 6. Initial estimates for the dH and dS of helix formation are provided by the user in kcal as a list using the "vh_start" argument. The default is -70 kcal/mol and -0.180 kcal/mol/K for the enthalpy and entropy respectively, and will work for most helices. The free energy of helix formation at 37 <span>&#176;</span>C (dG) was calculated from the dH and dS values provided by the fit (Equation 12).
 
 $$ dG = dH - 310.15*dS \qquad (12) $$
 
@@ -119,11 +135,11 @@ Helix formation energies are traditionally reported in terms of the association 
 
 $$ K = \frac{[AB]}{[A][B]} = frac{1}{K_{D}} \qquad (14) $$
 
-The dHs and dSs reported by MeltR are also reported in terms of the association constant, which is obtained by multiplying helix formation energies from fitting K	extsubscript{D} by negative one. 
+The dHs and dSs reported by MeltR are also reported in terms of the association constant, which is obtained by multiplying helix formation energies from fitting K\textsubscript{D} by negative one. 
 
 ### 3.1.4 Method 2 Global fit
 
-Method 2 globally fits fluorescence data that were passed from the preprocessing to Equation 15, obtained by plugging Equation 6 into Equation 5. F	extsubscript{max} and F	extsubscript{min} is allowed to float between temperatures and dH and dS are fixed between temperatures. Starting values for F	extsubscript{max}, F	extsubscript{min}, dH, and dS are obtained from the results for individual fits. 
+Method 2 globally fits fluorescence data that were passed from the preprocessing to Equation 15, obtained by plugging Equation 6 into Equation 5. F\textsubscript{max} and F\textsubscript{min} is allowed to float between temperatures and dH and dS are fixed between temperatures. Starting values for F\textsubscript{max}, F\textsubscript{min}, dH, and dS are obtained from the results for individual fits. 
 
 $$E = F_{max} + (F_{min} - F_{max})*\frac{(\exp{(\frac{dS}{R} - \frac{dH}{RT})}+[A]_{T}+[B]_{T}) - \sqrt{{(\exp{(\frac{dS}{R} - \frac{dH}{RT})}+[A]_{T}+B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (15) $$
 
@@ -133,25 +149,23 @@ The dG and the error in the dG were calculated as in method 1.
 
 ### 3.2.1 Absorbance data preprocessing
 
-MeltR can obtain thermodynamic parameters from absorbance melting curves for heteroduplex, homoduplex (selfcomplementary), and monomolecular self-structured DNA and RNA using the method pioneered by Tinoco and colleagues and refined by Turner and colleagues.	extsuperscript{[1-3]}
+MeltR can obtain thermodynamic parameters from absorbance melting curves for heteroduplex, homoduplex (selfcomplementary), and monomolecular self-structured DNA and RNA using the method pioneered by Tinoco and colleagues and refined by Turner and colleagues.\textsuperscript{[1-3]}
 
 MeltR performs the following data preprocessing steps before fitting:
 
-1.) RNA and DNA extinction coefficients are calculated from the sequence using the extinction coefficient data from Tinoco and colleagues.	extsuperscript{[2]}
+1.) RNA and DNA extinction coefficients are calculated from the sequence using the extinction coefficient data from Tinoco and colleagues.\textsuperscript{[2]}
 
 2.) The background absorbance of a user specified blank is scaled to the pathlength of the cuvette and subtracted from each curve.
 
-3.) The total strand concentration (C	extsubscript{t}) is calculated at a user specified temperature (Default = 90 <span>&#176;</span>C).
+3.) The total strand concentration (C\textsubscript{t}) is calculated at a user specified temperature (Default = 90 <span>&#176;</span>C). For homoduplexes and monomolecular-self structured RNA, where there is only one nucleic acid in the sample, the C\textsubscript{t} is the total concentration of the single strand. For heteroduplexes, the C\textsubscript{t} is the total concentration of strand 1 plus the total concentration of strand 2.
 
 4.) High and low temperature data are trimmed (to the users specification) to ensure linear baselines.
 
-5.) First and second derivatives are taken using polynomial regression. First, the data are approximated using a 20th order polynomial. Then, the first and second derivatives of the polynomial are determined analytically using calculus. The approximate T	extsubscript{0.5} (the approximate melting temperature, T	extsubscript{m}, where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve and the T	extsubscript{0.75} (the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the first derivative (Figure 2), to a precision of less than 0.1 <span>&#176;</span>C.
+5.) First and second derivatives are taken using polynomial regression. First, the data are approximated using a 20th order polynomial. Then, the first and second derivatives of the polynomial are determined analytically using calculus. The approximate T\textsubscript{0.5} (the approximate melting temperature, T\textsubscript{m}, where 50% of the nucleic acid is single stranded) is calculated by finding the maximum of the first derivative curve and the T\textsubscript{0.75} (the approximate temperature where 75% of the nucleic acid is single stranded) is calculated by finding the minimum of the second derivative (Figure 2), to a precision of less than 0.1 <span>&#176;</span>C.
 
-![Melt curve derivative determined with polynomial regression.](https://user-images.githubusercontent.com/63312483/166296578-341d3aac-05a9-4176-9a72-0831dc0487cf.svg)
+![Absorbance melting curve derivative determined with polynomial regression.](https://user-images.githubusercontent.com/63312483/166296578-341d3aac-05a9-4176-9a72-0831dc0487cf.svg)
 
-##### Figure 2: Absorbance melting curve derivative determined with polynomial regression.
-
-6.) Initial parameter estimates are calculated for each curve. The initial values for slopes and intercepts of the baselines are estimated by fitting absorbance values that are greater than the 75th quantile for the uper baselines, and fitting aborbance values that are lower than the 25th quantile for the lower baseline, to y = mx + b. Initial values for the enthalpy are determined using the T	extsubscript{0.5} and T	extsubscript{0.75} (in Kelvin) from first and second derivative curves. MeltR uses equation 16, equation 17, and equation 18, for heteroduplex, homoduplex, and monomolecular self-structured DNA and RNA melting curves.   
+6.) Initial parameter estimates are calculated for each curve. The initial values for slopes and intercepts of the baselines are estimated by fitting absorbance values that are greater than the 75th quantile for the uper baselines, and fitting aborbance values that are lower than the 25th quantile for the lower baseline, to y = mx + b. Initial values for the enthalpy are determined using the T\textsubscript{0.5} and T\textsubscript{0.75} (in Kelvin) from first and second derivative curves. MeltR uses equation 16, equation 17, and equation 18, for heteroduplex, homoduplex, and monomolecular self-structured DNA and RNA melting curves.   
 
 $$ dH = -0.007*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (16)$$
 
@@ -159,7 +173,7 @@ $$dH = -0.0044*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (17)$$
 
 $$dH = -0.0032*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (18)$$
 
-The initial T	extsubscript{m} is estimated from the T	extsubscript{0.5}, determined in step 5.
+The initial T\textsubscript{m} is estimated from the T\textsubscript{0.5}, determined in step 5.
 
 ### 3.2.2 Thermodynamic models for duplex formation
 
@@ -197,7 +211,7 @@ $$f(T) = \frac{\frac{1}{2*K(T)*Ct} + 2 - \sqrt{(\frac{1}{2*K(T)*Ct} + 2)^2 - 4}}
 
 $$f(T) = \frac{K(T)}{1 + K(T)} \qquad (27)$$
 
-Where C	extsubscript{t} is the total strand concentration. K(T) is the equilibrium constant as a function of temperature, given by Equation 28 for heteroduplexes, Equation 29 for homoduplexes, and Equation 30 for monomolecular self-structured RNA.
+Where C\textsubscript{t} is the total strand concentration. K(T) is the equilibrium constant as a function of temperature, given by Equation 28 for heteroduplexes, Equation 29 for homoduplexes, and Equation 30 for monomolecular self-structured RNA.
 
 $$ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}\qquad (28) $$
 
@@ -205,7 +219,7 @@ $$ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}
 
 $$ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))} \qquad (30) $$
 
-Note, K(T) is in terms of T	extsubscript{m} and C	extsubscript{t}, instead of the dS, to increase the ease of estimating initial parameters for non-linear regression and to increase the robustness of the nls algorithm. Briefly, the dS is replaced with T	extsubscript{m} and C	extsubscript{t} by solving Equation 19 for the dS at the T	extsubscript{m}, where f(T) = 0.5.
+Note, K(T) is in terms of T\textsubscript{m} and C\textsubscript{t}, instead of the dS, to increase the ease of estimating initial parameters for non-linear regression and to increase the robustness of the nls algorithm. Briefly, the dS is replaced with T\textsubscript{m} and C\textsubscript{t} by solving Equation 19 for the dS at the T\textsubscript{m}, where f(T) = 0.5.
 
 Thus, method 1 fits absorbtion versus temperature for each sample to equations 31, 32, and 33 to determine thermodynamic prameters for heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively.
 
@@ -233,19 +247,19 @@ For monomolecular self-structured RNA/DNA:
 
 $$ dS = \frac{dH}{Tm} \qquad (37) $$
 
-Error in the dS and dG is calculated by propagating error in the fit terms dH and T	extsubscript{m}.
+Error in the dS and dG is calculated by propagating error in the fit terms dH and T\textsubscript{m}.
 
 $$ SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 + {(\frac{SE_{Tm}}{Tm})}^2 - 2\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (38) $$
 
 $$ SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dH}}{dH})}^2 + {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (39) $$
 
-### 3.2.4 Method 2 fitting the T	extsubscript{m} as a function of C	extsubscript{t}
+### 3.2.4 Method 2 fitting the T\textsubscript{m} as a function of C\textsubscript{t}
 
-Method 2 fits the relationship between 1/T	extsubscript{m} and the total strand concentration C	extsubscript{t}. To avoid inaccuracies in T	extsubscript{m} determination from first derivative plots or covariation with the dH terms in method 1, T	extsubscript{m}s were determined for Method 2 using a semi-quantitative method. Slopes and intercepts from method 1 were used to calculate f(T) at each experimental temperature using the absorbance. 
+Method 2 fits the relationship between 1/T\textsubscript{m} and the total strand concentration C\textsubscript{t}. To avoid inaccuracies in T\textsubscript{m} determination from first derivative plots or covariation with the dH terms in method 1, T\textsubscript{m}s were determined for Method 2 using a semi-quantitative method. Slopes and intercepts from method 1 were used to calculate f(T) at each experimental temperature using the absorbance. 
 
 $$ f(T) = \frac{A -(m_{SS}T + b_{SS})}{(m_{DS}T + b_{DS}) + (m_{SS}T + b_{SS})}\qquad (40)$$
 
-F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T in {0.4 to 0.6}) was fit with y = mT + b, and solved using y = 0.5 to accurately determine the melting temperature for each C	extsubscript{t}. To determine thermodynamic parameters, the relationship between 1/T	extsubscript{m} and the total strand concentration was then fit to Equations 41, and 42, for heteroduplexes and homoduplexes respectively. The T	extsubscript{m} of monomolecular, self-structured RNA is independent of C	extsubscript{t} so Method 2 cannot be used.
+F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T in {0.4 to 0.6}) was fit with y = mT + b, and solved using y = 0.5 to accurately determine the melting temperature for each C\textsubscript{t}. To determine thermodynamic parameters, the relationship between 1/T\textsubscript{m} and the total strand concentration was then fit to Equations 41, and 42, for heteroduplexes and homoduplexes respectively. The T\textsubscript{m} of monomolecular, self-structured RNA is independent of C\textsubscript{t} so Method 2 cannot be used.
 
 $$ \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} + \frac{dS}{dH} - R*ln(4) \qquad (41)$$
 
@@ -275,7 +289,7 @@ The dG and error in the dG is calculated using the same equations as Method 2.
 
 # 4 Running MeltR
 
-In this section, we cover how to use MeltR in your R console. If you have not already, read section 3 to understand the theory underlying the results of MeltR. Section 4 will cover MeltR usage and how to avoid pitfalls. The most common error with MeltR is a user attempting to fit data that is inconsistent with the underlying model, either a fluorescence isotherm or a absorbance melting curve with a non-standard shape or specifying an incorrect molecular model. In the case of data with a non-standard shape, the aberrant data will need to be filtered out data set prior to fitting the set with MeltR. While MeltR has no dependencies other than base R 4.1.3, data wrangling and plotting functions in the "tidyverse" package	extsuperscript{[4]} are highly recommended, along with the "ggrepel" package	extsuperscript{[5]}, for data quality checks and filtering. To begin, open a new R session in the proper directory. Load relevant packages into your memory.
+In this section, we cover how to use MeltR in your R console. If you have not already, read section 3 to understand the theory underlying the results of MeltR. Section 4 will cover MeltR usage and how to avoid pitfalls. The most common error with MeltR is a user attempting to fit data that is inconsistent with the underlying model, either a fluorescence isotherm or a absorbance melting curve with a non-standard shape or specifying an incorrect molecular model. In the case of data with a non-standard shape, the aberrant data will need to be filtered out data set prior to fitting the set with MeltR. While MeltR has no dependencies other than base R 4.1.3, data wrangling and plotting functions in the "tidyverse" package\textsuperscript{[4]} are highly recommended, along with the "ggrepel" package\textsuperscript{[5]}, for data quality checks and filtering. To begin, open a new R session in the proper directory. Load relevant packages into your memory.
 
 ```{r}
 library(MeltR)
@@ -296,9 +310,7 @@ Help documentation for MeltR functions can be pulled up using standard R command
 
 Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 3). There should be a “Well” column where numbers or character strings specify what well in a microplate the data came from, a “Reading” column that specifies the reading a data point comes from, a “Temperature” column that specifies the temperature where the data was recorded, a “B” column which specifies an approximate quencher labeled strand concentration in nM, an “A” column which specifies an approximate fluorophore labeled strand concentration in nM, and an “Emission” column containing the fluorescence emission intensity. 
 
-![Formatting fluorescence binding isotherm datat in a csv file for MeltR with Excel](https://user-images.githubusercontent.com/63312483/165355843-40b03fbc-7d89-429e-8252-1b65ea6fced1.png)
-
-##### Figure 3: Formatting fluorescence binding isotherm datat in a csv file for MeltR with Excel. B and A are the concentration of quencher and fluorophore labeled RNA strands, respectively, in nM. Temperature is in <span>&#176;</span>C.
+![Formatting fluorescence binding isotherm datat in a csv file for MeltR with Excel. B and A are the concentration of quencher and fluorophore labeled RNA strands, respectively, in nM. Temperature is in <span>&#176;</span>C.](https://user-images.githubusercontent.com/63312483/165355843-40b03fbc-7d89-429e-8252-1b65ea6fced1.png)
 
 Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorporation of an extra space, so that MeltR cannot recognize relevant data when it is read into R. The second is incorporation of characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
 
@@ -342,9 +354,7 @@ ggplot(df %>% filter(Reading == 1), aes(x = B, y = Emission, label = Well)) +
 
 The result is a really nice binding isotherm (Figure 4). One should check a few more readings by changing the value in the filter command, for example 20, 60, 80, etc... 
 
-![Isotherm example from data included in MeltR. Labels represent the well in a 96 well plate.](https://user-images.githubusercontent.com/63312483/165367119-ed4e15df-4c08-46d7-82c6-03b386f61395.svg)
-
-##### Figure 4: Fluorescence isotherm example from data included in MeltR. Labels represent the well in a 96 well plate.
+![Fluorescence isotherm example from data included in MeltR. Labels represent the well in a 96 well plate.](https://user-images.githubusercontent.com/63312483/165367119-ed4e15df-4c08-46d7-82c6-03b386f61395.svg)
 
 If you observe one or two obvious outliers in the data set, it is reasonable to remove them using the filter command. However, this data is excellent and needs no filtering.
 
@@ -380,7 +390,7 @@ You will see the following output in your console.
 1 0.01050236 0.013298 0.000542719
 ```
 
-Note, the concentration optimization algorithm, by default allowing the Kd.opt to float, identified an optimal R of ~0.78. Since the FAM-RNA strand in each well is estimated at 200 nM, the concentration optimization algorithm will adjust the concentration to 200/0.78 = 256 nM. We will test the robustness of this estimate by constraining the Kd.opt to a range of K	extsubscript{D}s that are more than 10 times less than the FAM-RNA concentration, using the "low_K" argument. For example, 1, 0.5, 0.1, and 0.05 nM. Note, the mole ratio "R" was labeled "X" in the theory section to avoid confusion with the gas constant.
+Note, the concentration optimization algorithm, by default allowing the Kd.opt to float, identified an optimal R of ~0.78. Since the FAM-RNA strand in each well is estimated at 200 nM, the concentration optimization algorithm will adjust the concentration to 200/0.78 = 256 nM. We will test the robustness of this estimate by constraining the Kd.opt to a range of K\textsubscript{D}s that are more than 10 times less than the FAM-RNA concentration, using the "low_K" argument. For example, 1, 0.5, 0.1, and 0.05 nM. Note, the mole ratio "R" was labeled "X" in the theory section to avoid confusion with the gas constant.
 
 ```{r}
 > meltR.F(df, low_K = 1)
@@ -434,7 +444,7 @@ Note, the concentration optimization algorithm, by default allowing the Kd.opt t
 1 0.002195498 0.002611534 0.0002110328
 ```
 
-The optimization algorithm, using a constrained K	extsubscript{D}, adjusts the FAM-RNA concentration to at most 281, about 10% difference from the optimization algorithm using a floating K	extsubscript{D}. Thus, the default concentration optimization is robust. Note that there is considerable variance in the enthalpies, entropies, and free energies from the various constrained K	extsubscript{D}s and the unconstrained fit (about 20 kcal/mole in terms of the enthalpy). We will demonstrate how to refine these thermodynamic parameters independent of the concentration optimization algorithm in section 4.1.5.
+The optimization algorithm, using a constrained K\textsubscript{D}, adjusts the FAM-RNA concentration to at most 281, about 10% difference from the optimization algorithm using a floating K\textsubscript{D}. Thus, the default concentration optimization is robust. Note that there is considerable variance in the enthalpies, entropies, and free energies from the various constrained K\textsubscript{D}s and the unconstrained fit (about 20 kcal/mole in terms of the enthalpy). We will demonstrate how to refine these thermodynamic parameters independent of the concentration optimization algorithm in section 4.1.5.
 
 ### 4.1.4 Saving meltR.F outputs
 
@@ -453,17 +463,15 @@ meltR.F(df,
         file_prefix = "Helix_J")
 ```
 
-This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure 5A). Points represent the K	extsubscript{D} and error from fitting isotherms individually. The red line represents the fit to Equation 6 that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of K	extsubscript{D} values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure 5B). The third output is a .csv file containing the thermodynamic parameters from each method Figure 5 C. Note that the fit line (red) in Figure 5A does not follow the trend at high temperatures and the helix folding energies from this line are thus unreliable. We will cover refining the fit in section 4.1.5.
+This will create three pre-canned outputs. The first output, corresponding to Method 1, is a Van't Hoff plot (Figure 5A). Points represent the K\textsubscript{D} and error from fitting isotherms individually. The red line represents the fit to Equation 6 that provides thermodynamic parameters. The blue line and orange line represents the lower and upper limit of the range of K\textsubscript{D} values included in the fit. The second output, corresponding to Method 2, is a depiction of the global fit, where points represent raw data and red lines represent the global fit (Figure 5B). The third output is a .csv file containing the thermodynamic parameters from each method Figure 5 C. Note that the fit line (red) in Figure 5A does not follow the trend at high temperatures and the helix folding energies from this line are thus unreliable. We will cover refining the fit in section 4.1.5.
 
-![Pre-canned meltR.F outputs](https://user-images.githubusercontent.com/63312483/165543584-0a15344b-9f9c-4b63-ba60-256a7fe2edd1.svg)
-
-##### Figure 5: Pre-canned meltR.F outputs.
+![Pre-canned meltR.F outputs.](https://user-images.githubusercontent.com/63312483/165543584-0a15344b-9f9c-4b63-ba60-256a7fe2edd1.svg)
 
 ### 4.1.5 Refining meltR.F fits
 
-Two arguments are important for refining meltR.F fits. The first is, "Kd_range", which is the range of K	extsubscript{D}s in nM that will be fit to obtain thermodynamic parameters. By default, the "Kd_range" is set to 10 to 1000. The second is, "Kd_error_quantile", which controls the amount of error that is included in the K	extsubscript{D}s that will be fit to obtain thermodynamic parameters. By default, the "Kd_error_quantile" is 0.25, meaning only the 25% most accurate KDs in the "K_range" will be fit to obtain thermodynamic parameters. 
+Two arguments are important for refining meltR.F fits. The first is, "Kd_range", which is the range of K\textsubscript{D}s in nM that will be fit to obtain thermodynamic parameters. By default, the "Kd_range" is set to 10 to 1000. The second is, "Kd_error_quantile", which controls the amount of error that is included in the K\textsubscript{D}s that will be fit to obtain thermodynamic parameters. By default, the "Kd_error_quantile" is 0.25, meaning only the 25% most accurate KDs in the "K_range" will be fit to obtain thermodynamic parameters. 
 
-As a first guess, the K	extsubscript{D} range should start about 10 times less than the fluorophore labeled RNA strand concentration and end at about 10 times more than the fluorophore labeled RNA strand, and the "Kd_error_quantile" should be conservative, near 0.25. After this, the Van't Hoff plot should be inspected, for how well the fit matches the linear range. In general, constraining the "Kd_range" and loostening the "Kd_error_quantile" results in the best fits. For example, a "Kd_range" of 40 to 500 nM and a "Kd_error_quantile" of 0.5 works well for the sample data (Figure 6).
+As a first guess, the K\textsubscript{D} range should start about 10 times less than the fluorophore labeled RNA strand concentration and end at about 10 times more than the fluorophore labeled RNA strand, and the "Kd_error_quantile" should be conservative, near 0.25. After this, the Van't Hoff plot should be inspected, for how well the fit matches the linear range. In general, constraining the "Kd_range" and loostening the "Kd_error_quantile" results in the best fits. For example, a "Kd_range" of 40 to 500 nM and a "Kd_error_quantile" of 0.5 works well for the sample data (Figure 6).
 
 ```{r}
 meltR.F(df,
@@ -491,9 +499,7 @@ with an output of:
 
 Note two things: (1) the refined fit uses more isotherms than the original iterations of the program, where we were checking the concentration optimization algorithm in Section 4.1.3, with an "accurate Ks" count of 18 instead of 10 to 14. (2) The the thermodynamic parameters are closer to the fits with constrained "low_Ks", with a difference of about 5% in terms of the enthalpy and 1% in terms of the free energy.   
 
-![Refined Van't Hoff plot](https://user-images.githubusercontent.com/63312483/165550513-87659c1c-0a43-4e79-a9ef-d2b22a53e673.svg)
-
-##### Figure 6: Refined Van't Hoff plot to determine the dH and dS.
+![Refined Van't Hoff plot to determine the dH and dS.](https://user-images.githubusercontent.com/63312483/165550513-87659c1c-0a43-4e79-a9ef-d2b22a53e673.svg)
 
 ### 4.1.6 Advanced analysis of meltR.F outputs in R
 
@@ -559,7 +565,7 @@ MeltR.fit$Raw_data
 MeltR.fit$First_derivative
 ```
 
-[7] Tms: The approximate T	extsubscript{m} of each sample obtained from the maximum of the first derivative. Useful for qualitative comparison of data between solution conditions. It can be called using:
+[7] Tms: The approximate T\textsubscript{m} of each sample obtained from the maximum of the first derivative. Useful for qualitative comparison of data between solution conditions. It can be called using:
 
 ```{r}
 MeltR.fit$Tms
@@ -583,9 +589,7 @@ MeltR.fit$Fractional_error_between_methods
 
 Data should be formatted into a comma separated value (“.csv”) text file with carefully labeled columns (Figure 7). There should be a “Sample” column where numbers or character strings specify what sample the absorbance data was collected on. There should be one buffer blank in the data set for background subtraction. If no blank is available, add data with an absorbance of 0 recorded at each temperature. A “Pathlength” column specifies the pathlength in cm of the cuvette the data was collected in. A “Temperature” column specifies the temperature in <span>&#176;</span>C where the data was recorded. Lastly, a “Absorbance” column specifies the absorbance collected at each temperature. 
 
-![Formatting absorbance melting curve data in a csv in Excel.](https://user-images.githubusercontent.com/63312483/165771699-ce0ea0d0-79b5-40c8-8746-9f67b09be245.PNG)
-
-##### Figure 7: Formatting absorbance melting curve data in a csv in Excel. Temperature is in <span>&#176;</span>C and pathlength is in cm.
+![Formatting absorbance melting curve data in a csv in Excel. Temperature is in <span>&#176;</span>C and pathlength is in cm.](https://user-images.githubusercontent.com/63312483/165771699-ce0ea0d0-79b5-40c8-8746-9f67b09be245.PNG)
 
 Two common pitfalls occur when formatting data for MeltR, usually in Excel. The first is incorrect column names, even incorporation of an extra space, so that MeltR cannot recognize data when it is read into R. The second is incorporation of characters into data columns when values are missing. If a data point is missing, leave the cell blank. Do not write something like "NA".
 
@@ -628,8 +632,6 @@ ggplot(df, aes(x = Temperature, y = Absorbance, color = factor(Sample))) +
 ```
 
 ![Absorbance data check.](https://user-images.githubusercontent.com/63312483/165774624-39edee9d-8ab8-4ae7-8852-ace5c222303c.svg)
-
-##### Figure 8: Absorbance data check.
 
 This data looks good (Figure 8), with a small and consistent blank absorbance and sigmoidal RNA melting curves. If one of the RNA melting curves does not resemble a sigmoid, it should be removed from the data set using:
 
@@ -702,15 +704,125 @@ meltR.A(data_frame = df,
         file_prefix = "Helix")
 ```
 
-This will create seven pre-canned outputs. The first and second outputs are depictions of the fits in method Method 1, with the individual fits (red lines) overlay-ed on raw data (Figure 9A) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9B). The third output is a depiction of the fit in Method 2, with the fit overlay-ed on the T	extsubscript{m} data at each strand concentration (Figure 9C). The fourth and fifth outputs are depictions of the fit in method Method 3, with the global fits (red lines) overlay-ed on raw data (Figure 9D) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9E). The sixth output is a .csv file containing the thermodynamic parameters generated by individual fits (Figure 9F). The seventh output is a .csv file containing the thermodynamic parameters from each method (Figure 9G).
+This will create seven pre-canned outputs. The first and second outputs are depictions of the fits in method Method 1, with the individual fits (red lines) overlay-ed on raw data (Figure 9A) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9B). The third output is a depiction of the fit in Method 2, with the fit overlay-ed on the T\textsubscript{m} data at each strand concentration (Figure 9C). The fourth and fifth outputs are depictions of the fit in method Method 3, with the global fits (red lines) overlay-ed on raw data (Figure 9D) and normalized data generated by calculating the absorbtivity (extinction coefficient) at each temperature (Figure 9E). The sixth output is a .csv file containing the thermodynamic parameters generated by individual fits (Figure 9F). The seventh output is a .csv file containing the thermodynamic parameters from each method (Figure 9G).
 
 ![Pre-canned meltR.A outputs](https://user-images.githubusercontent.com/63312483/165786859-fd0e921c-e943-44cf-ad12-7ffd8dd0c20d.svg)
 
-##### Figure 9: Pre-canned meltR.A outputs.
+### 4.2.5 Specifying blanks with meltR.A
 
-### 4.2.5 Refining MeltR.A fits by trimming fluorescence baselines.
+In this section, we will describe usage for the blank argument, which controls background subtraction. There is a single blank in the data set we fit in section 4.2.3. The identity of the blank sample specified in the "blank" argument, must match the identity of the blank sample in the data frame. If the blank sample is labeled with a character, the "blank" argument needs to be a character string, "Blank 1" for example. In the example in section 4.2.3, the blank sample is represented by a integer. We can check this using the "str" function in base R.
 
-MeltR approximates absorbance baselines using a line (y = mx+b). Real absorbance data deviates from this linear behavior over wide temperature ranges. MeltR fits are thus improved by trimming the baselines so that baselines better approximate a line. First, the raw data should be inspected for linear baselines one sample at a time using the tidyverse.
+```{r}
+str(df.abs.data)
+'data.frame':	1800 obs. of  4 variables:
+ $ Sample     : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Pathlength : num  1 1 1 1 1 1 1 1 1 1 ...
+ $ Temperature: num  4.78 5.5 6.03 6.52 7.03 7.53 8.02 8.54 9.04 9.54 ...
+ $ Absorbance : num  0.004395 -0.00058 0.000778 0.001038 0.001068 ...
+ ```
+
+As you can see, the Sample column in the data frame, which is why we specified the blank as:
+
+```{r}
+blank = 1
+```
+
+You may have already performed the background subtraction on your data. In this case, blanks should be removed from the data set and background subtraction can be turned off in meltR.A by setting the blank argument to "none". There is a data set in MeltR that is already background subtracted.
+
+```{r}
+?df.FAM.C.BHQ1.data
+meltR.A(data_frame = df.FAM.C.BHQ1.data,
+        blank = "none",
+        NucAcid = c("RNA", "CUGAGUC", "GACUCAG"),
+        Mmodel = "Heteroduplex.2State")
+```
+
+Thus, setting blank = "none" turns off background subtraction.
+
+If there are multiple blanks in the data set, different blanks can be assigned to different blanks by supplying sample-blank pairs to the "blank" argument using a list of vectors. For example, the df.abs.ROX.data data set, included in MeltR, contains variable concentrations of ROX fluorophore. The ROX absorbance must be subtracted out. We first check the Sample identities.
+
+```{r}
+?df.abs.ROX.data
+unique(df.abs.ROX.data$Sample)
+ [1] "0 uM ROX 0 uM Helix A"     "0 uM ROX 5 uM Helix A"    
+ [3] "0.032 uM ROX 5 uM Helix A" "0.1 uM ROX 5 uM Helix A"  
+ [5] "0.32 uM ROX 5 uM Helix A"  "3.2 uM ROX 5 uM Helix A"  
+ [7] "10 uM ROX 5 uM Helix A"    "32 uM ROX 5 uM Helix A"   
+ [9] "0.032 uM ROX 0 uM Helix A" "0.1 uM ROX 0 uM Helix A"  
+[11] "0.32 uM ROX 0 uM Helix A"  "3.2 uM ROX 0 uM Helix A"  
+[13] "10 uM ROX 0 uM Helix A"    "32 uM ROX 0 uM Helix A"  
+```
+
+We then create a list of samples specifying sample-blank pairs. Samples are specified first and blanks are specified second.
+
+```{r}
+list.blanks = list(c("0 uM ROX 5 uM Helix A", "0 uM ROX 0 uM Helix A"),
+              c("0.032 uM ROX 5 uM Helix A", "0.032 uM ROX 0 uM Helix A"),
+              c("0.1 uM ROX 5 uM Helix A", "0.1 uM ROX 0 uM Helix A"),
+              c("0.32 uM ROX 5 uM Helix A", "0.32 uM ROX 0 uM Helix A"),
+              c("3.2 uM ROX 5 uM Helix A", "3.2 uM ROX 0 uM Helix A"),
+              c("10 uM ROX 5 uM Helix A", "10 uM ROX 0 uM Helix A"),
+              c("32 uM ROX 5 uM Helix A", "32 uM ROX 0 uM Helix A"))
+```
+
+We can then supply the list "list.blanks" to the "blank" argument.
+
+```{r}
+meltR.A(df.abs.ROX.data,
+        blank = list.blanks,
+        NucAcid = c("RNA", "CGAAAGGU", "ACCUUUCG"),
+        methods = c(TRUE, FALSE, FALSE),
+        Mmodel = "Heteroduplex.2State",
+        fitTs = c(25, 75))
+```
+
+Note: I turned of methods 2 and 3 because the data set is not set up for these methods and it would likely cause the algorithm to fail because the data are inappropriate. Also, baselines are trimmed using the fitTs argument. This baseline trimming is discussed in more detail in section 4.2.7.
+
+### 4.2.6 Specifying extinction coefficients
+
+This section will describe how to specify extinction coefficients using the "NucAcid"" argument. In section 4.2.3, we supplied meltR.A with a nucleic acid sequence, and MeltR used extinction coefficient data to calculate an extinction coefficient at 260 nm, which meltR.A then uses to calculate C\textsubscript{t}. MeltR contains data to calculate extinction coefficients at 300, 295, 290, 285, 280, 275, 270, 265, 260, 255, 250, 245, 240, 235, and 230 nm for RNA. MeltR contains data to calculate extinction coefficients at 260 nm for DNA. Extinction coefficient calculations assume pH 7.0.
+
+You can change the wavelength that extinction coefficients are calculated at using the "wavelength" argument. We can test on the df.abs.ROX.data, even though this data was collected at 260 nm.
+
+```{r}
+meltR.A(df.abs.ROX.data,
+        wavelength = 280,
+        blank = blanks,
+        NucAcid = c("RNA", "CGAAAGGU", "ACCUUUCG"),
+        methods = c(TRUE, FALSE, FALSE),
+        Mmodel = "Heteroduplex.2State",
+        fitTs = c(25, 75))
+```
+
+You can check what values meltR.A is calculating using "calc.extcoeff".
+
+```{r}
+calc.extcoeff(c("RNA", "CGAAAGGU", "ACCUUUCG"))
+$Total
+[1] 115200
+
+$CGAAAGGU
+[1] 66120
+
+$ACCUUUCG
+[1] 49080
+```
+
+Custom molar extinction coefficients can be supplied to the NucAcid condition, if data is not included to calculate extinction coefficients for your specific nucleic acid. This is important for modified nucleic acids or extreme solution conditions. For example, the df.FAM.C.BHQ1.data set was collected on a fluorophore and quencher labeled helix. Thus, I need to use extinction coefficients that include the fluorophore and quencher.
+
+```{r}
+?df.FAM.C.BHQ1.data
+FAM.BHQ1 = c("Custom", 105860, 82300)
+meltR.A(data_frame = df.FAM.C.BHQ1.data,
+        blank = "none",
+        NucAcid = FAM.BHQ1,
+        Mmodel = "Heteroduplex.2State",
+        concT = 75)
+```
+
+### 4.2.7 Refining meltR.A fits by trimming absorbance baselines.
+
+MeltR approximates absorbance baselines using a line (y = mx+b). Real absorbance data deviates from this linear behavior over wide temperature ranges. MeltR fits are thus improved by trimming the baselines so that baselines better approximate a line. First, the raw data should be inspected for linear baselines one sample at a time using the tidyverse. Then, data are fit with meltR.A using a manually optimized baseline trim. After this, the manually optimized fit can be passed to an automated baseline trimmer, which tests combinations of randomly trimmed baselines and identifies an optimum set of trimmed baselines.
 
 ```{r}
 ggplot(df %>% filter(Sample == 10), #Only plot sample 10
@@ -720,11 +832,9 @@ aes(x = Temperature, y = Absorbance, color = factor(Sample))) +
   geom_vline(xintercept = c(15, 70)) #will add horizontal lines to the plot at 15 and 70
 ```
 
-Thus, for Sample 2, baselines are approximately linear above 15 <span>&#176;</span>C and below 70 <span>&#176;</span>C (Figure 10).
+Thus, for Sample 2, baselines are approximately linear above 80 <span>&#176;</span>C and below 80 <span>&#176;</span>C (Figure 10).
 
-![Baseline trimming on Sample 10](https://user-images.githubusercontent.com/63312483/165791992-20b92819-5904-4287-9183-c4f489a1d1e7.svg)
-
-##### Figure 10: Baseline trimming on Sample 10. Vertical lines represent 25 and 70 <span>&#176;</span>C.
+![Baseline trimming on Sample 10. Vertical lines represent 25 and 80 <span>&#176;</span>C.](https://user-images.githubusercontent.com/63312483/165791992-20b92819-5904-4287-9183-c4f489a1d1e7.svg)
 
 This should be repeated for each sample that contains RNA. After identifying ranges where baselines are linear, ranges can be supplied to the "fitTs" argument as a list of vectors (in the order of the samples in the data set). Note, do not provide a temperature range for the blank. 
 
@@ -739,7 +849,7 @@ list.T.range = list(c(15, 70), #Sample 2
                     c(25, 85), #Sample 9
                     c(25, 85)) #Sample 10
 
-meltR.A(data_frame = df,
+fit = meltR.A(data_frame = df,
         blank = 1,
         NucAcid = helix,
         Mmodel = "Heteroduplex.2State",
@@ -753,29 +863,148 @@ Which will produce:
 ```{r}
 [1] "Individual curves"
   Sample           Ct     H       S     G   Tm
-1      2 2.832690e-06 -67.2 -0.1849  -9.9 42.4
-2      3 4.718659e-06 -71.6 -0.1984 -10.1 44.5
-3      4 7.439046e-06 -65.3 -0.1783 -10.0 46.1
-4      5 1.173670e-05 -61.9 -0.1676 -10.0 47.9
-5      6 2.049582e-05 -66.3 -0.1813 -10.0 49.3
-6      7 3.131297e-05 -71.2 -0.1964 -10.3 50.8
-7      8 5.533500e-05 -68.9 -0.1894 -10.1 52.3
-8      9 8.990554e-05 -68.4 -0.1879 -10.1 53.9
-9     10 1.439218e-04 -71.0 -0.1952 -10.4 56.1
+1      2 2.913343e-06 -67.2 -0.1850  -9.9 42.4
+2      3 4.853010e-06 -71.6 -0.1985 -10.1 44.5
+3      4 7.650852e-06 -65.3 -0.1784 -10.0 46.1
+4      5 1.207087e-05 -61.9 -0.1676  -9.9 47.9
+5      6 2.107938e-05 -66.3 -0.1814 -10.0 49.3
+6      7 3.220452e-05 -71.2 -0.1964 -10.3 50.8
+7      8 5.691051e-05 -68.9 -0.1894 -10.1 52.3
+8      9 9.246535e-05 -68.4 -0.1879 -10.1 53.9
+9     10 1.480195e-04 -71.0 -0.1953 -10.4 56.1
 [1] "Summary"
-              Method     H SE.H      S SE.S     G SE.G
-1  1 individual fits -68.0  3.2 -186.6  9.9 -10.1  0.2
-2 2 Tm versus ln[Ct] -62.2  1.4 -168.9  4.5  -9.9  0.1
-3       3 Global fit -67.4  0.3 -184.7  0.9 -10.1  0.0
+              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
+1  1 individual fits -68.0  3.2 -186.7  9.9 -10.1  0.2    54.15446      3.8393625
+2 2 Tm versus ln[Ct] -62.1  2.8 -168.9  8.7  -9.8  0.1    53.76500      3.6805415
+3       3 Global fit -67.4  0.3 -184.8  0.9 -10.1  0.0    54.26074      0.3579972
+[1] "fractional error between methods"
+           H          S    G
+1 0.08962025 0.09881569 0.03
+[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
+```
+
+Fitting manually trimmed baselines reduces the fractional error between the methods from 15% to 9% in terms of the enthalpy.
+
+Next, the "fit" from meltR.A can be fit using the "BLTrimmer".
+
+```{r}
+BLTrimmer(fit)
+```
+
+Which will yeild something like this:
+
+```{r}
+[1] "You are trying to test 100 baseline combinations"
+[1] "Do you think this is possible?"
+[1] "Fitting 100 combinations of 5 different baselines per sample"
+  |=========================================================================| 100%[1] "Testing baselines took 4.00400000000036 seconds"
+[1] "Using autotrimmed baselines in MeltR"
+[1] "Individual curves"
+  Sample           Ct     H       S     G   Tm
+1      2 2.913343e-06 -65.8 -0.1802  -9.9 42.6
+2      3 4.853010e-06 -59.2 -0.1588  -9.9 45.2
+3      4 7.650852e-06 -63.7 -0.1735  -9.9 45.7
+4      5 1.207087e-05 -67.4 -0.1852 -10.0 47.2
+5      6 2.107938e-05 -43.1 -0.1090  -9.3 50.5
+6      7 3.220452e-05 -72.6 -0.2010 -10.3 50.6
+7      8 5.691051e-05 -66.8 -0.1836  -9.9 51.7
+8      9 9.246535e-05 -71.9 -0.1987 -10.3 53.9
+9     10 1.480195e-04 -70.0 -0.1926 -10.3 55.8
+[1] "Summary"
+              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
+1  1 individual fits -64.5  9.0 -175.8 28.2 -10.0  0.3    54.49795     11.5865784
+2 2 Tm versus ln[Ct] -65.4  3.6 -179.2 11.0  -9.9  0.1    53.42931      4.4052573
+3       3 Global fit -68.2  0.4 -187.3  1.2 -10.1  0.0    54.17182      0.4705376
+[1] "fractional error between methods"
+           H          S    G
+1 0.05603231 0.06361792 0.02
+[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
+```
+
+In this example, the BLTrimmer reduces the fractional error between methods from 9% to 5.6%. Note, your answer when you run this code will be different, because the BLTrimmer tests 100 random baseline combinations. By, default, there are n.ranges^n.samples = 5^9 baseline combinations (5 different trimmed baselines per sample and 9 samples). If you want to get a more similar answer, you will need to do a more exaustive testing of baseline combinations. For example,
+
+```{r}
+BLTrimmer(fit, n.combinations = 1000)
+[1] "You are trying to test 1000 baseline combinations"
+[1] "Do you think this is possible?"
+[1] "Fitting 1000 combinations of 5 different baselines per sample"
+  |========================================================================| 100%[1] "Testing baselines took 36.1050000000005 seconds"
+[1] "Using autotrimmed baselines in MeltR"
+[1] "Individual curves"
+  Sample           Ct     H       S     G   Tm
+1      2 2.913343e-06 -65.8 -0.1802  -9.9 42.6
+2      3 4.853010e-06 -59.2 -0.1588  -9.9 45.2
+3      4 7.650852e-06 -65.5 -0.1792  -9.9 45.8
+4      5 1.207087e-05 -66.5 -0.1822  -9.9 47.2
+5      6 2.107938e-05 -43.1 -0.1090  -9.3 50.5
+6      7 3.220452e-05 -72.3 -0.1998 -10.3 50.8
+7      8 5.691051e-05 -69.3 -0.1911 -10.1 51.9
+8      9 9.246535e-05 -71.7 -0.1980 -10.2 53.7
+9     10 1.480195e-04 -70.0 -0.1926 -10.3 55.8
+[1] "Summary"
+              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
+1  1 individual fits -64.8  9.1 -176.8 28.3 -10.0  0.3    54.35821     11.5749687
+2 2 Tm versus ln[Ct] -65.4  3.4 -179.0 10.6  -9.9  0.1    53.75580      4.2359722
+3       3 Global fit -65.8  0.5 -180.0  1.4 -10.0  0.0    54.11935      0.5884726
 [1] "fractional error between methods"
            H          S          G
-1 0.08805668 0.09829693 0.01993355
+1 0.01530612 0.01791713 0.01003344
+[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
 ```
-The fitting trimmed baselines reduces the fractional error between the methods from 15% to 9% in terms of the enthalpy. 
 
-### 4.2.6 Advanced plotting meltR.A outputs using the "tidyverse"
+Note, that this produces a different answer, that is more reproducible, but requires more computational time, in this case 36.1 seconds. If you have a multicore machine, you can test baselines in parallel. First, you must install the "doParallel" package and its dependencies, and load them into your memory.
 
-meltR.A can pass a more extensive output to an object in R. 
+```{r}
+install.packages("doParallel")
+library(doParallel)
+```
+
+Now, you can turn on the parallelization and specify the number of cores.
+
+!!!!!Warning. Copying and pasting this code into your console could hurt your computer. Make sure you know how many cores your computer has and make sure you know how many cores can be designated to run this task!!!!!
+
+```{r}
+BLTrimmer(fit, n.combinations = 1000,
+          parallel = "on", n.core = 3,
+          Save_results = "all")
+[1] "You are trying to test 1000 baseline combinations"
+[1] "Do you think this is possible?"
+[1] "Fitting 1000 combinations of 5 different baselines per sample"
+[1] "Testing baselines took 13.3319999999994 seconds"
+[1] "Using autotrimmed baselines in MeltR"
+[1] "Individual curves"
+  Sample           Ct     H       S     G   Tm
+1      2 2.913343e-06 -65.8 -0.1802  -9.9 42.6
+2      3 4.853010e-06 -59.2 -0.1588  -9.9 45.2
+3      4 7.650852e-06 -65.0 -0.1777  -9.9 45.9
+4      5 1.207087e-05 -66.5 -0.1822  -9.9 47.2
+5      6 2.107938e-05 -43.1 -0.1090  -9.3 50.5
+6      7 3.220452e-05 -72.3 -0.1998 -10.3 50.8
+7      8 5.691051e-05 -68.4 -0.1880 -10.1 52.1
+8      9 9.246535e-05 -68.8 -0.1892 -10.1 53.8
+9     10 1.480195e-04 -70.9 -0.1951 -10.4 55.9
+[1] "Summary"
+              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
+1  1 individual fits -64.4  8.9 -175.6 27.6 -10.0  0.3    54.32267     11.3692822
+2 2 Tm versus ln[Ct] -65.6  3.5 -179.8 10.7  -9.9  0.1    53.44949      4.2719888
+3       3 Global fit -66.7  0.3 -182.7  1.0 -10.0  0.0    54.19970      0.3839714
+[1] "fractional error between methods"
+          H          S          G
+1 0.0350788 0.03958372 0.01003344
+[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
+```
+
+Note, this obtained a similar answer to running the code with no parallelization but required 13.6 seconds instead of 36.1 seconds.
+
+Lastly, we can check the quality of the BLTrimmer results using some precanned outputs which are generated by setting  Save_results = "all". See section 4.2.4 for details on saving results.
+
+The BLTrimmer produces, three precanned plots. The first is a histogram of the difference in enthalpies obtained by method 1 and method 2 obtained by fitting all of the baseline  (Figure 11A). The peak of this distribution is occurring at about 6% enthalpy error, indicating that the helices are likely two state. The second is the enthalpy produced by methods 1 and 2 versus the fractional error between the two methods (Figure 11B). The enthalpies should converge on a single enthalpy value, plus or minus 1 kcal/mol, at low fractional error values. The third is a depiction of the trimmed baselines, where the blue points are the no trim range, red points are the baselines that are fit, and black points are points that are removed from the data set by the BLTrimmer (Figure 11C). The baselines produced by this example make sense.
+
+![Precanned outputs of the BL trimmer. Enthalpy units are in kcal/mol.](https://user-images.githubusercontent.com/63312483/174105426-b532f249-bb05-4082-aa04-40da939a6467.png)
+
+### 4.2.8 Advanced plotting meltR.A outputs using the "tidyverse"
+
+meltR.A can pass a more extensive output to an object in R. This also applies to the BLTrimmer. 
 
 ```{r}
 MeltR.fit = meltR.A(data_frame = df,

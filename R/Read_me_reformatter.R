@@ -32,7 +32,7 @@ for (i in 1:length(Lines)){
   }
 }
 
-Con = file("Manual.md")
-writeLines(Lines, Con)
-close(Con)
+#Con = file("Manual.md")
+#writeLines(Lines, Con)
+#close(Con)
 
