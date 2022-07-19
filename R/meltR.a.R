@@ -416,6 +416,7 @@ meltR.A = function(data_frame,
     mSS <- c()
     Ind.model = Model
     for (i in c(1:length(unique(no.background$Sample)))){
+      print(i)
       tryCatch({
         a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
         if (is.list(auto.trimmed)){
@@ -468,11 +469,11 @@ meltR.A = function(data_frame,
     }
     indvfits <- data.frame("Sample" = unique(no.background$Sample),
                            "Ct" = unique(no.background$Ct),
-                           "H" = round(indvfits.H, 1),
+                           "H" = round(indvfits.H, 2),
                            "S" = round(indvfits.S, 4),
-                           "G" = round(indvfits.G, 1),
-                           "Tm" = round(indvfits.Tm, 1))
-    indvfits.mean <- list(round(mean(indvfits$H), 1), round(sd(indvfits$H), 1), round(1000*mean(indvfits$S), 1), round(1000*sd(indvfits$S), 1), round(mean(indvfits.G), 1), round(sd(indvfits.G), 1))
+                           "G" = round(indvfits.G, 2),
+                           "Tm" = round(indvfits.Tm, 2))
+    indvfits.mean <- list(round(mean(indvfits$H), 2), round(sd(indvfits$H), 2), round(1000*mean(indvfits$S), 2), round(1000*sd(indvfits$S), 2), round(mean(indvfits.G), 2), round(sd(indvfits.G), 2))
     names(indvfits.mean) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
     indvfits.mean <- data.frame(indvfits.mean)
     no.background$Ext <- no.background$Absorbance/(no.background$Pathlength*no.background$Ct)
@@ -537,9 +538,9 @@ meltR.A = function(data_frame,
         Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
                               data = Tm_data,
                               start = list(H = -70, S = -0.17))
-        Tm_vs_lnCt <- list(round(coef(Tm_vs_lnCt_fit)[1], 1), round(summary(Tm_vs_lnCt_fit)$coefficients[1,2], 1),
-                           round(1000*coef(Tm_vs_lnCt_fit)[2], 1), round(1000*summary(Tm_vs_lnCt_fit)$coefficients[2,2], 1),
-                           round(coef(Tm_vs_lnCt_fit)[1] - (310.15*coef(Tm_vs_lnCt_fit)[2]), 1), round(sqrt((summary(Tm_vs_lnCt_fit)$coefficients[1,2])^2 + (310*summary(Tm_vs_lnCt_fit)$coefficients[2,2])^2 - 2*310*summary(Tm_vs_lnCt_fit)$cov.unscaled[1,2]*(summary(Tm_vs_lnCt_fit)$sigma^2)),1))
+        Tm_vs_lnCt <- list(round(coef(Tm_vs_lnCt_fit)[1], 2), round(summary(Tm_vs_lnCt_fit)$coefficients[1,2], 2),
+                           round(1000*coef(Tm_vs_lnCt_fit)[2], 2), round(1000*summary(Tm_vs_lnCt_fit)$coefficients[2,2], 2),
+                           round(coef(Tm_vs_lnCt_fit)[1] - (310.15*coef(Tm_vs_lnCt_fit)[2]), 2), round(sqrt((summary(Tm_vs_lnCt_fit)$coefficients[1,2])^2 + (310*summary(Tm_vs_lnCt_fit)$coefficients[2,2])^2 - 2*310*summary(Tm_vs_lnCt_fit)$cov.unscaled[1,2]*(summary(Tm_vs_lnCt_fit)$sigma^2)),2))
         names(Tm_vs_lnCt) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
         Tm_vs_lnCt <- data.frame(Tm_vs_lnCt)
         if (Save_results == "all"){
@@ -691,9 +692,9 @@ meltR.A = function(data_frame,
       }
       dev.off()
     }
-    Gfit_summary <- list(round(coef(gfit)[1], 1), round(summary(gfit)$coefficients[1,2], 1),
-                         round(1000*coef(gfit)[2], 1), round(1000*summary(gfit)$coefficients[2,2], 1),
-                         round(coef(gfit)[1] - (310.15)*coef(gfit)[2], 1), round(sqrt((summary(gfit)$coefficients[1,2])^2 + (310.15*summary(gfit)$coefficients[2,2])^2 - 2*310.15*summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)), 1))
+    Gfit_summary <- list(round(coef(gfit)[1], 2), round(summary(gfit)$coefficients[1,2], 2),
+                         round(1000*coef(gfit)[2], 2), round(1000*summary(gfit)$coefficients[2,2], 2),
+                         round(coef(gfit)[1] - (310.15)*coef(gfit)[2], 2), round(sqrt((summary(gfit)$coefficients[1,2])^2 + (310.15*summary(gfit)$coefficients[2,2])^2 - 2*310.15*summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)), 2))
     names(Gfit_summary) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
     Gfit_summary <- data.frame(Gfit_summary)
   }
