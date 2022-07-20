@@ -202,9 +202,8 @@ meltR.A = function(data_frame,
       samples <- {}
       for (i in c(1:length(unique(data_frame$Sample)))){
         samples[[i]] <- subset(data_frame, Sample == unique(data_frame$Sample)[i])
-        for (j in c(1:length(samples[[i]]$Sample))){
-          samples[[i]]$Absorbance[j] <- samples[[i]]$Absorbance[j] - (samples[[blank]]$Absorbance[j]*samples[[blank]]$Pathlength[j])
-        }
+        df.blank = subset(data_frame, Sample == blank)
+        samples[[i]]$Absorbance = samples[[i]]$Absorbance - (df.blank$Absorbance*samples[[i]]$Pathlength/df.blank$Pathlength)
       }
       k <- samples[[1]]
       for (i in c(2:length(samples))){
@@ -416,7 +415,7 @@ meltR.A = function(data_frame,
     mSS <- c()
     Ind.model = Model
     for (i in c(1:length(unique(no.background$Sample)))){
-      print(i)
+      #print(i)
       tryCatch({
         a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
         if (is.list(auto.trimmed)){
@@ -726,11 +725,11 @@ meltR.A = function(data_frame,
   SE.Tm_at_0.1mM = c()
 
   for (i in 1:nrow(comparison)){
-    Tm_at_0.1mM[i] =  calcTM(H = comparison$H[i], S = comparison$S[i],
-                             Ct = 10^-4)
-    SE.Tm_at_0.1mM[i] = calcTM.SE(H = comparison$H[i], S = comparison$S[i],
+    Tm_at_0.1mM[i] =  round(calcTM(H = comparison$H[i], S = comparison$S[i],
+                             Ct = 10^-4), digits = 2)
+    SE.Tm_at_0.1mM[i] = round(calcTM.SE(H = comparison$H[i], S = comparison$S[i],
                             SE.H = comparison$SE.H[i], SE.S = comparison$SE.S[i],
-                            Ct = 10^-4)
+                            Ct = 10^-4), digits = 2)
   }
 
   comparison$Tm_at_0.1mM = Tm_at_0.1mM
