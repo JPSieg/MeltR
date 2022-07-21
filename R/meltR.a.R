@@ -19,6 +19,7 @@
 #'@param concT The temperature used to calculate the NucAcid concentration. Default = 90.
 #'@param fitTs Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit.
 #'@param methods what methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Can be true or false. Note, method 1 must be set to TRUE or the subsequent steps will not work.
+#'@param Tm_method either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
@@ -31,6 +32,7 @@ meltR.A = function(data_frame,
                    concT = 90,
                    fitTs = NULL,
                    methods = c(TRUE, TRUE, TRUE),
+                   Tm_method = "nls",
                    Mmodel,
                    Tmodel = "VantHoff",
                    Save_results = "none",
@@ -510,26 +512,40 @@ meltR.A = function(data_frame,
   }
   ####Method 2 Tm vs Ct####
   if (methods[2] == TRUE){
-    a <- {}
-    Tm_range <- {}
-    Tm_fit <- {}
-    Tm <- c()
-    lnCt <- c()
-    for (i in c(1:length(unique(no.background$Sample)))){
-      #print(i)
-      a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i]) #Pull out data
-      #calculate f at each temp
-      a[[i]]$f <- (a[[i]]$Absorbance - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))/((coef(fit[[i]])[3]*a[[i]]$Temperature + coef(fit[[i]])[4]) - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))
-      Tm_range[[i]] <- data.frame( #Pull out data where f >= 0.4 and f <= 0.6
-        "Temperature" = a[[i]]$Temperature,
-        "f" = a[[i]]$f
-      )
+    if (Tm_method == "lm"){
 
-      Tm_fit[[i]] <- lm(f~Temperature, data = Tm_range[[i]]) #fit data where f >= 0.4 and f <= 0.6
-      Tm[i] <- (0.5 - coef(Tm_fit[[i]])[1])/coef(Tm_fit[[i]])[2]
-      lnCt[i] <- log(a[[i]]$Ct[1])
+      a <- {}
+      Tm_range <- {}
+      Tm_fit <- {}
+      Tm <- c()
+      lnCt <- c()
+      for (i in c(1:length(unique(no.background$Sample)))){
+        #print(i)
+        a[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i]) #Pull out data
+        #calculate f at each temp
+        a[[i]]$f <- (a[[i]]$Absorbance - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))/((coef(fit[[i]])[3]*a[[i]]$Temperature + coef(fit[[i]])[4]) - (coef(fit[[i]])[5]*a[[i]]$Temperature + coef(fit[[i]])[6]))
+        Tm_range[[i]] <- data.frame( #Pull out data where f >= 0.4 and f <= 0.6
+          "Temperature" = a[[i]]$Temperature,
+          "f" = a[[i]]$f
+        )
+
+        Tm_fit[[i]] <- lm(f~Temperature, data = Tm_range[[i]]) #fit data where f >= 0.4 and f <= 0.6
+        Tm[i] <- (0.5 - coef(Tm_fit[[i]])[1])/coef(Tm_fit[[i]])[2]
+        lnCt[i] <- log(a[[i]]$Ct[1])
+      }
+      Tm_data <- data.frame("lnCt" = lnCt, "Tm" = Tm)
     }
-    Tm_data <- data.frame("lnCt" = lnCt, "Tm" = Tm)
+    if (Tm_method == "nls"){
+      lnCt = log(indvfits$Ct)
+      Tm = indvfits$Tm
+      Tm_data = data.frame(lnCt, Tm)
+    }
+    if (Tm_method == "polynomial"){
+      lnCt = log(indvfits$Ct)
+      Tm = T0.5
+      Tm_data = data.frame(lnCt, Tm)
+    }
+
     Tm_data$invT <- 1/(Tm_data$Tm + 273.15)
     if (Mmodel != "Monomolecular.2State"){
       if (Mmodel != "Monomolecular.3State"){
