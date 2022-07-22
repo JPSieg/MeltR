@@ -23,6 +23,8 @@
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
+#'@param auto.trimmed Ignore this argument unless you are writting auto baseline trimmers
+#'@param Silent TRUE to not print data in your console. Default = FALSE.
 #'@return A list of data frames containing parameters from the fits and data for ploting the results with ggplot2.
 #' @export
 meltR.A = function(data_frame,
@@ -38,7 +40,8 @@ meltR.A = function(data_frame,
                    Save_results = "none",
                    file_prefix = "Fit",
                    file_path = getwd(),
-                   auto.trimmed = FALSE) {
+                   auto.trimmed = FALSE,
+                   Silent = FALSE) {
   ####List of molecular models to fit####
   Mmodel_names <- c("Monomolecular.2State",
                     "Monomolecular.3State",
@@ -820,16 +823,19 @@ meltR.A = function(data_frame,
 
   ####Assemble final output####
 
-  print("Individual curves")
-  print(indvfits)
-  print("Summary")
-  print(comparison)
-  range <- data.frame("H" = abs((range(comparison$H)[1]-range(comparison$H)[2])/mean(comparison$H)),
-                      "S" = abs((range(comparison$S)[1]-range(comparison$S)[2])/mean(comparison$S)),
-                      "G" = abs((range(comparison$G)[1]-range(comparison$G)[2])/mean(comparison$G)))
-  print("fractional error between methods")
-  print(range)
-  print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
+  if (Silent){}else{
+    print("Individual curves")
+    print(indvfits)
+    print("Summary")
+    print(comparison)
+    range <- data.frame("H" = abs((range(comparison$H)[1]-range(comparison$H)[2])/mean(comparison$H)),
+                        "S" = abs((range(comparison$S)[1]-range(comparison$S)[2])/mean(comparison$S)),
+                        "G" = abs((range(comparison$G)[1]-range(comparison$G)[2])/mean(comparison$G)))
+    print("fractional error between methods")
+    print(range)
+    print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
+  }
+
   output <- list("Summary" = comparison,
                  "Method.1.indvfits" = indvfits,
                  "Range" = range,

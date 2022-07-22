@@ -12,12 +12,14 @@ meltR.A(
   concT = 90,
   fitTs = NULL,
   methods = c(TRUE, TRUE, TRUE),
+  Tm_method = "nls",
   Mmodel,
   Tmodel = "VantHoff",
   Save_results = "none",
   file_prefix = "Fit",
   file_path = getwd(),
-  auto.trimmed = FALSE
+  auto.trimmed = FALSE,
+  Silent = FALSE
 )
 }
 \arguments{
@@ -35,6 +37,8 @@ meltR.A(
 
 \item{methods}{what methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Can be true or false. Note, method 1 must be set to TRUE or the subsequent steps will not work.}
 
+\item{Tm_method}{either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.}
+
 \item{Mmodel}{The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".}
 
 \item{Tmodel}{The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".}
@@ -44,6 +48,10 @@ meltR.A(
 \item{file_prefix}{Prefix that you want on the saved files.}
 
 \item{file_path}{Path to the directory you want to save results in.}
+
+\item{auto.trimmed}{Ignore this argument unless you are writting auto baseline trimmers}
+
+\item{Silent}{TRUE to not print data in your console. Default = FALSE.}
 }
 \value{
 A list of data frames containing parameters from the fits and data for ploting the results with ggplot2.

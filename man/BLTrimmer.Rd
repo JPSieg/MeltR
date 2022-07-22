@@ -6,25 +6,36 @@
 \usage{
 BLTrimmer(
   meltR.A.fit,
+  Trim.method = "floating",
+  Assess.method = 3,
   n.combinations = 100,
-  n.ranges = 5,
-  range.step = 5,
-  no.trim.range = c(0.2, 0.8),
+  n.ranges.float = 5,
+  range.step.float = 5,
+  n.ranges.fixed = 40,
+  range.step.fixed = 0.5,
+  no.trim.range = c(0.1, 0.9),
   parallel = "none",
   n.core = 1,
   Save_results = "none",
   file_path = getwd(),
-  file_prefix = "BLTrimmer"
+  file_prefix = "BLTrimmer",
+  Silent = FALSE
 )
 }
 \arguments{
 \item{meltR.A.fit}{A object produced by fitting data with MeltR.A.}
 
-\item{n.combinations}{Number of baseline combinations to test. The program will produce n.ranges^Samples combinations of baselines. It will require a large amount of computational time to test these. In general, testing 1000 combinations will produce a reliable result (plus or minus 5\% in terms on enthalpy). For an exhaustive testing, set this parameter to n.ranges^Samples.}
+\item{Trim.method}{Method for trimming baselines. "fixed" to use the same baseline lengths for each curve or "floating" to use different baseline lengths for each curve. Default = "floating".}
 
-\item{n.ranges}{Number of trimmed baselines to generate per sample. It is not recommended to increase this parameter past 6 because of how long it will take the computer to generate all of these combinations.}
+\item{Assess.method}{Method for assessing fits from trimmed baseline. Options are integers 1, 2, and 3. 1 maximizes agreement between individual fits. 2 maximizes agreement between the average of individual fits and the average of the 1/Tm versus lnCt method. 3 takes both 1 and 2 into account. Default = 3.}
 
-\item{range.step}{Temperature difference between each range that is generated for each sample. Default = 5 deg Celsius works well.}
+\item{n.combinations}{Number of baseline combinations to test using the float method. The program will produce n.ranges^Samples combinations of baselines. It will require a large amount of computational time to test these. In general, testing 1000 combinations will produce a reliable result (plus or minus 5\% in terms on enthalpy). For an exhaustive testing, set this parameter to n.ranges^Samples.}
+
+\item{n.ranges.float}{Number of trimmed baselines to generate per sample using the float method. It is not recommended to increase this parameter past 6 because of how long it will take the computer to generate all of these combinations.}
+
+\item{range.step.float}{Temperature difference between each range that is generated for each sample using the float method. Default = 5 deg Celsius works well.}
+
+\item{n.ranges.fixed}{Number of baseline ranges for the fixed method.}
 
 \item{no.trim.range}{Determines the range where the absorbance data will not be trimmed. By default, no.trim.range = c(0.2, 0.8), meaning that the data will not be trimmed at a mode fraction double stranded greater than 0.2 and less than 0.8. Determined using the global fit from the input object created by meltR.A.}
 
@@ -37,6 +48,10 @@ BLTrimmer(
 \item{file_path}{A path to the folder you want your results saved in.}
 
 \item{file_prefix}{Prefix that you want on the saved files.}
+
+\item{Silent}{Set to TRUE to not print results}
+
+\item{range.step.fixed.}{Temperature difference between each range that is generated using the fixed method.}
 }
 \value{
 A list of data frames containing parameters from the fits and data for plotting the results with ggplot2.

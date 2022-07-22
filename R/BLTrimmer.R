@@ -3,27 +3,37 @@
 #'Automates absorbance data baseline trimming and testing. Generates random permutations of trimmed baseline combinations, fits the data using Method 1 and Method 2, compares the enthalpy difference, and chooses an optimum set of trimmed absorbance melting curves.
 #'
 #'@param meltR.A.fit A object produced by fitting data with MeltR.A.
-#'@param n.combinations Number of baseline combinations to test. The program will produce n.ranges^Samples combinations of baselines. It will require a large amount of computational time to test these. In general, testing 1000 combinations will produce a reliable result (plus or minus 5% in terms on enthalpy). For an exhaustive testing, set this parameter to n.ranges^Samples.
-#'@param n.ranges Number of trimmed baselines to generate per sample. It is not recommended to increase this parameter past 6 because of how long it will take the computer to generate all of these combinations.
-#'@param range.step Temperature difference between each range that is generated for each sample. Default = 5 deg Celsius works well.
+#'@param Trim.method Method for trimming baselines. "fixed" to use the same baseline lengths for each curve or "floating" to use different baseline lengths for each curve. Default = "floating".
+#'@param Assess.method Method for assessing fits from trimmed baseline. Options are integers 1, 2, and 3. 1 maximizes agreement between individual fits. 2 maximizes agreement between the average of individual fits and the average of the 1/Tm versus lnCt method. 3 takes both 1 and 2 into account. Default = 3.
+#'@param n.combinations Number of baseline combinations to test using the float method. The program will produce n.ranges^Samples combinations of baselines. It will require a large amount of computational time to test these. In general, testing 1000 combinations will produce a reliable result (plus or minus 5% in terms on enthalpy). For an exhaustive testing, set this parameter to n.ranges^Samples.
+#'@param n.ranges.float Number of trimmed baselines to generate per sample using the float method. It is not recommended to increase this parameter past 6 because of how long it will take the computer to generate all of these combinations.
+#'@param range.step.float Temperature difference between each range that is generated for each sample using the float method. Default = 5 deg Celsius works well.
+#'@param n.ranges.fixed Number of baseline ranges for the fixed method.
+#'@param range.step.fixed. Temperature difference between each range that is generated using the fixed method.
 #'@param no.trim.range Determines the range where the absorbance data will not be trimmed. By default, no.trim.range = c(0.2, 0.8), meaning that the data will not be trimmed at a mode fraction double stranded greater than 0.2 and less than 0.8. Determined using the global fit from the input object created by meltR.A.
 #'@param parallel Set to "on" if you want to use multiple cores to fit baselines. You will need to run library(doParallel) to load doParallel and its dependencies. You will also need to specify the number of cores in the n.cores argument, which should not exceed the number of cores your computer has. There will be no benefit for running in parallel mode for a single core machine. Default = "none".
 #'@param n.core How many cores do you want to designate for this task.
 #'@param Save_results "all" to save results to the disk or "none" to not save results to the disk.
 #'@param file_path A path to the folder you want your results saved in.
 #'@param file_prefix Prefix that you want on the saved files.
+#'@param Silent Set to TRUE to not print results
 #'@return A list of data frames containing parameters from the fits and data for plotting the results with ggplot2.
 #' @export
 BLTrimmer = function(meltR.A.fit,
+                     Trim.method = "floating",
+                     Assess.method = 3,
                    n.combinations = 100,
-                   n.ranges = 5,
-                   range.step = 5,
-                   no.trim.range = c(0.2, 0.8),
+                   n.ranges.float = 5,
+                   range.step.float = 5,
+                   n.ranges.fixed = 40,
+                   range.step.fixed = 0.5,
+                   no.trim.range = c(0.1, 0.9),
                    parallel = "none",
                    n.core = 1,
                    Save_results = "none",
                    file_path = getwd(),
-                   file_prefix = "BLTrimmer"){
+                   file_prefix = "BLTrimmer",
+                   Silent = FALSE){
   ####Determine Mmodel and Tmodel####
 
   Tmodel = meltR.A.fit$BLTrimmer.data[[3]]
@@ -196,32 +206,77 @@ BLTrimmer = function(meltR.A.fit,
 
   ####Create a list of baseline ranges for each sample####
 
-  list.df.ranges = {}
+  ####Trim method 1####
 
-  for (i in 1:length(Samples)){
-    df = list.df.raw[[i]]
-    v.samples = c()
-    lows = c()
-    highs = c()
-    Windows = c()
-    for (j in 1:n.ranges){
-      v.samples[j] = df$Sample[1]
-      lows[j] =  list.no.trim[[i]][1] - range.step*j
-      highs[j] =  list.no.trim[[i]][2] + range.step*j
-      Windows[j] = paste(v.samples[j], lows[j], "to", highs[j], sep = "#")
+  if (Trim.method == "fixed"){
+    list.df.ranges = {}
+
+    for (i in 1:length(Samples)){
+      df = list.df.raw[[i]]
+      v.samples = c()
+      lows = c()
+      highs = c()
+      Windows = c()
+      for (j in 1:n.ranges.fixed){
+        v.samples[j] = df$Sample[1]
+        lows[j] =  list.no.trim[[i]][1] - range.step.fixed*j
+        highs[j] =  list.no.trim[[i]][2] + range.step.fixed*j
+        Windows[j] = paste(v.samples[j], lows[j], "to", highs[j], sep = "#")
+      }
+      list.df.ranges[[i]] = Windows
     }
-    list.df.ranges[[i]] = Windows
+
+    ####Combine####
+
+    head(baselines)
+
+    baselines = matrix(nrow = n.ranges.fixed, ncol = length(Samples))
+
+    for (i in 1:n.ranges.fixed){
+      #print(i)
+      for (j in 1:length(Samples)){
+        #print(j)
+        baselines[i,j] = list.df.ranges[[j]][i]
+      }
+    }
+
+    }
+
+  ####Trim method 2####
+
+  if (Trim.method == "floating"){
+    list.df.ranges = {}
+
+    for (i in 1:length(Samples)){
+      df = list.df.raw[[i]]
+      v.samples = c()
+      lows = c()
+      highs = c()
+      Windows = c()
+      for (j in 1:n.ranges.float){
+        v.samples[j] = df$Sample[1]
+        lows[j] =  list.no.trim[[i]][1] - range.step.float*j
+        highs[j] =  list.no.trim[[i]][2] + range.step.float*j
+        Windows[j] = paste(v.samples[j], lows[j], "to", highs[j], sep = "#")
+      }
+      list.df.ranges[[i]] = Windows
+    }
+
+    #####Combine####
+
+
+    baselines = expand.grid(list.df.ranges)
+    baselines = baselines[runif(n.combinations, min = 1, max = nrow(baselines)),]
+
+
   }
-
-  #####Combine all combinations####
-
-  baselines = expand.grid(list.df.ranges)
-  baselines = baselines[runif(n.combinations, min = 1, max = nrow(baselines)),]
 
   ####Print number of baselines ####
 
-  print(paste("You are trying to test", nrow(baselines), "baseline combinations"))
-  print("Do you think this is possible?")
+  if(Silent){}else{
+    print(paste("You are trying to test", nrow(baselines), "baseline combinations"))
+    print("Do you think this is possible?")
+  }
 
   ####Get starting parameters####
 
@@ -247,11 +302,13 @@ BLTrimmer = function(meltR.A.fit,
 
     #Define variables
     list.fit.start = {}
-    frac.dH.error = c()
+    frac.dH1.error = c()
+    frac.dH1.dH2.error = c()
     dH1 = c()
     dS1 = c()
     dH2 = c()
     dS2 = c()
+
 
     for (i in 1:nrow(baselines)){
       #print(i)
@@ -279,6 +336,8 @@ BLTrimmer = function(meltR.A.fit,
         fit <- {}
         indvfits.H <- c()
         indvfits.S <- c()
+        indvfits.Tm = c()
+        indvfits.Ct = c()
         Ind.model = Model
         mED = c()
         bED = c()
@@ -309,6 +368,8 @@ BLTrimmer = function(meltR.A.fit,
           }
           indvfits.H[j] = coef(fit[[j]])[1]
           indvfits.S[j] = calcS(coef(fit[[j]])[1], coef(fit[[j]])[2], a[[j]]$Ct[1])
+          indvfits.Tm[j] = coef(fit[[j]])[2]
+          indvfits.Ct[j] = a[[j]]$Ct[1]
           mED[j] = coef(fit[[j]])[3]
           bED[j] = coef(fit[[j]])[4]
           mESS[j] = coef(fit[[j]])[5]
@@ -322,22 +383,9 @@ BLTrimmer = function(meltR.A.fit,
 
         ####Method 2####
 
-        Tm_range <- {}
-        Tm_fit <- {}
-        Tm <- c()
-        lnCt <- c()
-        for (j in c(1:length(Samples))){
-          #calculate f at each temp
-          a[[j]]$f = (a[[j]]$Absorbance - (mESS[j]*a[[j]]$Temperature + bESS[j]))/((mED[j]*a[[j]]$Temperature + bED[j]) - (mESS[j]*a[[j]]$Temperature + bESS[j]))
-          Tm_range[[j]] <- data.frame( #Pull out data where f >= 0.4 and f <= 0.6
-            "Temperature" = a[[j]]$Temperature[which(a[[j]]$f >= 0.4)][which(a[[j]]$f[which(a[[j]]$f >= 0.4)] <= 0.6)],
-            "f" = a[[j]]$f[which(a[[j]]$f >= 0.4)][which(a[[j]]$f[which(a[[j]]$f >= 0.4)] <= 0.6)]
-          )
-          Tm_fit[[j]] <- lm(f~Temperature, data = Tm_range[[j]]) #fit data where f >= 0.4 and f <= 0.6
-          Tm[j] <- (0.5 - coef(Tm_fit[[j]])[1])/coef(Tm_fit[[j]])[2]
-          lnCt[j] <- log(a[[j]]$Ct[1])
-        }
-        Tm_data <- data.frame("lnCt" = lnCt, "Tm" = Tm)
+        lnCt = log(indvfits.Ct)
+        Tm = indvfits.Tm
+        Tm_data = data.frame(lnCt, Tm)
         Tm_data$invT <- 1/(Tm_data$Tm + 273.15)
         Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
                               data = Tm_data,
@@ -346,22 +394,32 @@ BLTrimmer = function(meltR.A.fit,
         dH2[i] = coef(Tm_vs_lnCt_fit)[1]
         dS2[i] = coef(Tm_vs_lnCt_fit)[2]
 
-        frac.dH.error[i] = abs(dH1[i] - dH2[i])/abs(mean(dH1[i], dH2[i]))
+        frac.dH1.error[i] = abs(sd(indvfits.H)/mean(indvfits.H))
+        frac.dH1.dH2.error[i] = abs(dH1[i] - dH2[i])/abs(mean(dH1[i], dH2[i]))
 
       },
       error = function(e){})
     }
+    BL.df=data.frame(BL.df)
     BL.df$dH1 = dH1
     BL.df$dH2 = dH2
     BL.df$dS1 = dS1
     BL.df$dS2 = dS2
-    BL.df$frac.dH.error = frac.dH.error
+    BL.df$frac.dH1.error = frac.dH1.error
+    BL.df$frac.dH1.dH2.error =  frac.dH1.dH2.error
     output = BL.df
   }
 
   ####Unparallelized####
 
-    print(paste("Fitting", nrow(baselines), "combinations of", n.ranges, "different baselines per sample"))
+  if (Silent){}else{
+    if (Trim.method == "fixed"){
+      print(paste("Fitting", nrow(baselines), "baseline combinations"))
+    }
+    if (Trim.method == "floating"){
+      print(paste("Fitting", nrow(baselines), "combinations of", n.ranges.float, "different baselines per sample"))
+    }
+  }
 
     if (parallel == "none"){
       stime <- system.time({
@@ -398,128 +456,352 @@ BLTrimmer = function(meltR.A.fit,
       })
     }
 
-    print(paste("Testing baselines took", stime[3], "seconds"))
-
-  ####Grab best baseline####
-
-  df.raw = meltR.A.fit$BLTrimmer.data[[1]]
-
-  df.opt = baselines[which.min(baselines$frac.dH.error),]
-
-  fitstart = list.fit.start.indv
-
-  v.sample = c()
-
-  list.T.range = {}
-  list.df.trim = {}
-  list.df.no.trim = {}
-
-  for (i in 1:length(Samples)){
-    window = df.opt[,i]
-    window.vector = strsplit(as.character(window), "#")[[1]]
-    low = as.numeric(window.vector[2])
-    high = as.numeric(window.vector[4])
-    list.T.range[[i]] = c(low, high)
-    list.df.trim[[i]] = subset(df.raw, Sample == Samples[i])
-    list.df.trim[[i]] = subset(list.df.trim[[i]], Temperature >= low)
-    list.df.trim[[i]] = subset(list.df.trim[[i]], Temperature <= high)
-    list.df.no.trim[[i]] = subset(df.raw, Sample == Samples[i])
-    list.df.no.trim[[i]] = subset(list.df.no.trim[[i]], Temperature >= list.no.trim[[i]][1])
-    list.df.no.trim[[i]] = subset(list.df.no.trim[[i]], Temperature <= list.no.trim[[i]][2])
+  if (Silent){}else{
+    print(paste("Testing baselines took", round(stime[3], digits = 1), "seconds"))
   }
 
-  df.trim = list.df.trim[[1]]
-  df.no.trim = list.df.no.trim[[1]]
+    ####Quantilize data####
 
-  for (i in 2:length(Samples)){
-    df.trim = rbind(df.trim, list.df.trim[[i]])
-    df.no.trim = rbind(df.no.trim, list.df.no.trim[[i]])
+
+    quantiles.dH1.error = quantile(baselines$frac.dH1.error, seq(0, 1, length.out = nrow(baselines)))
+    quantiles.dH1.dH2.error = quantile(baselines$frac.dH1.dH2.error, seq(0, 1, length.out = nrow(baselines)))
+
+    dH1.error.quantile = c()
+    dH1.dH2.error.quantile = c()
+
+    for (i in 1:nrow(baselines)) {
+      dH1.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.error - baselines$frac.dH1.error[i]))]))/100
+      dH1.dH2.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.dH2.error - baselines$frac.dH1.dH2.error[i]))]))/100
+    }
+
+    dH1.dH2.error.quantile[1]
+    dH1.error.quantile[1]
+
+    error.distance = sqrt(dH1.dH2.error.quantile^2 + dH1.error.quantile^2)
+
+    baselines$dH1.error.quantile = dH1.error.quantile
+    baselines$dH1.dH2.error.quantile = dH1.dH2.error.quantile
+    baselines$error.distance =  error.distance
+
+    ####Pull out top 10% of best values based on some criterion####
+
+    #Method 1 agrees with method 1
+
+    n.best = ceiling(nrow(baselines)*0.1)
+
+    best.error.distance = sort(baselines$dH1.error.quantile)[1:n.best]
+
+    best.i = c()
+
+    for (i in 1:n.best){
+      best.i[i] = which(baselines$dH1.error.quantile == best.error.distance[i])
+    }
+
+    df.m1 = baselines[best.i,]
+
+    #Method 2 agrees with method 1
+
+    n.best = ceiling(nrow(baselines)*0.1)
+
+    best.error.distance = sort(baselines$dH1.dH2.error.quantile)[1:n.best]
+
+    best.i = c()
+
+    for (i in 1:n.best){
+      best.i[i] = which(baselines$dH1.dH2.error.quantile == best.error.distance[i])
+    }
+
+    df.m2 = baselines[best.i,]
+
+    #Method 1 agrees with method 1 and Method 2 agrees with method 1
+
+    n.best = ceiling(nrow(baselines)*0.1)
+
+    best.error.distance = sort(baselines$error.distance)[1:n.best]
+
+    best.i = c()
+
+    for (i in 1:n.best){
+      best.i[i] = which(baselines$error.distance == best.error.distance[i])
+    }
+
+    df.m1.M2 = baselines[best.i,]
+
+
+    ####Make plots####
+
+    if (Save_results == "all"){
+
+      pdf(paste(file_path, "/", file_prefix, "_baseline_ensemble_analysis.pdf", sep = ""),
+          width = 9, height = 6, pointsize = 0.25)
+
+
+      layout_matrix_1 <- matrix(1:6, ncol = 3) # Define position matrix
+      layout(layout_matrix_1)
+
+      #Histogram 1 agree 1
+
+      hist(baselines$frac.dH1.error,
+           xlab = "SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           main = "Standard deviation of Method 1 dH")
+      abline(v = df.m1$frac.dH1.error, col = "blue")
+
+      #dH1 error vrs. dH1 error
+
+      plot(baselines$dH1 ~ baselines$frac.dH1.error,
+           xlab = "SD(dH1)/Average dH",
+           ylab = "dH1 (black)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           ylim = c(min(c(baselines$dH1), na.rm = TRUE),
+                    max(c(baselines$dH1), na.rm = TRUE)),
+           xlim = c(min(c(baselines$frac.dH1.error), na.rm = TRUE),
+                    max(c(baselines$frac.dH1.error), na.rm = TRUE)),
+           main = "Standard deviation of Method 1 dH")
+      par(new=T)
+      plot(df.m1$dH1 ~ df.m1$frac.dH1.error,
+           xlab = "SD(dH1)/Average dH",
+           ylab = "dH1 (black)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
+           ylim = c(min(c(baselines$dH1), na.rm = TRUE),
+                    max(c(baselines$dH1), na.rm = TRUE)),
+           xlim = c(min(c(baselines$frac.dH1.error), na.rm = TRUE),
+                    max(c(baselines$frac.dH1.error), na.rm = TRUE)))
+
+      #Histogram 1 agree 2
+
+      hist(baselines$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           main = "Method 1 dH agrees with Method 2 dH")
+      abline(v = df.m2$frac.dH1.dH2.error, col = "blue")
+
+
+      #dH vrs. dH1 to dH2 error
+
+      plot(baselines$dH1 ~ baselines$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "dH1 (black) or dH2 (red)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)),
+           main = "Method 1 dH agrees with Method 2 dH")
+      par(new=T)
+      plot(baselines$dH2 ~ baselines$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "dH1 (black) or dH2 (red)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "red",
+           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)))
+      par(new=T)
+      plot(df.m2$dH1 ~ df.m2$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "dH1 (black) or dH2 (red)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
+           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)))
+      par(new=T)
+      plot(df.m2$dH2 ~ df.m2$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "dH1 (black) or dH2 (red)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
+           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)))
+
+      #dH1 to dH2 error quantile verseus dH1 error quantile
+
+      plot(baselines$dH1.error.quantile ~ baselines$dH1.dH2.error.quantile,
+           xlab = "Quantile |dH1 - dH2|/Average dH",
+           ylab = "Quantile SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           ylim = c(0,1),
+           xlim = c(0,1),
+           main = "Error distance")
+      par(new=T)
+      plot(df.m1.M2$dH1.error.quantile ~ df.m1.M2$dH1.dH2.error.quantile,
+           xlab = "Quantile |dH1 - dH2|/Average dH",
+           ylab = "Quantile SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
+           ylim = c(0,1),
+           xlim = c(0,1))
+      for (i in 1:nrow(df.m1.M2)){
+        segments(x0 = 0,
+                 y0 = 0,
+                 x1 = df.m1.M2$dH1.dH2.error.quantile[i],
+                 y1 = df.m1.M2$dH1.error.quantile[i],
+                 col = "blue")
+      }
+
+      #dH1 error verseus dH1 to dH2 error
+
+      plot(baselines$frac.dH1.error ~ baselines$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           ylim = c(min(baselines$frac.dH1.error),
+                    max(baselines$frac.dH1.error)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)),
+           main = "Error distance")
+      par(new=T)
+      plot(df.m1.M2$frac.dH1.error ~ df.m1.M2$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
+           ylim = c(min(baselines$frac.dH1.error),
+                    max(baselines$frac.dH1.error)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)))
+
+      dev.off()
+
+    }
+
+  ####Grab best baselines####
+
+    if (Assess.method == 1){
+      baselines = df.m1
+    }
+    if (Assess.method == 2){
+      baselines = df.m2
+    }
+    if (Assess.method == 3){
+      baselines = df.m1.M2
+    }
+
+  ####Set up meltR.A####
+
+    if (Silent){}else{
+      print("Using autotrimmed baselines in meltR.A")
+    }
+
+  list.meltR.A.fit = {}
+  list.df.results = {}
+  list.baselines = {}
+
+  for (k in 1:nrow(baselines)){
+    df.raw = meltR.A.fit$BLTrimmer.data[[1]]
+
+    df.opt = baselines[k,]
+
+    fitstart = list.fit.start.indv
+
+    v.sample = c()
+
+    list.T.range = {}
+    list.df.trim = {}
+    list.df.no.trim = {}
+
+    for (i in 1:length(Samples)){
+      window = df.opt[,i]
+      window.vector = strsplit(as.character(window), "#")[[1]]
+      low = as.numeric(window.vector[2])
+      high = as.numeric(window.vector[4])
+      list.T.range[[i]] = c(low, high)
+      list.df.trim[[i]] = subset(df.raw, Sample == Samples[i])
+      list.df.trim[[i]] = subset(list.df.trim[[i]], Temperature >= low)
+      list.df.trim[[i]] = subset(list.df.trim[[i]], Temperature <= high)
+      list.df.no.trim[[i]] = subset(df.raw, Sample == Samples[i])
+      list.df.no.trim[[i]] = subset(list.df.no.trim[[i]], Temperature >= list.no.trim[[i]][1])
+      list.df.no.trim[[i]] = subset(list.df.no.trim[[i]], Temperature <= list.no.trim[[i]][2])
+    }
+
+    df.trim = list.df.trim[[1]]
+    df.no.trim = list.df.no.trim[[1]]
+
+    for (i in 2:length(Samples)){
+      df.trim = rbind(df.trim, list.df.trim[[i]])
+      df.no.trim = rbind(df.no.trim, list.df.no.trim[[i]])
+    }
+
+    meltR.A.fit = meltR.A(data_frame = meltR.A.fit$meltR.A.settings[[1]],
+                          blank = meltR.A.fit$meltR.A.settings[[2]],
+                          NucAcid = meltR.A.fit$meltR.A.settings[[3]],
+                          concT = meltR.A.fit$meltR.A.settings[[4]],
+                          fitTs = list.T.range,
+                          methods = meltR.A.fit$meltR.A.settings[[6]],
+                          Mmodel = meltR.A.fit$meltR.A.settings[[7]],
+                          Tmodel = meltR.A.fit$meltR.A.settings[[8]],
+                          Save_results = Save_results,
+                          file_prefix = file_prefix,
+                          file_path = file_path,
+                          auto.trimmed = fitstart,
+                          Silent = TRUE)
+
+    list.meltR.A.fit[[k]] = meltR.A.fit
+    list.df.results[[k]] = meltR.A.fit$Summary
+    list.baselines[[k]] = list.T.range
+
+
   }
 
-  ####Make plots####
+  df.result = list.df.results[[1]]
 
-  if (Save_results == "all"){
-
-    #Histogram
-
-    pdf(paste(file_path, "/", file_prefix, "_histogram.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    hist(baselines$frac.dH.error,
-         xlab = "|dH1 - dH2|/Average dH",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-    dev.off()
-
-    #dH vrs. frac error
-
-    pdf(paste(file_path, "/", file_prefix, "_dH_vs_frac_error.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    plot(baselines$dH1 ~ log10(baselines$frac.dH.error),
-         xlab = "|dH1 - dH2|/Average dH",
-         ylab = "dH1 (black) or dH2 (red)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)))
-    par(new=T)
-    plot(baselines$dH2 ~ log10(baselines$frac.dH.error), col = "red",
-         xlab = "|dH1 - dH2|/Average dH",
-         ylab = "dH1 (black) or dH2 (red)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)))
-    dev.off()
-
-    #Trimmed baseline plot
-
-    pdf(paste(file_path, "/", file_prefix, "_trimmed_baseline_plot.pdf", sep = ""),
-        width = 3, height = 3, pointsize = 0.25)
-    plot(df.raw$Absorbance ~ df.raw$Temperature,
-         xlab = Temperature ~ (degree ~ C), ylab = "Absorbance",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         ylim = c(min(df.raw$Absorbance),
-                  max(df.raw$Absorbance)),
-         xlim = c(min(df.raw$Temperature),
-                  max(df.raw$Temperature)))
-    par(new=T)
-    plot(df.trim$Absorbance ~ df.trim$Temperature, col = "red",
-         xlab = "", ylab = "",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         ylim = c(min(df.raw$Absorbance),
-                  max(df.raw$Absorbance)),
-         xlim = c(min(df.raw$Temperature),
-                  max(df.raw$Temperature)))
-    par(new=T)
-    plot(df.no.trim$Absorbance ~ df.no.trim$Temperature, col = "blue",
-         xlab = "", ylab = "",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         ylim = c(min(df.raw$Absorbance),
-                  max(df.raw$Absorbance)),
-         xlim = c(min(df.raw$Temperature),
-                  max(df.raw$Temperature)))
-    dev.off()
-
+  for (i in 2:length(list.meltR.A.fit)){
+    df.result = bind_rows(df.result, list.df.results[[i]])
   }
 
-  ####Fit auto trimmed data with meltR.A####
+  df1.data = subset(df.result, Method == "1 individual fits")
+  df.1 = data.frame("Method" = "1 individual fits",
+                    "H" = mean(df1.data$H),
+                    "SE.H" = sd(df1.data$H),
+                    "S" = mean(df1.data$S),
+                    "SE.S"= sd(df1.data$S),
+                    "G" = mean(df1.data$G),
+                    "SE.G" = sd(df1.data$G),
+                    "Tm_at_0.1mM" = mean(df1.data$Tm_at_0.1mM),
+                    "SE.Tm_at_0.1mM" = sd(df1.data$Tm_at_0.1mM))
+  df2.data = subset(df.result, Method == "2 Tm versus ln[Ct]")
+  df.2 = data.frame("Method" = "2 Tm versus ln[Ct]",
+                    "H" = mean(df2.data$H),
+                    "SE.H" = sd(df2.data$H),
+                    "S" = mean(df2.data$S),
+                    "SE.S"= sd(df2.data$S),
+                    "G" = mean(df2.data$G),
+                    "SE.G" = sd(df2.data$G),
+                    "Tm_at_0.1mM" = mean(df2.data$Tm_at_0.1mM),
+                    "SE.Tm_at_0.1mM" = sd(df2.data$Tm_at_0.1mM))
+  df3.data = subset(df.result, Method == "3 Global fit")
+  df.3 = data.frame("Method" = "3 Global fit",
+                    "H" = mean(df3.data$H),
+                    "SE.H" = sd(df3.data$H),
+                    "S" = mean(df3.data$S),
+                    "SE.S"= sd(df3.data$S),
+                    "G" = mean(df3.data$G),
+                    "SE.G" = sd(df3.data$G),
+                    "Tm_at_0.1mM" = mean(df3.data$Tm_at_0.1mM),
+                    "SE.Tm_at_0.1mM" = sd(df3.data$Tm_at_0.1mM))
 
-  print("Using autotrimmed baselines in MeltR")
+  df.final = rbind(df.1, df.2)
+  df.final = rbind(df.final, df.3)
 
-  meltR.A.fit = meltR.A(data_frame = meltR.A.fit$meltR.A.settings[[1]],
-                        blank = meltR.A.fit$meltR.A.settings[[2]],
-                        NucAcid = meltR.A.fit$meltR.A.settings[[3]],
-                        concT = meltR.A.fit$meltR.A.settings[[4]],
-                        fitTs = list.T.range,
-                        methods = meltR.A.fit$meltR.A.settings[[6]],
-                        Mmodel = meltR.A.fit$meltR.A.settings[[7]],
-                        Tmodel = meltR.A.fit$meltR.A.settings[[8]],
-                        Save_results = Save_results,
-                        file_prefix = file_prefix,
-                        file_path = file_path,
-                        auto.trimmed = fitstart)
+  df.error = data.frame("H" = abs((min(df.final$H) - max(df.final$H))/mean(df.final$H)),
+                        "S" = abs((min(df.final$S) - max(df.final$S))/mean(df.final$S)),
+                        "G" = abs((min(df.final$G) - max(df.final$G))/mean(df.final$G)))
 
-  output = list(list.T.range,
-                meltR.A.fit,
+  output = list(list.baselines,
+                list.meltR.A.fit,
+                df.final,
+                df.error,
                 stime)
-  names(output) = c("Optimum.T.ranges", "Optimum.fit", "System.time")
+
+  names(output) = c("List.T.ranges", "List.fits", "Ensemble.energies", "Fractional.error.between.methods", "System.time")
+
+  if(Silent){}else{
+    print("Ensemble energies")
+    print(df.final)
+    print("Fractional error between methods")
+    print(df.error)
+    print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
+  }
 
   output = output
 
