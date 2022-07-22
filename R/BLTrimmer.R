@@ -730,9 +730,6 @@ BLTrimmer = function(meltR.A.fit,
                           methods = meltR.A.fit$meltR.A.settings[[6]],
                           Mmodel = meltR.A.fit$meltR.A.settings[[7]],
                           Tmodel = meltR.A.fit$meltR.A.settings[[8]],
-                          Save_results = Save_results,
-                          file_prefix = file_prefix,
-                          file_path = file_path,
                           auto.trimmed = fitstart,
                           Silent = TRUE)
 
