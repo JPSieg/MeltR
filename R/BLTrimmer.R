@@ -71,7 +71,7 @@ BLTrimmer = function(meltR.A.fit,
   ####Calculate the fraction unfolded for each reading####
 
   for (i in 1:length(Samples)){
-    list.df.raw[[i]]$f = f(coef(meltR.A.fit$Method.3.fit)[1],
+    list.df.raw[[i]]$f = c(coef(meltR.A.fit$Method.3.fit)[1],
                            coef(meltR.A.fit$Method.3.fit)[2],
                            list.df.raw[[i]]$Temperature,
                            list.df.raw[[i]]$Ct)
