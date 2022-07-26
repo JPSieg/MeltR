@@ -467,9 +467,6 @@ BLTrimmer = function(meltR.A.fit,
     dH1.dH2.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.dH2.error - baselines$frac.dH1.dH2.error[i]))]))/100
   }
 
-  dH1.dH2.error.quantile[1]
-  dH1.error.quantile[1]
-
   error.distance = sqrt(dH1.dH2.error.quantile^2 + dH1.error.quantile^2)
 
   baselines$dH1.error.quantile = dH1.error.quantile
