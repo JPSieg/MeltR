@@ -11,6 +11,7 @@
 #'@param n.ranges.fixed Number of baseline ranges for the fixed method.
 #'@param range.step.fixed. Temperature difference between each range that is generated using the fixed method.
 #'@param no.trim.range Determines the range where the absorbance data will not be trimmed. By default, no.trim.range = c(0.2, 0.8), meaning that the data will not be trimmed at a mode fraction double stranded greater than 0.2 and less than 0.8. Determined using the global fit from the input object created by meltR.A.
+#'@param quantile.threshold Threshold for assessing the best baseline combinations
 #'@param parallel Set to "on" if you want to use multiple cores to fit baselines. You will need to run library(doParallel) to load doParallel and its dependencies. You will also need to specify the number of cores in the n.cores argument, which should not exceed the number of cores your computer has. There will be no benefit for running in parallel mode for a single core machine. Default = "none".
 #'@param n.core How many cores do you want to designate for this task.
 #'@param Save_results "all" to save results to the disk or "none" to not save results to the disk.
@@ -28,6 +29,7 @@ BLTrimmer = function(meltR.A.fit,
                    n.ranges.fixed = 40,
                    range.step.fixed = 0.5,
                    no.trim.range = c(0.1, 0.9),
+                   quantile.threshold = 0.25,
                    parallel = "none",
                    n.core = 1,
                    Save_results = "none",
@@ -49,129 +51,11 @@ BLTrimmer = function(meltR.A.fit,
                   function(K, Ct){ ( (2/(K*Ct)) + 2 - sqrt(((((2/(K*Ct)) + 2)^2) - 4)))/2 },
                   function(K, Ct){ ((1/(2*K*Ct)) + 2 - sqrt(((((1/(2*K*Ct)) + 2)^2) - 4)))/2 })
   names(Mmodels) <- Mmodel_names
+
   ####List of thermodynamics models to fit to####
   Tmodel_names <- c("VantHoff")
   Tmodels <- list(function(H, Tm, Temperature){(H/0.0019872)*((1/(Tm + 273.15)) - (1/(Temperature + 273.15)))})
   names(Tmodels) <- Tmodel_names
-  ####Assemble the models####
-  G_VH = function(H, S, Temperature){exp((S/0.0019872) - ((1/((Temperature + 273.15)*0.0019872))*H))}
-  if (Mmodel == "Monomolecular.2State"){
-    if (Tmodel == "VantHoff"){
-      Model = function(H, Tm, mED, bED, mESS, bESS, Temperature){
-        K <- exp(Tmodels$VantHoff(H = H, Tm = Tm, Temperature = Temperature))
-        f <- Mmodels$Monomolecular.2State(K = K)
-        ED <- mED*Temperature + bED
-        ESS <- mESS*Temperature + bESS
-        model <- (f*ED) + (1-f)*ESS
-        return(model)
-      }
-      GModel = function(H, S, mED, bED, mESS, bESS, Sample, Temperature){
-        K <- G_VH(H = H, S = S, Temperature = Temperature)
-        f <- Mmodels$Monomolecular.2State(K = K)
-        ED <- mED[Sample]*Temperature + bED[Sample]
-        ESS <- mESS[Sample]*Temperature + bESS[Sample]
-        model <- (f*ED) + (1-f)*ESS
-        return(model)
-      }
-      calcS = function(H, Tm){ (H/(273.15 + Tm)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
-      calcG = function(H, Tm){H - (310*((H/(273.15 + Tm))))}
-      calcG.SE = function(H, Tm, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*(H/(273.15 + Tm)))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
-      f = function(H, S, Temperature){
-        K <- G_VH(H = H, S = S, Temperature = Temperature)
-        model <- Mmodels$Monomolecular.2State(K = K)
-        return(model)
-      }
-    }
-  }
-  if (Mmodel == "Monomolecular.3State"){
-    if (Tmodel == "VantHoff"){
-      Model = function(H1, Tm1, H2, Tm2, mED, bED, EI, mESS, bESS, Temperature, Ct){
-        K1 <- exp(Tmodels$VantHoff(H = H1, Tm = Tm1, Temperature = Temperature))
-        K2 <- exp(Tmodels$VantHoff(H = H2, Tm = Tm2, Temperature = Temperature))
-        f <- Mmodels$Monomolecular.2State(K1 = K1, K2 = K2, Ct = Ct)
-        ED <- mED*Temperature + bED
-        ESS <- mESS*Temperature + bESS
-        model <- (f*K1*K2*ED) + (f*K1*EI) + (f)*ESS
-        return(model)
-      }
-      GModel = function(H1, Tm1, H2, Tm2, mED, bED, EI, mESS, bESS, Sample, Temperature, Ct){
-        K1 <- exp(Tmodels$VantHoff(H = H1, Tm = Tm1, Temperature = Temperature))
-        K2 <- exp(Tmodels$VantHoff(H = H2, Tm = Tm2, Temperature = Temperature))
-        f <- Mmodels$Monomolecular.2State(K1 = K1, K2 = K2, Ct = Ct)
-        ED <- mED[Sample]*Temperature + bED[Sample]
-        ESS <- mESS[Sample]*Temperature + bESS[Sample]
-        model <- (f*K1*K2*ED) + (f*K1*EI[Sample]) + (f)*ESS
-        return(model)
-      }
-      calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
-    }
-  }
-  if (Mmodel == "Heteroduplex.2State"){
-    if (Tmodel == "VantHoff"){
-      Model = function(H, Tm, mED, bED, mESS, bESS, Temperature, Ct){
-        K <- exp(Tmodels$VantHoff(H = H, Tm = Tm, Temperature = Temperature) + log(4/Ct))
-        f <- Mmodels$Heteroduplex.2State(K = K, Ct = Ct)
-        ED <- mED*Temperature + bED
-        ESS <- mESS*Temperature + bESS
-        model <- (f*ED) + (1-f)*ESS
-        return(model)
-      }
-      TmModel = function(H, S, lnCt){
-        ((0.0019872/H)*lnCt) + ((S - 0.0019872*log(4))/H)
-      }
-      GModel = function(H, S, mED, bED, mESS, bESS, Sample, Temperature, Ct){
-        K <- G_VH(H = H, S = S, Temperature = Temperature)
-        f <- Mmodels$Heteroduplex.2State(K = K, Ct = Ct)
-        ED <- mED[Sample]*Temperature + bED[Sample]
-        ESS <- mESS[Sample]*Temperature + bESS[Sample]
-        model <- (f*ED) + (1-f)*ESS
-        return(model)
-      }
-      f = function(H, S, Temperature, Ct){
-        K <- G_VH(H = H, S = S, Temperature = Temperature)
-        model <- Mmodels$Heteroduplex.2State(K = K, Ct = Ct)
-        return(model)
-      }
-      calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) + (0.0019872*log(4/Ct)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
-      calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct)))) }
-      calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
-    }
-  }
-  if (Mmodel == "Homoduplex.2State"){
-    if (Tmodel == "VantHoff"){
-      Model = function(H, Tm, mED, bED, mESS, bESS, Temperature, Ct){
-        K <- exp(Tmodels$VantHoff(H = H, Tm = Tm, Temperature = Temperature) + log(1/Ct))
-        f <- Mmodels$Homoduplex.2State(K = K, Ct = Ct)
-        ED <- mED*Temperature + bED
-        ESS <- mESS*Temperature + bESS
-        model <- (f*ED) + (1-f)*ESS
-        return(model)
-      }
-      TmModel = function(H, S, lnCt){
-        ((0.0019872/H)*lnCt) + (S/H)
-      }
-      GModel = function(H, S, mED, bED, mESS, bESS, Sample, Temperature, Ct){
-        K <- G_VH(H = H, S = S, Temperature = Temperature)
-        f <- Mmodels$Homoduplex.2State(K = K, Ct = Ct)
-        ED <- mED[Sample]*Temperature + bED[Sample]
-        ESS <- mESS[Sample]*Temperature + bESS[Sample]
-        model <- (f*ED) + (1-f)*ESS
-        return(model)
-      }
-      f = function(H, S, Temperature, Ct){
-        K <- G_VH(H = H, S = S, Temperature = Temperature)
-        model <- Mmodels$Homoduplex.2State(K = K, Ct = Ct)
-        return(model)
-      }
-      calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) + (0.0019872*log(1/Ct)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
-      calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct)))) }
-      calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2)}
-    }
-  }
 
   ####Get Cts for each sample####
 
@@ -225,11 +109,6 @@ BLTrimmer = function(meltR.A.fit,
       }
       list.df.ranges[[i]] = Windows
     }
-
-    ####Combine####
-
-    head(baselines)
-
     baselines = matrix(nrow = n.ranges.fixed, ncol = length(Samples))
 
     for (i in 1:n.ranges.fixed){
@@ -239,8 +118,7 @@ BLTrimmer = function(meltR.A.fit,
         baselines[i,j] = list.df.ranges[[j]][i]
       }
     }
-
-    }
+  }
 
   ####Trim method 2####
 
@@ -262,15 +140,10 @@ BLTrimmer = function(meltR.A.fit,
       list.df.ranges[[i]] = Windows
     }
 
-    #####Combine####
-
-
     baselines = expand.grid(list.df.ranges)
     baselines = baselines[runif(n.combinations, min = 1, max = nrow(baselines)),]
 
-
   }
-
   ####Print number of baselines ####
 
   if(Silent){}else{
@@ -421,273 +294,281 @@ BLTrimmer = function(meltR.A.fit,
     }
   }
 
-    if (parallel == "none"){
-      stime <- system.time({
+  if (parallel == "none"){
+    stime <- system.time({
 
-       baselines = BL.fitter(baselines)
+      baselines = BL.fitter(baselines)
 
-      })
-    }
+    })
+  }
 
-    ####Paralleled####
+  ####Paralleled####
 
-    list.result = {}
+  list.result = {}
 
-    if (parallel == "on"){
-      stime <- system.time({
+  if (parallel == "on"){
+    stime <- system.time({
 
-        list.BL.df = split(baselines, rep(1:n.core, length.out = nrow(baselines), each = ceiling(nrow(baselines)/n.core)))
+      list.BL.df = split(baselines, rep(1:n.core, length.out = nrow(baselines), each = ceiling(nrow(baselines)/n.core)))
 
-        c1 = parallel::makeCluster(2)
-        doParallel::registerDoParallel(cores = n.core)
+      c1 = parallel::makeCluster(2)
+      doParallel::registerDoParallel(cores = n.core)
 
-        list.result = foreach::foreach(k = 1:length(list.BL.df))  %dopar% {
-          list.BL.df[[k]] = BL.fitter(list.BL.df[[k]])
+      list.result = foreach::foreach(k = 1:length(list.BL.df))  %dopar% {
+        list.BL.df[[k]] = BL.fitter(list.BL.df[[k]])
+      }
+
+      baselines = list.result[[1]]
+
+      if (length(list.BL.df) > 1){
+        for (k in 2:length(list.BL.df)){
+          baselines = rbind(baselines, list.result[[k]])
         }
+      }
 
-        baselines = list.result[[1]]
-
-        if (length(list.BL.df) > 1){
-          for (k in 2:length(list.BL.df)){
-            baselines = rbind(baselines, list.result[[k]])
-          }
-        }
-
-      })
-    }
+    })
+  }
 
   if (Silent){}else{
     print(paste("Testing baselines took", round(stime[3], digits = 1), "seconds"))
   }
 
-    ####Quantilize data####
+  ####Quantilize data####
 
 
-    quantiles.dH1.error = quantile(baselines$frac.dH1.error, seq(0, 1, length.out = nrow(baselines)))
-    quantiles.dH1.dH2.error = quantile(baselines$frac.dH1.dH2.error, seq(0, 1, length.out = nrow(baselines)))
+  quantiles.dH1.error = quantile(baselines$frac.dH1.error, seq(0, 1, length.out = nrow(baselines)))
+  quantiles.dH1.dH2.error = quantile(baselines$frac.dH1.dH2.error, seq(0, 1, length.out = nrow(baselines)))
 
-    dH1.error.quantile = c()
-    dH1.dH2.error.quantile = c()
+  dH1.error.quantile = c()
+  dH1.dH2.error.quantile = c()
 
-    for (i in 1:nrow(baselines)) {
-      dH1.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.error - baselines$frac.dH1.error[i]))]))/100
-      dH1.dH2.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.dH2.error - baselines$frac.dH1.dH2.error[i]))]))/100
+  for (i in 1:nrow(baselines)) {
+    dH1.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.error - baselines$frac.dH1.error[i]))]))/100
+    dH1.dH2.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.dH2.error - baselines$frac.dH1.dH2.error[i]))]))/100
+  }
+
+  dH1.dH2.error.quantile[1]
+  dH1.error.quantile[1]
+
+  error.distance = sqrt(dH1.dH2.error.quantile^2 + dH1.error.quantile^2)
+
+  baselines$dH1.error.quantile = dH1.error.quantile
+  baselines$dH1.dH2.error.quantile = dH1.dH2.error.quantile
+  baselines$error.distance =  error.distance
+
+  ####Pull out top 10% of best values based on some criterion####
+
+  #Method 1 agrees with method 1
+
+  n.best = ceiling(nrow(baselines)*quantile.threshold)
+
+  best.error.distance = sort(baselines$dH1.error.quantile)[1:n.best]
+
+  best.i = c()
+
+  for (i in 1:n.best){
+    best.i[i] = which(baselines$dH1.error.quantile == best.error.distance[i])
+  }
+
+  df.m1 = baselines[best.i,]
+
+  #Method 2 agrees with method 1
+
+  n.best = ceiling(nrow(baselines)*quantile.threshold)
+
+  best.error.distance = sort(baselines$dH1.dH2.error.quantile)[1:n.best]
+
+  best.i = c()
+
+  for (i in 1:n.best){
+    best.i[i] = which(baselines$dH1.dH2.error.quantile == best.error.distance[i])
+  }
+
+  df.m2 = baselines[best.i,]
+
+  #Method 1 agrees with method 1 and Method 2 agrees with method 1
+
+  n.best = ceiling(nrow(baselines)*quantile.threshold)
+
+  best.error.distance = sort(baselines$error.distance)[1:n.best]
+
+  best.i = c()
+
+  for (i in 1:n.best){
+    best.i[i] = which(baselines$error.distance == best.error.distance[i])
+  }
+
+  df.m1.M2 = baselines[best.i,]
+
+  if (Assess.method == 1){
+    df.best = df.m1
+    color = "orange"
+  }
+  if (Assess.method == 2){
+    df.best = df.m2
+    color = "cyan"
+  }
+  if (Assess.method == 3){
+    df.best = df.m1.M2
+    color = "blue"
+  }
+
+  ####Make plots####
+
+  if (Save_results == "all"){
+
+    pdf(paste(file_path, "/", file_prefix, "_baseline_ensemble_analysis.pdf", sep = ""),
+        width = 9, height = 6, pointsize = 0.25)
+
+
+    layout_matrix_1 <- matrix(1:6, ncol = 3) # Define position matrix
+    layout(layout_matrix_1)
+
+    #Histogram 1 agree 1
+
+    hist(baselines$frac.dH1.error,
+         xlab = "SD(dH1)/Average dH",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+         main = "Standard deviation of Method 1 dH")
+    abline(v = df.best$frac.dH1.error, col = adjustcolor(color, alpha = 0.3))
+
+    #dH1 error vrs. dH1 error
+
+    plot(baselines$dH1 ~ baselines$frac.dH1.error,
+         xlab = "SD(dH1)/Average dH",
+         ylab = "dH1 (black)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+         ylim = c(min(c(baselines$dH1), na.rm = TRUE),
+                  max(c(baselines$dH1), na.rm = TRUE)),
+         xlim = c(min(c(baselines$frac.dH1.error), na.rm = TRUE),
+                  max(c(baselines$frac.dH1.error), na.rm = TRUE)),
+         main = "Standard deviation of Method 1 dH")
+    par(new=T)
+    plot(df.best$dH1 ~ df.best$frac.dH1.error,
+         xlab = "SD(dH1)/Average dH",
+         ylab = "dH1 (black)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
+         ylim = c(min(c(baselines$dH1), na.rm = TRUE),
+                  max(c(baselines$dH1), na.rm = TRUE)),
+         xlim = c(min(c(baselines$frac.dH1.error), na.rm = TRUE),
+                  max(c(baselines$frac.dH1.error), na.rm = TRUE)))
+
+    #Histogram 1 agree 2
+
+    hist(baselines$frac.dH1.dH2.error,
+         xlab = "|dH1 - dH2|/Average dH",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+         main = "Method 1 dH agrees with Method 2 dH")
+    abline(v = df.best$frac.dH1.dH2.error, col = adjustcolor(color, alpha = 0.3))
+
+
+    #dH vrs. dH1 to dH2 error
+
+    plot(baselines$dH1 ~ baselines$frac.dH1.dH2.error,
+         xlab = "|dH1 - dH2|/Average dH",
+         ylab = "dH1 (black) or dH2 (red)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+         xlim = c(min(baselines$frac.dH1.dH2.error),
+                  max(baselines$frac.dH1.dH2.error)),
+         main = "Method 1 dH agrees with Method 2 dH")
+    par(new=T)
+    plot(baselines$dH2 ~ baselines$frac.dH1.dH2.error,
+         xlab = "|dH1 - dH2|/Average dH",
+         ylab = "dH1 (black) or dH2 (red)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "red",
+         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+         xlim = c(min(baselines$frac.dH1.dH2.error),
+                  max(baselines$frac.dH1.dH2.error)))
+    par(new=T)
+    plot(df.best$dH1 ~ df.best$frac.dH1.dH2.error,
+         xlab = "|dH1 - dH2|/Average dH",
+         ylab = "dH1 (black) or dH2 (red)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
+         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+         xlim = c(min(baselines$frac.dH1.dH2.error),
+                  max(baselines$frac.dH1.dH2.error)))
+    par(new=T)
+    plot(df.best$dH2 ~ df.best$frac.dH1.dH2.error,
+         xlab = "|dH1 - dH2|/Average dH",
+         ylab = "dH1 (black) or dH2 (red)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
+         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+         xlim = c(min(baselines$frac.dH1.dH2.error),
+                  max(baselines$frac.dH1.dH2.error)))
+
+    #dH1 to dH2 error quantile verseus dH1 error quantile
+
+    plot(baselines$dH1.error.quantile ~ baselines$dH1.dH2.error.quantile,
+         xlab = "Quantile |dH1 - dH2|/Average dH",
+         ylab = "Quantile SD(dH1)/Average dH",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+         ylim = c(0,1),
+         xlim = c(0,1),
+         main = "Error distance")
+    par(new=T)
+    plot(df.best$dH1.error.quantile ~ df.best$dH1.dH2.error.quantile,
+         xlab = "Quantile |dH1 - dH2|/Average dH",
+         ylab = "Quantile SD(dH1)/Average dH",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
+         ylim = c(0,1),
+         xlim = c(0,1))
+    for (i in 1:nrow(df.best)){
+      segments(x0 = 0,
+               y0 = 0,
+               x1 = df.best$dH1.dH2.error.quantile[i],
+               y1 = df.best$dH1.error.quantile[i],
+               col = adjustcolor(color, alpha = 0.3))
     }
 
-    dH1.dH2.error.quantile[1]
-    dH1.error.quantile[1]
+    #dH1 error verseus dH1 to dH2 error
 
-    error.distance = sqrt(dH1.dH2.error.quantile^2 + dH1.error.quantile^2)
+    plot(baselines$frac.dH1.error ~ baselines$frac.dH1.dH2.error,
+         xlab = "|dH1 - dH2|/Average dH",
+         ylab = "SD(dH1)/Average dH",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+         ylim = c(min(baselines$frac.dH1.error),
+                  max(baselines$frac.dH1.error)),
+         xlim = c(min(baselines$frac.dH1.dH2.error),
+                  max(baselines$frac.dH1.dH2.error)),
+         main = "Error distance")
+    par(new=T)
+    plot(df.best$frac.dH1.error ~ df.best$frac.dH1.dH2.error,
+         xlab = "|dH1 - dH2|/Average dH",
+         ylab = "SD(dH1)/Average dH",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
+         ylim = c(min(baselines$frac.dH1.error),
+                  max(baselines$frac.dH1.error)),
+         xlim = c(min(baselines$frac.dH1.dH2.error),
+                  max(baselines$frac.dH1.dH2.error)))
+    dev.off()
 
-    baselines$dH1.error.quantile = dH1.error.quantile
-    baselines$dH1.dH2.error.quantile = dH1.dH2.error.quantile
-    baselines$error.distance =  error.distance
-
-    ####Pull out top 10% of best values based on some criterion####
-
-    #Method 1 agrees with method 1
-
-    n.best = ceiling(nrow(baselines)*0.1)
-
-    best.error.distance = sort(baselines$dH1.error.quantile)[1:n.best]
-
-    best.i = c()
-
-    for (i in 1:n.best){
-      best.i[i] = which(baselines$dH1.error.quantile == best.error.distance[i])
-    }
-
-    df.m1 = baselines[best.i,]
-
-    #Method 2 agrees with method 1
-
-    n.best = ceiling(nrow(baselines)*0.1)
-
-    best.error.distance = sort(baselines$dH1.dH2.error.quantile)[1:n.best]
-
-    best.i = c()
-
-    for (i in 1:n.best){
-      best.i[i] = which(baselines$dH1.dH2.error.quantile == best.error.distance[i])
-    }
-
-    df.m2 = baselines[best.i,]
-
-    #Method 1 agrees with method 1 and Method 2 agrees with method 1
-
-    n.best = ceiling(nrow(baselines)*0.1)
-
-    best.error.distance = sort(baselines$error.distance)[1:n.best]
-
-    best.i = c()
-
-    for (i in 1:n.best){
-      best.i[i] = which(baselines$error.distance == best.error.distance[i])
-    }
-
-    df.m1.M2 = baselines[best.i,]
-
-
-    ####Make plots####
-
-    if (Save_results == "all"){
-
-      pdf(paste(file_path, "/", file_prefix, "_baseline_ensemble_analysis.pdf", sep = ""),
-          width = 9, height = 6, pointsize = 0.25)
-
-
-      layout_matrix_1 <- matrix(1:6, ncol = 3) # Define position matrix
-      layout(layout_matrix_1)
-
-      #Histogram 1 agree 1
-
-      hist(baselines$frac.dH1.error,
-           xlab = "SD(dH1)/Average dH",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           main = "Standard deviation of Method 1 dH")
-      abline(v = df.m1$frac.dH1.error, col = "blue")
-
-      #dH1 error vrs. dH1 error
-
-      plot(baselines$dH1 ~ baselines$frac.dH1.error,
-           xlab = "SD(dH1)/Average dH",
-           ylab = "dH1 (black)",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           ylim = c(min(c(baselines$dH1), na.rm = TRUE),
-                    max(c(baselines$dH1), na.rm = TRUE)),
-           xlim = c(min(c(baselines$frac.dH1.error), na.rm = TRUE),
-                    max(c(baselines$frac.dH1.error), na.rm = TRUE)),
-           main = "Standard deviation of Method 1 dH")
-      par(new=T)
-      plot(df.m1$dH1 ~ df.m1$frac.dH1.error,
-           xlab = "SD(dH1)/Average dH",
-           ylab = "dH1 (black)",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
-           ylim = c(min(c(baselines$dH1), na.rm = TRUE),
-                    max(c(baselines$dH1), na.rm = TRUE)),
-           xlim = c(min(c(baselines$frac.dH1.error), na.rm = TRUE),
-                    max(c(baselines$frac.dH1.error), na.rm = TRUE)))
-
-      #Histogram 1 agree 2
-
-      hist(baselines$frac.dH1.dH2.error,
-           xlab = "|dH1 - dH2|/Average dH",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           main = "Method 1 dH agrees with Method 2 dH")
-      abline(v = df.m2$frac.dH1.dH2.error, col = "blue")
-
-
-      #dH vrs. dH1 to dH2 error
-
-      plot(baselines$dH1 ~ baselines$frac.dH1.dH2.error,
-           xlab = "|dH1 - dH2|/Average dH",
-           ylab = "dH1 (black) or dH2 (red)",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-           xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)),
-           main = "Method 1 dH agrees with Method 2 dH")
-      par(new=T)
-      plot(baselines$dH2 ~ baselines$frac.dH1.dH2.error,
-           xlab = "|dH1 - dH2|/Average dH",
-           ylab = "dH1 (black) or dH2 (red)",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "red",
-           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-           xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)))
-      par(new=T)
-      plot(df.m2$dH1 ~ df.m2$frac.dH1.dH2.error,
-           xlab = "|dH1 - dH2|/Average dH",
-           ylab = "dH1 (black) or dH2 (red)",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
-           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-           xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)))
-      par(new=T)
-      plot(df.m2$dH2 ~ df.m2$frac.dH1.dH2.error,
-           xlab = "|dH1 - dH2|/Average dH",
-           ylab = "dH1 (black) or dH2 (red)",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
-           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-           xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)))
-
-      #dH1 to dH2 error quantile verseus dH1 error quantile
-
-      plot(baselines$dH1.error.quantile ~ baselines$dH1.dH2.error.quantile,
-           xlab = "Quantile |dH1 - dH2|/Average dH",
-           ylab = "Quantile SD(dH1)/Average dH",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           ylim = c(0,1),
-           xlim = c(0,1),
-           main = "Error distance")
-      par(new=T)
-      plot(df.m1.M2$dH1.error.quantile ~ df.m1.M2$dH1.dH2.error.quantile,
-           xlab = "Quantile |dH1 - dH2|/Average dH",
-           ylab = "Quantile SD(dH1)/Average dH",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
-           ylim = c(0,1),
-           xlim = c(0,1))
-      for (i in 1:nrow(df.m1.M2)){
-        segments(x0 = 0,
-                 y0 = 0,
-                 x1 = df.m1.M2$dH1.dH2.error.quantile[i],
-                 y1 = df.m1.M2$dH1.error.quantile[i],
-                 col = "blue")
-      }
-
-      #dH1 error verseus dH1 to dH2 error
-
-      plot(baselines$frac.dH1.error ~ baselines$frac.dH1.dH2.error,
-           xlab = "|dH1 - dH2|/Average dH",
-           ylab = "SD(dH1)/Average dH",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           ylim = c(min(baselines$frac.dH1.error),
-                    max(baselines$frac.dH1.error)),
-           xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)),
-           main = "Error distance")
-      par(new=T)
-      plot(df.m1.M2$frac.dH1.error ~ df.m1.M2$frac.dH1.dH2.error,
-           xlab = "|dH1 - dH2|/Average dH",
-           ylab = "SD(dH1)/Average dH",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "blue",
-           ylim = c(min(baselines$frac.dH1.error),
-                    max(baselines$frac.dH1.error)),
-           xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)))
-
-      dev.off()
-
-    }
+  }
 
   ####Grab best baselines####
 
-    if (Assess.method == 1){
-      baselines = df.m1
-    }
-    if (Assess.method == 2){
-      baselines = df.m2
-    }
-    if (Assess.method == 3){
-      baselines = df.m1.M2
-    }
+  baselines = df.best
 
   ####Set up meltR.A####
 
-    if (Silent){}else{
-      print("Using autotrimmed baselines in meltR.A")
-    }
+  if (Silent){}else{
+    print("Using autotrimmed baselines in meltR.A")
+  }
 
   list.meltR.A.fit = {}
   list.df.results = {}
   list.baselines = {}
 
+  pb = txtProgressBar(min = 1, max = nrow(baselines), initial = 1, style = 3)
+
   for (k in 1:nrow(baselines)){
+
+    setTxtProgressBar(pb, k)
+
     df.raw = meltR.A.fit$BLTrimmer.data[[1]]
 
     df.opt = baselines[k,]
@@ -747,35 +628,69 @@ BLTrimmer = function(meltR.A.fit,
   }
 
   df1.data = subset(df.result, Method == "1 individual fits")
-  df.1 = data.frame("Method" = "1 individual fits",
-                    "H" = mean(df1.data$H),
-                    "SE.H" = sd(df1.data$H),
-                    "S" = mean(df1.data$S),
-                    "SE.S"= sd(df1.data$S),
-                    "G" = mean(df1.data$G),
-                    "SE.G" = sd(df1.data$G),
-                    "Tm_at_0.1mM" = mean(df1.data$Tm_at_0.1mM),
-                    "SE.Tm_at_0.1mM" = sd(df1.data$Tm_at_0.1mM))
+
   df2.data = subset(df.result, Method == "2 Tm versus ln[Ct]")
-  df.2 = data.frame("Method" = "2 Tm versus ln[Ct]",
-                    "H" = mean(df2.data$H),
-                    "SE.H" = sd(df2.data$H),
-                    "S" = mean(df2.data$S),
-                    "SE.S"= sd(df2.data$S),
-                    "G" = mean(df2.data$G),
-                    "SE.G" = sd(df2.data$G),
-                    "Tm_at_0.1mM" = mean(df2.data$Tm_at_0.1mM),
-                    "SE.Tm_at_0.1mM" = sd(df2.data$Tm_at_0.1mM))
+
   df3.data = subset(df.result, Method == "3 Global fit")
-  df.3 = data.frame("Method" = "3 Global fit",
-                    "H" = mean(df3.data$H),
-                    "SE.H" = sd(df3.data$H),
-                    "S" = mean(df3.data$S),
-                    "SE.S"= sd(df3.data$S),
-                    "G" = mean(df3.data$G),
-                    "SE.G" = sd(df3.data$G),
-                    "Tm_at_0.1mM" = mean(df3.data$Tm_at_0.1mM),
-                    "SE.Tm_at_0.1mM" = sd(df3.data$Tm_at_0.1mM))
+
+  if (Trim.method == "fixed"){
+    df.1 = data.frame("Method" = "1 individual fits",
+                      "H" = mean(df1.data$H),
+                      "SE.H" = sd(df1.data$H),
+                      "S" = mean(df1.data$S),
+                      "SE.S"= sd(df1.data$S),
+                      "G" = mean(df1.data$G),
+                      "SE.G" = sd(df1.data$G),
+                      "Tm_at_0.1mM" = mean(df1.data$Tm_at_0.1mM),
+                      "SE.Tm_at_0.1mM" = sd(df1.data$Tm_at_0.1mM))
+    df.2 = data.frame("Method" = "2 Tm versus ln[Ct]",
+                      "H" = mean(df2.data$H),
+                      "SE.H" = sd(df2.data$H),
+                      "S" = mean(df2.data$S),
+                      "SE.S"= sd(df2.data$S),
+                      "G" = mean(df2.data$G),
+                      "SE.G" = sd(df2.data$G),
+                      "Tm_at_0.1mM" = mean(df2.data$Tm_at_0.1mM),
+                      "SE.Tm_at_0.1mM" = sd(df2.data$Tm_at_0.1mM))
+    df.3 = data.frame("Method" = "3 Global fit",
+                      "H" = mean(df3.data$H),
+                      "SE.H" = sd(df3.data$H),
+                      "S" = mean(df3.data$S),
+                      "SE.S"= sd(df3.data$S),
+                      "G" = mean(df3.data$G),
+                      "SE.G" = sd(df3.data$G),
+                      "Tm_at_0.1mM" = mean(df3.data$Tm_at_0.1mM),
+                      "SE.Tm_at_0.1mM" = sd(df3.data$Tm_at_0.1mM))
+  }else{
+    df.1 = data.frame("Method" = "1 individual fits",
+                      "H" = mean(df1.data$H),
+                      "CI95.H" = paste(round(quantile(df1.data$H, 0.05), 2), "to", round(quantile(df1.data$H, 0.95), 2)),
+                      "S" = mean(df1.data$S),
+                      "CI95.S"= paste(round(quantile(df1.data$S, 0.05), 2), "to", round(quantile(df1.data$S, 0.95), 2)),
+                      "G" = mean(df1.data$G),
+                      "CI95.G" = paste(round(quantile(df1.data$G, 0.05), 2), "to", round(quantile(df1.data$G, 0.95), 2)),
+                      "Tm_at_0.1mM" = mean(df1.data$Tm_at_0.1mM),
+                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df1.data$Tm_at_0.1mM, 0.05), 2), "to", round(quantile(df1.data$Tm_at_0.1mM, 0.95), 2)))
+    df.2 = data.frame("Method" = "2 Tm versus ln[Ct]",
+                      "H" = mean(df2.data$H),
+                      "CI95.H" = paste(round(quantile(df2.data$H, 0.05), 2), "to", round(quantile(df2.data$H, 0.95), 2)),
+                      "S" = mean(df2.data$S),
+                      "CI95.S"= paste(round(quantile(df2.data$S, 0.05), 2), "to", round(quantile(df2.data$S, 0.95), 2)),
+                      "G" = mean(df2.data$G),
+                      "CI95.G" = paste(round(quantile(df2.data$G, 0.05), 2), "to", round(quantile(df2.data$G, 0.95), 2)),
+                      "Tm_at_0.1mM" = mean(df2.data$Tm_at_0.1mM),
+                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df2.data$Tm_at_0.1mM, 0.05), 2), "to", round(quantile(df2.data$Tm_at_0.1mM, 0.95), 2)))
+    df.3 = data.frame("Method" = "3 Global fit",
+                      "H" = mean(df3.data$H),
+                      "CI95.H" = paste(round(quantile(df3.data$H, 0.05), 2), "to", round(quantile(df3.data$H, 0.95), 2)),
+                      "S" = mean(df3.data$S),
+                      "CI95.S"= paste(round(quantile(df3.data$S, 0.05), 2), "to", round(quantile(df3.data$S, 0.95), 2)),
+                      "G" = mean(df3.data$G),
+                      "CI95.G" = paste(round(quantile(df3.data$G, 0.05), 2), "to", round(quantile(df3.data$G, 0.95), 2)),
+                      "Tm_at_0.1mM" = mean(df3.data$Tm_at_0.1mM),
+                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df3.data$Tm_at_0.1mM, 0.05), 2), "to", round(quantile(df3.data$Tm_at_0.1mM, 0.95), 2)))
+  }
+
 
   df.final = rbind(df.1, df.2)
   df.final = rbind(df.final, df.3)
@@ -786,11 +701,12 @@ BLTrimmer = function(meltR.A.fit,
 
   output = list(list.baselines,
                 list.meltR.A.fit,
+                df.result,
                 df.final,
                 df.error,
                 stime)
 
-  names(output) = c("List.T.ranges", "List.fits", "Ensemble.energies", "Fractional.error.between.methods", "System.time")
+  names(output) = c("List.T.ranges", "List.fits", "Fit.summaries", "Ensemble.energies", "Fractional.error.between.methods", "System.time")
 
   if(Silent){}else{
     print("Ensemble energies")
