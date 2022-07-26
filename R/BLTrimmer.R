@@ -23,7 +23,7 @@
 BLTrimmer = function(meltR.A.fit,
                      Trim.method = "floating",
                      Assess.method = 3,
-                   n.combinations = 100,
+                   n.combinations = 1000,
                    n.ranges.float = 5,
                    range.step.float = 5,
                    n.ranges.fixed = 40,
@@ -56,6 +56,126 @@ BLTrimmer = function(meltR.A.fit,
   Tmodel_names <- c("VantHoff")
   Tmodels <- list(function(H, Tm, Temperature){(H/0.0019872)*((1/(Tm + 273.15)) - (1/(Temperature + 273.15)))})
   names(Tmodels) <- Tmodel_names
+
+  ####Assemble the models####
+  G_VH = function(H, S, Temperature){exp((S/0.0019872) - ((1/((Temperature + 273.15)*0.0019872))*H))}
+  if (Mmodel == "Monomolecular.2State"){
+    if (Tmodel == "VantHoff"){
+      Model = function(H, Tm, mED, bED, mESS, bESS, Temperature){
+        K <- exp(Tmodels$VantHoff(H = H, Tm = Tm, Temperature = Temperature))
+        f <- Mmodels$Monomolecular.2State(K = K)
+        ED <- mED*Temperature + bED
+        ESS <- mESS*Temperature + bESS
+        model <- (f*ED) + (1-f)*ESS
+        return(model)
+      }
+      GModel = function(H, S, mED, bED, mESS, bESS, Sample, Temperature){
+        K <- G_VH(H = H, S = S, Temperature = Temperature)
+        f <- Mmodels$Monomolecular.2State(K = K)
+        ED <- mED[Sample]*Temperature + bED[Sample]
+        ESS <- mESS[Sample]*Temperature + bESS[Sample]
+        model <- (f*ED) + (1-f)*ESS
+        return(model)
+      }
+      calcS = function(H, Tm){ (H/(273.15 + Tm)) }
+      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
+      calcG = function(H, Tm){H - (310*((H/(273.15 + Tm))))}
+      calcG.SE = function(H, Tm, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*(H/(273.15 + Tm)))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
+      f = function(H, S, Temperature){
+        K <- G_VH(H = H, S = S, Temperature = Temperature)
+        model <- Mmodels$Monomolecular.2State(K = K)
+        return(model)
+      }
+    }
+  }
+  if (Mmodel == "Monomolecular.3State"){
+    if (Tmodel == "VantHoff"){
+      Model = function(H1, Tm1, H2, Tm2, mED, bED, EI, mESS, bESS, Temperature, Ct){
+        K1 <- exp(Tmodels$VantHoff(H = H1, Tm = Tm1, Temperature = Temperature))
+        K2 <- exp(Tmodels$VantHoff(H = H2, Tm = Tm2, Temperature = Temperature))
+        f <- Mmodels$Monomolecular.2State(K1 = K1, K2 = K2, Ct = Ct)
+        ED <- mED*Temperature + bED
+        ESS <- mESS*Temperature + bESS
+        model <- (f*K1*K2*ED) + (f*K1*EI) + (f)*ESS
+        return(model)
+      }
+      GModel = function(H1, Tm1, H2, Tm2, mED, bED, EI, mESS, bESS, Sample, Temperature, Ct){
+        K1 <- exp(Tmodels$VantHoff(H = H1, Tm = Tm1, Temperature = Temperature))
+        K2 <- exp(Tmodels$VantHoff(H = H2, Tm = Tm2, Temperature = Temperature))
+        f <- Mmodels$Monomolecular.2State(K1 = K1, K2 = K2, Ct = Ct)
+        ED <- mED[Sample]*Temperature + bED[Sample]
+        ESS <- mESS[Sample]*Temperature + bESS[Sample]
+        model <- (f*K1*K2*ED) + (f*K1*EI[Sample]) + (f)*ESS
+        return(model)
+      }
+      calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) }
+      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
+    }
+  }
+  if (Mmodel == "Heteroduplex.2State"){
+    if (Tmodel == "VantHoff"){
+      Model = function(H, Tm, mED, bED, mESS, bESS, Temperature, Ct){
+        K <- exp(Tmodels$VantHoff(H = H, Tm = Tm, Temperature = Temperature) + log(4/Ct))
+        f <- Mmodels$Heteroduplex.2State(K = K, Ct = Ct)
+        ED <- mED*Temperature + bED
+        ESS <- mESS*Temperature + bESS
+        model <- (f*ED) + (1-f)*ESS
+        return(model)
+      }
+      TmModel = function(H, S, lnCt){
+        ((0.0019872/H)*lnCt) + ((S - 0.0019872*log(4))/H)
+      }
+      GModel = function(H, S, mED, bED, mESS, bESS, Sample, Temperature, Ct){
+        K <- G_VH(H = H, S = S, Temperature = Temperature)
+        f <- Mmodels$Heteroduplex.2State(K = K, Ct = Ct)
+        ED <- mED[Sample]*Temperature + bED[Sample]
+        ESS <- mESS[Sample]*Temperature + bESS[Sample]
+        model <- (f*ED) + (1-f)*ESS
+        return(model)
+      }
+      f = function(H, S, Temperature, Ct){
+        K <- G_VH(H = H, S = S, Temperature = Temperature)
+        model <- Mmodels$Heteroduplex.2State(K = K, Ct = Ct)
+        return(model)
+      }
+      calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) + (0.0019872*log(4/Ct)) }
+      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
+      calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct)))) }
+      calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
+    }
+  }
+  if (Mmodel == "Homoduplex.2State"){
+    if (Tmodel == "VantHoff"){
+      Model = function(H, Tm, mED, bED, mESS, bESS, Temperature, Ct){
+        K <- exp(Tmodels$VantHoff(H = H, Tm = Tm, Temperature = Temperature) + log(1/Ct))
+        f <- Mmodels$Homoduplex.2State(K = K, Ct = Ct)
+        ED <- mED*Temperature + bED
+        ESS <- mESS*Temperature + bESS
+        model <- (f*ED) + (1-f)*ESS
+        return(model)
+      }
+      TmModel = function(H, S, lnCt){
+        ((0.0019872/H)*lnCt) + (S/H)
+      }
+      GModel = function(H, S, mED, bED, mESS, bESS, Sample, Temperature, Ct){
+        K <- G_VH(H = H, S = S, Temperature = Temperature)
+        f <- Mmodels$Homoduplex.2State(K = K, Ct = Ct)
+        ED <- mED[Sample]*Temperature + bED[Sample]
+        ESS <- mESS[Sample]*Temperature + bESS[Sample]
+        model <- (f*ED) + (1-f)*ESS
+        return(model)
+      }
+      f = function(H, S, Temperature, Ct){
+        K <- G_VH(H = H, S = S, Temperature = Temperature)
+        model <- Mmodels$Homoduplex.2State(K = K, Ct = Ct)
+        return(model)
+      }
+      calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) + (0.0019872*log(1/Ct)) }
+      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
+      calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct)))) }
+      calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2)}
+    }
+  }
 
   ####Get Cts for each sample####
 
