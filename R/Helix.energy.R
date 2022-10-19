@@ -20,8 +20,8 @@
 #'@param Symmetry = 0.43 Energy for a folding parameter
 #'@return A data frame containing the data in the "information in the ".o3a" formatted file.
 #' @export
-Helix.energy = function(seqF = "UUCCCU",
-                       seqR = "AGGGAA",
+Helix.energy = function(seqF = "ACGCA",
+                       seqR = "UGCGU",
                        output = "df",
                        F.Q = FALSE,
                        Double.label = 0,

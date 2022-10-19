@@ -8,14 +8,13 @@ BLTrimmer(
   meltR.A.fit,
   Trim.method = "floating",
   Assess.method = 3,
-  n.combinations = 100,
+  n.combinations = 1000,
   n.ranges.float = 5,
   range.step.float = 5,
   n.ranges.fixed = 40,
   range.step.fixed = 0.5,
   no.trim.range = c(0.1, 0.9),
-  parallel = "none",
-  n.core = 1,
+  quantile.threshold = 0.25,
   Save_results = "none",
   file_path = getwd(),
   file_prefix = "BLTrimmer",
@@ -39,9 +38,7 @@ BLTrimmer(
 
 \item{no.trim.range}{Determines the range where the absorbance data will not be trimmed. By default, no.trim.range = c(0.2, 0.8), meaning that the data will not be trimmed at a mode fraction double stranded greater than 0.2 and less than 0.8. Determined using the global fit from the input object created by meltR.A.}
 
-\item{parallel}{Set to "on" if you want to use multiple cores to fit baselines. You will need to run library(doParallel) to load doParallel and its dependencies. You will also need to specify the number of cores in the n.cores argument, which should not exceed the number of cores your computer has. There will be no benefit for running in parallel mode for a single core machine. Default = "none".}
-
-\item{n.core}{How many cores do you want to designate for this task.}
+\item{quantile.threshold}{Threshold for assessing the best baseline combinations}
 
 \item{Save_results}{"all" to save results to the disk or "none" to not save results to the disk.}
 
@@ -52,6 +49,10 @@ BLTrimmer(
 \item{Silent}{Set to TRUE to not print results}
 
 \item{range.step.fixed.}{Temperature difference between each range that is generated using the fixed method.}
+
+\item{parallel}{Set to "on" if you want to use multiple cores to fit baselines. You will need to run library(doParallel) to load doParallel and its dependencies. You will also need to specify the number of cores in the n.cores argument, which should not exceed the number of cores your computer has. There will be no benefit for running in parallel mode for a single core machine. Default = "none".}
+
+\item{n.core}{How many cores do you want to designate for this task.}
 }
 \value{
 A list of data frames containing parameters from the fits and data for plotting the results with ggplot2.

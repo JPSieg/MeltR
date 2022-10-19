@@ -5,8 +5,8 @@
 \title{Calculates folding INN-HB parameters for a helix sequnece}
 \usage{
 Helix.energy(
-  seqF = "UUCCCU",
-  seqR = "AGGGAA",
+  seqF = "ACGCA",
+  seqR = "UGCGU",
   output = "df",
   F.Q = FALSE,
   Double.label = 0,

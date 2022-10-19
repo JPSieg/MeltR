@@ -17,21 +17,35 @@
 #'@param Mmodel The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".
 #'@param Tmodel The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".
 #'@param concT The temperature used to calculate the NucAcid concentration. Default = 90.
+#'@param outliers A vector containing the identifiers of the outlier samples that you want to remove.
 #'@param fitTs Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit.
 #'@param methods what methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Can be true or false. Note, method 1 must be set to TRUE or the subsequent steps will not work.
 #'@param Tm_method either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
-#'@param auto.trimmed Ignore this argument unless you are writting auto baseline trimmers
+#'@param auto.trimmed Ignore this argument unless you are writing auto baseline trimmers
 #'@param Silent TRUE to not print data in your console. Default = FALSE.
-#'@return A list of data frames containing parameters from the fits and data for ploting the results with ggplot2.
+#'@return A list of data opject containing raw data, data, transformation, fit objects, and statistics from the fits plotting, exporting, and advanced analysis.
+#' \itemize{
+#'   \item 1. Summary - A data frame containing the thermodynamic parameters from each method.
+#'   \item 2. Method.1.indvfits - A data frame containing the thermodynamic parameters from the individual fits.
+#'   \item 3. Range - A data frame containing fractional error between Method 1, 2, and 3 for each thermodynamic parameter.
+#'   \item 4. Derivatives.data - A data frame containing the first and second derivatives for each sample containing RNA.
+#'   \item 5. Method.1.data - A data frame containing the raw data from method 1 and the model.
+#'   \item 6. Method.1.fit - A list of nls objects containing the fits obtained from fitting melting curves individually. Fit statistics can be extracted here.
+#'   \item 7. Method.2.data - A data frame containing the raw data from method 2 and the model.
+#'   \item 8. Method.2.fit - A nls object containing the fit obtained from fitting the relationship of Tm and Ct.
+#'   \item 9. Method.3.data - A data frame containing the raw data from method 3 and the model.
+#'   \item 10. Method.3.fit - A nls object containing the fit obtained from fitting the raw data.
+#' }
 #' @export
 meltR.A = function(data_frame,
                    blank = "none",
                    NucAcid,
                    wavelength = 260,
                    concT = 90,
+                   outliers = NA,
                    fitTs = NULL,
                    methods = c(TRUE, TRUE, TRUE),
                    Tm_method = "nls",
@@ -317,16 +331,12 @@ meltR.A = function(data_frame,
     for (i in c(1:length(unique(no.background$Sample)))){
       samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
       df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
-      for (j in c(length(df.raw$Sample):1)){
-        if (df.raw$Temperature[j] > concT){
           if (is.atomic(extcoef)){
-            ct[i] <- (df.raw$Absorbance[j]/(extcoef[[1]]*df.raw$Pathlength[j]))
+            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[j]))
           }else{
-            ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
+            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[j]))
           }
-        }
         samples[[i]]$Ct <- ct[i]
-      }
     }
   }
   k <- samples[[1]]
@@ -337,6 +347,17 @@ meltR.A = function(data_frame,
   }
 
   no.background <- subset(k, Sample != blank)
+
+  ####Remove outliers####
+
+  if (is.na(outliers)){
+
+  }else{
+    for (i in 1:length(outliers)){
+      no.background = subset(data_frame, Sample != outliers[i])
+    }
+  }
+
   ####Calculate starting thermo parameters for nls####
   first.derive <- {}
   T0.5 <- c()
@@ -469,12 +490,12 @@ meltR.A = function(data_frame,
           indvfits.G[i] <- calcG(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
         }
         indvfits.Tm[i] <- coef(fit[[i]])[2]
-      }, error = function(e){print(a[[i]]$Sample[1])})
+      }, error = function(e){print(paste("There was a problem fitting Sample", a[[i]]$Sample[1], "with method 1") )})
     }
     indvfits <- data.frame("Sample" = unique(no.background$Sample),
                            "Ct" = unique(no.background$Ct),
                            "H" = round(indvfits.H, 2),
-                           "S" = round(indvfits.S, 4),
+                           "S" = round(indvfits.S, 5),
                            "G" = round(indvfits.G, 2),
                            "Tm" = round(indvfits.Tm, 2))
     indvfits.mean <- list(round(mean(indvfits$H), 2), round(sd(indvfits$H), 2), round(1000*mean(indvfits$S), 2), round(1000*sd(indvfits$S), 2), round(mean(indvfits.G), 2), round(sd(indvfits.G), 2))
@@ -724,6 +745,12 @@ meltR.A = function(data_frame,
     Tm_vs_lnCt <- data.frame(Gfit_summary)
   }
   ####Assemble Results####
+
+  indvfits$Ct = as.numeric(formatC(indvfits$Ct, format = "e", digits = 2))
+  indvfits$S = 1000*indvfits$S
+
+  colnames(indvfits) = c("Sample", "Ct", "dH", "dS", "dG", "Tm")
+
   if (Mmodel == "Monomolecular.2State"){
     comparison <- rbind(indvfits.mean, Gfit_summary)
     comparison <- cbind(data.frame("Method" = c("1 individual fits", "3 Global fit")), comparison)
@@ -754,6 +781,7 @@ meltR.A = function(data_frame,
   comparison$Tm_at_0.1mM = Tm_at_0.1mM
   comparison$SE.Tm_at_0.1mM = SE.Tm_at_0.1mM
 
+  colnames(comparison) = c("Method", "dH", "SE.dH", "dS", "SE.dS", "dG", "SE.dG", "Tm_at_0.1mM", "SE.Tm_at_0.1mM")
 
   if (Save_results != "none"){
     write.table(comparison, paste(file_path, "/", file_prefix, "_summary.csv", sep = ""), sep = ",", row.names = FALSE)
@@ -825,15 +853,16 @@ meltR.A = function(data_frame,
 
   if (Silent){}else{
     print("Individual curves")
+    print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
     print(indvfits)
     print("Summary")
-    print(comparison)
-    range <- data.frame("H" = abs((range(comparison$H)[1]-range(comparison$H)[2])/mean(comparison$H)),
-                        "S" = abs((range(comparison$S)[1]-range(comparison$S)[2])/mean(comparison$S)),
-                        "G" = abs((range(comparison$G)[1]-range(comparison$G)[2])/mean(comparison$G)))
-    print("fractional error between methods")
-    print(range)
     print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
+    print(comparison)
+    range <- data.frame("dH" = round(100*abs((range(comparison$dH)[1]-range(comparison$dH)[2])/mean(comparison$dH)), digits = 1),
+                        "dS" = round(100*abs((range(comparison$dS)[1]-range(comparison$dS)[2])/mean(comparison$dS)), digits = 1),
+                        "dG" = round(100*abs((range(comparison$dG)[1]-range(comparison$dG)[2])/mean(comparison$dG)), digits = 1))
+    print("%error between methods")
+    print(range)
   }
 
   output <- list("Summary" = comparison,

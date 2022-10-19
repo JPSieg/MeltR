@@ -10,6 +10,7 @@ meltR.A(
   NucAcid,
   wavelength = 260,
   concT = 90,
+  outliers = NA,
   fitTs = NULL,
   methods = c(TRUE, TRUE, TRUE),
   Tm_method = "nls",
@@ -33,6 +34,8 @@ meltR.A(
 
 \item{concT}{The temperature used to calculate the NucAcid concentration. Default = 90.}
 
+\item{outliers}{A vector containing the identifiers of the outlier samples that you want to remove.}
+
 \item{fitTs}{Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit.}
 
 \item{methods}{what methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Can be true or false. Note, method 1 must be set to TRUE or the subsequent steps will not work.}
@@ -49,12 +52,24 @@ meltR.A(
 
 \item{file_path}{Path to the directory you want to save results in.}
 
-\item{auto.trimmed}{Ignore this argument unless you are writting auto baseline trimmers}
+\item{auto.trimmed}{Ignore this argument unless you are writing auto baseline trimmers}
 
 \item{Silent}{TRUE to not print data in your console. Default = FALSE.}
 }
 \value{
-A list of data frames containing parameters from the fits and data for ploting the results with ggplot2.
+A list of data opject containing raw data, data, transformation, fit objects, and statistics from the fits plotting, exporting, and advanced analysis.
+\itemize{
+\item 1. Summary - A data frame containing the thermodynamic parameters from each method.
+\item 2. Method.1.indvfits - A data frame containing the thermodynamic parameters from the individual fits.
+\item 3. Range - A data frame containing fractional error between Method 1, 2, and 3 for each thermodynamic parameter.
+\item 4. Derivatives.data - A data frame containing the first and second derivatives for each sample containing RNA.
+\item 5. Method.1.data - A data frame containing the raw data from method 1 and the model.
+\item 6. Method.1.fit - A list of nls objects containing the fits obtained from fitting melting curves individually. Fit statistics can be extracted here.
+\item 7. Method.2.data - A data frame containing the raw data from method 2 and the model.
+\item 8. Method.2.fit - A nls object containing the fit obtained from fitting the relationship of Tm and Ct.
+\item 9. Method.3.data - A data frame containing the raw data from method 3 and the model.
+\item 10. Method.3.fit - A nls object containing the fit obtained from fitting the raw data.
+}
 }
 \description{
 Automates the trivial but time-consuming tasks associated with non-linear regression.

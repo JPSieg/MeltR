@@ -105,8 +105,10 @@ meltR.F = function(df,
       hockey_stick = subset(df, Reading == Low_reading)
       hockey_stick$low_K = low_K
       hockey_stick_fit = nls(Emission ~ Optimize(R, K, A, B, Fmax, Fmin),
+                             #trace = TRUE,
                              low = 0, algorithm = 'port',
-                             start = optomize_start, data = hockey_stick)
+                             start = optomize_start, data = hockey_stick,
+                             control = nls.control(warnOnly = TRUE))
       R = coef(hockey_stick_fit)[1]
       K.opt = coef(hockey_stick_fit)[2]
     }else{
@@ -115,7 +117,8 @@ meltR.F = function(df,
       hockey_stick$low_K = low_K
       hockey_stick_fit = nls(Emission ~ Optimize(R, K = low_K, A, B, Fmax, Fmin),
                              low = 0, algorithm = 'port',
-                             start = optomize_start, data = hockey_stick)
+                             start = optomize_start, data = hockey_stick,
+                             control = nls.control(warnOnly = TRUE))
       R = coef(hockey_stick_fit)[1]
       K.opt = low_K
     }
@@ -230,7 +233,6 @@ meltR.F = function(df,
 
   indvfits.to.fit = indvfits[-c(which(indvfits$K <= Kd_range[1]), which(indvfits$K >= Kd_range[2])),]
 
-
   vh_start = vh_start
 
   K_error = quantile(indvfits.to.fit$SE.lnK, Kd_error_quantile, na.rm = TRUE)
@@ -239,6 +241,7 @@ meltR.F = function(df,
 
   vh_plot_fit = nls(lnK~Tmodel(H, S, Temperature),
                     start = vh_start,
+                    control = nls.control(warnOnly = TRUE),
                     data = indvfits.to.fit)
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_1_VH_plot.pdf", sep = ""),
@@ -289,7 +292,8 @@ meltR.F = function(df,
 
   gfit = nls(Emission ~ Global(H, S, Fmax, Fmin, Reading, A, B, Temperature),
              start = gfit_start,
-             data = df.gfit)
+             data = df.gfit,
+             control = nls.control(warnOnly = TRUE))
 
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_2_Gfit_plot.pdf", sep = ""),
@@ -318,28 +322,28 @@ meltR.F = function(df,
 
   ####Method 3 Tm versus LnCt####
 
-  df.Tm = Tm_summary
+  #df.Tm = Tm_summary
 
-  df.Tm$Ct = (10^-9)*df.Tm$B - (10^-9)*0.5*df.Tm$A
+  #df.Tm$Ct = (10^-9)*df.Tm$B - (10^-9)*0.5*df.Tm$A
 
-  df.Tm = subset(df.Tm, df.Tm$Ct > 0)
+  #df.Tm = subset(df.Tm, df.Tm$Ct > 0)
 
-  df.Tm$lnCt = log(df.Tm$Ct)
+  #df.Tm$lnCt = log(df.Tm$Ct)
 
-  fit = nls(invT ~ (S/H) + (0.00198720425864083/H)*lnCt,
-      data = subset(df.Tm, B >= B.conc.Tm),
-      start = list(H = -70, S = -0.22))
+  #fit = nls(invT ~ (S/H) + (0.00198720425864083/H)*lnCt,
+  #    data = subset(df.Tm, B >= B.conc.Tm),
+  #    start = list(H = -70, S = -0.22))
 
-  H = coef(fit)[1]
-  SE.H = coef(summary(fit))[1,2]
-  S = coef(fit)[2]
-  SE.S = coef(summary(fit))[2,2]
-  G = H - (273.13 + 37)*S
-  SE.G = calcG.SE(SE.H, SE.S, summary(fit)$cov.unscaled[1,2]*(summary(fit)$sigma^2))
+  #H = coef(fit)[1]
+  #SE.H = coef(summary(fit))[1,2]
+  #S = coef(fit)[2]
+  #SE.S = coef(summary(fit))[2,2]
+  #G = H - (273.13 + 37)*S
+  #SE.G = calcG.SE(SE.H, SE.S, summary(fit)$cov.unscaled[1,2]*(summary(fit)$sigma^2))
 
-  df.Tm.result = data.frame(H, SE.H, 1000*S, 1000*SE.S, G, SE.G)
+  #df.Tm.result = data.frame(H, SE.H, 1000*S, 1000*SE.S, G, SE.G)
 
-  colnames(df.Tm.result) = c("H", "SE.H", "S", "SE.S", "G", "SE.G")
+  #colnames(df.Tm.result) = c("H", "SE.H", "S", "SE.S", "G", "SE.G")
 
   #if (Save_results == "all"){
   #  pdf(paste(file_path, "/", file_prefix, "_method_3_Tm_vs_lnCt_plot.pdf", sep = ""),

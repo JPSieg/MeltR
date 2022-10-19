@@ -23,19 +23,22 @@
 BLTrimmer = function(meltR.A.fit,
                      Trim.method = "floating",
                      Assess.method = 3,
-                   n.combinations = 1000,
-                   n.ranges.float = 5,
-                   range.step.float = 5,
-                   n.ranges.fixed = 40,
-                   range.step.fixed = 0.5,
-                   no.trim.range = c(0.1, 0.9),
-                   quantile.threshold = 0.25,
-                   parallel = "none",
-                   n.core = 1,
-                   Save_results = "none",
-                   file_path = getwd(),
-                   file_prefix = "BLTrimmer",
-                   Silent = FALSE){
+                     n.combinations = 1000,
+                     n.ranges.float = 5,
+                     range.step.float = 5,
+                     n.ranges.fixed = 40,
+                     range.step.fixed = 0.5,
+                     no.trim.range = c(0.1, 0.9),
+                     quantile.threshold = 0.25,
+                     Save_results = "none",
+                     file_path = getwd(),
+                     file_prefix = "BLTrimmer",
+                     Silent = FALSE){
+  ####Potential arguments for parrellel computing on multicore machines####
+
+  parallel = "none" #This will keep the parallel code from running on accident
+  n.core = 1
+
   ####Determine Mmodel and Tmodel####
 
   Tmodel = meltR.A.fit$BLTrimmer.data[[3]]
@@ -205,6 +208,13 @@ BLTrimmer = function(meltR.A.fit,
     df = list.df.raw[[i]]
     high = df$Temperature[which.max(df$Temperature[which(df$f >= no.trim.range[1])])]
     low = df$Temperature[which.max(df$Temperature[which(df$f >= no.trim.range[2])])]
+    if (length(low) == 0){
+      low = df$Temperature[which.min(df$Temperature)]
+    }
+    if (length(high) == 0){
+      high = df$Temperature[which.max(df$Temperature)]
+    }
+
     list.no.trim[[i]] = c(low, high)
   }
 
@@ -449,10 +459,6 @@ BLTrimmer = function(meltR.A.fit,
     })
   }
 
-  if (Silent){}else{
-    print(paste("Testing baselines took", round(stime[3], digits = 1), "seconds"))
-  }
-
   ####Quantilize data####
 
 
@@ -479,43 +485,25 @@ BLTrimmer = function(meltR.A.fit,
 
   n.best = ceiling(nrow(baselines)*quantile.threshold)
 
-  best.error.distance = sort(baselines$dH1.error.quantile)[1:n.best]
+  baselines = baselines[order(baselines$dH1.error.quantile),]
 
-  best.i = c()
-
-  for (i in 1:n.best){
-    best.i[i] = which(baselines$dH1.error.quantile == best.error.distance[i])
-  }
-
-  df.m1 = baselines[best.i,]
+  df.m1 = baselines[1:n.best,]
 
   #Method 2 agrees with method 1
 
   n.best = ceiling(nrow(baselines)*quantile.threshold)
 
-  best.error.distance = sort(baselines$dH1.dH2.error.quantile)[1:n.best]
+  baselines = baselines[order(baselines$dH1.dH2.error.quantile),]
 
-  best.i = c()
-
-  for (i in 1:n.best){
-    best.i[i] = which(baselines$dH1.dH2.error.quantile == best.error.distance[i])
-  }
-
-  df.m2 = baselines[best.i,]
+  df.m2 = baselines[1:n.best,]
 
   #Method 1 agrees with method 1 and Method 2 agrees with method 1
 
   n.best = ceiling(nrow(baselines)*quantile.threshold)
 
-  best.error.distance = sort(baselines$error.distance)[1:n.best]
+  baselines = baselines[order(baselines$error.distance),]
 
-  best.i = c()
-
-  for (i in 1:n.best){
-    best.i[i] = which(baselines$error.distance == best.error.distance[i])
-  }
-
-  df.m1.M2 = baselines[best.i,]
+  df.m1.M2 = baselines[1:n.best,]
 
   if (Assess.method == 1){
     df.best = df.m1
@@ -666,10 +654,6 @@ BLTrimmer = function(meltR.A.fit,
 
   }
 
-  ####Grab best baselines####
-
-  baselines = df.best
-
   ####Set up meltR.A####
 
   if (Silent){}else{
@@ -680,15 +664,17 @@ BLTrimmer = function(meltR.A.fit,
   list.df.results = {}
   list.baselines = {}
 
-  pb = txtProgressBar(min = 1, max = nrow(baselines), initial = 1, style = 3)
+  pb = txtProgressBar(min = 1, max = nrow(df.best), initial = 1, style = 3)
 
-  for (k in 1:nrow(baselines)){
+  stime2 <- system.time({
+
+  for (k in 1:nrow(df.best)){
 
     setTxtProgressBar(pb, k)
 
     df.raw = meltR.A.fit$BLTrimmer.data[[1]]
 
-    df.opt = baselines[k,]
+    df.opt = df.best[k,]
 
     fitstart = list.fit.start.indv
 
@@ -738,6 +724,8 @@ BLTrimmer = function(meltR.A.fit,
 
   }
 
+  })
+
   df.result = list.df.results[[1]]
 
   for (i in 2:length(list.meltR.A.fit)){
@@ -752,78 +740,85 @@ BLTrimmer = function(meltR.A.fit,
 
   if (Trim.method == "fixed"){
     df.1 = data.frame("Method" = "1 individual fits",
-                      "H" = mean(df1.data$H),
-                      "SE.H" = sd(df1.data$H),
-                      "S" = mean(df1.data$S),
-                      "SE.S"= sd(df1.data$S),
-                      "G" = mean(df1.data$G),
-                      "SE.G" = sd(df1.data$G),
-                      "Tm_at_0.1mM" = mean(df1.data$Tm_at_0.1mM),
-                      "SE.Tm_at_0.1mM" = sd(df1.data$Tm_at_0.1mM))
+                      "H" = round(mean(df1.data$dH), digits = 2),
+                      "SE.dH" = round(sd(df1.data$dH), digits = 2),
+                      "dS" = round(mean(df1.data$dS), digits = 2),
+                      "SE.dS"= round(sd(df1.data$dS), digits = 2),
+                      "dG" = round(mean(df1.data$dG), digits = 2),
+                      "SE.dG" = round(sd(df1.data$dG), digits = 2),
+                      "Tm_at_0.1mM" = round(mean(df1.data$Tm_at_0.1mM), digits = 2),
+                      "SE.Tm_at_0.1mM" = round(sd(df1.data$Tm_at_0.1mM), digits = 2))
     df.2 = data.frame("Method" = "2 Tm versus ln[Ct]",
-                      "H" = mean(df2.data$H),
-                      "SE.H" = sd(df2.data$H),
-                      "S" = mean(df2.data$S),
-                      "SE.S"= sd(df2.data$S),
-                      "G" = mean(df2.data$G),
-                      "SE.G" = sd(df2.data$G),
-                      "Tm_at_0.1mM" = mean(df2.data$Tm_at_0.1mM),
-                      "SE.Tm_at_0.1mM" = sd(df2.data$Tm_at_0.1mM))
+                      "dH" = round(mean(df2.data$dH), digits = 2),
+                      "SE.dH" = round(sd(df2.data$dH), digits = 2),
+                      "dS" = round(mean(df2.data$dS), digits = 2),
+                      "SE.dS"= round(sd(df2.data$dS), digits = 2),
+                      "dG" = round(mean(df2.data$dG), digits = 2),
+                      "SE.dG" = round(sd(df2.data$dG), digits = 2),
+                      "Tm_at_0.1mM" = round(mean(df2.data$Tm_at_0.1mM), digits = 2),
+                      "SE.Tm_at_0.1mM" = round(sd(df2.data$Tm_at_0.1mM), digits = 2))
     df.3 = data.frame("Method" = "3 Global fit",
-                      "H" = mean(df3.data$H),
-                      "SE.H" = sd(df3.data$H),
-                      "S" = mean(df3.data$S),
-                      "SE.S"= sd(df3.data$S),
-                      "G" = mean(df3.data$G),
-                      "SE.G" = sd(df3.data$G),
-                      "Tm_at_0.1mM" = mean(df3.data$Tm_at_0.1mM),
-                      "SE.Tm_at_0.1mM" = sd(df3.data$Tm_at_0.1mM))
+                      "dH" = round(mean(df3.data$dH), digits = 2),
+                      "SE.dH" = round(sd(df3.data$dH), digits = 2),
+                      "dS" = round(mean(df3.data$dS), digits = 2),
+                      "SE.dS"= round(sd(df3.data$dS), digits = 2),
+                      "dG" = round(mean(df3.data$dG), digits = 2),
+                      "SE.dG" = round(sd(df3.data$dG), digits = 2),
+                      "Tm_at_0.1mM" = round(mean(df3.data$Tm_at_0.1mM), digits = 2),
+                      "SE.Tm_at_0.1mM" = round(sd(df3.data$Tm_at_0.1mM), digits = 2))
   }else{
     df.1 = data.frame("Method" = "1 individual fits",
-                      "H" = mean(df1.data$H),
-                      "CI95.H" = paste(round(quantile(df1.data$H, 0.05), 2), "to", round(quantile(df1.data$H, 0.95), 2)),
-                      "S" = mean(df1.data$S),
-                      "CI95.S"= paste(round(quantile(df1.data$S, 0.05), 2), "to", round(quantile(df1.data$S, 0.95), 2)),
-                      "G" = mean(df1.data$G),
-                      "CI95.G" = paste(round(quantile(df1.data$G, 0.05), 2), "to", round(quantile(df1.data$G, 0.95), 2)),
-                      "Tm_at_0.1mM" = mean(df1.data$Tm_at_0.1mM),
-                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df1.data$Tm_at_0.1mM, 0.05), 2), "to", round(quantile(df1.data$Tm_at_0.1mM, 0.95), 2)))
+                      "dH" = round(mean(df1.data$dH), digits = 2),
+                      "CI95.dH" = paste(round(quantile(df1.data$dH, 0.025), 2), "to", round(quantile(df1.data$dH, 0.975), 2)),
+                      "dS" = round(mean(df1.data$dS), digits = 2),
+                      "CI95.dS"= paste(round(quantile(df1.data$dS, 0.025), 2), "to", round(quantile(df1.data$dS, 0.975), 2)),
+                      "dG" = round(mean(df1.data$dG), digits = 2),
+                      "CI95.dG" = paste(round(quantile(df1.data$dG, 0.025), 2), "to", round(quantile(df1.data$dG, 0.975), 2)),
+                      "Tm_at_0.1mM" = round(mean(df1.data$Tm_at_0.1mM), digits = 2),
+                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df1.data$Tm_at_0.1mM, 0.025), 2), "to", round(quantile(df1.data$Tm_at_0.1mM, 0.975), 2)))
     df.2 = data.frame("Method" = "2 Tm versus ln[Ct]",
-                      "H" = mean(df2.data$H),
-                      "CI95.H" = paste(round(quantile(df2.data$H, 0.05), 2), "to", round(quantile(df2.data$H, 0.95), 2)),
-                      "S" = mean(df2.data$S),
-                      "CI95.S"= paste(round(quantile(df2.data$S, 0.05), 2), "to", round(quantile(df2.data$S, 0.95), 2)),
-                      "G" = mean(df2.data$G),
-                      "CI95.G" = paste(round(quantile(df2.data$G, 0.05), 2), "to", round(quantile(df2.data$G, 0.95), 2)),
-                      "Tm_at_0.1mM" = mean(df2.data$Tm_at_0.1mM),
-                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df2.data$Tm_at_0.1mM, 0.05), 2), "to", round(quantile(df2.data$Tm_at_0.1mM, 0.95), 2)))
+                      "dH" = round(mean(df2.data$dH), digits = 2),
+                      "CI95.dH" = paste(round(quantile(df2.data$dH, 0.025), 2), "to", round(quantile(df2.data$dH, 0.975), 2)),
+                      "dS" = round(mean(df2.data$dS), digits = 2),
+                      "CI95.dS"= paste(round(quantile(df2.data$dS, 0.025), 2), "to", round(quantile(df2.data$dS, 0.975), 2)),
+                      "dG" = round(mean(df2.data$dG), digits = 2),
+                      "CI95.dG" = paste(round(quantile(df2.data$dG, 0.025), 2), "to", round(quantile(df2.data$dG, 0.975), 2)),
+                      "Tm_at_0.1mM" = round(mean(df2.data$Tm_at_0.1mM), digits = 2),
+                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df2.data$Tm_at_0.1mM, 0.025), 2), "to", round(quantile(df2.data$Tm_at_0.1mM, 0.975), 2)))
     df.3 = data.frame("Method" = "3 Global fit",
-                      "H" = mean(df3.data$H),
-                      "CI95.H" = paste(round(quantile(df3.data$H, 0.05), 2), "to", round(quantile(df3.data$H, 0.95), 2)),
-                      "S" = mean(df3.data$S),
-                      "CI95.S"= paste(round(quantile(df3.data$S, 0.05), 2), "to", round(quantile(df3.data$S, 0.95), 2)),
-                      "G" = mean(df3.data$G),
-                      "CI95.G" = paste(round(quantile(df3.data$G, 0.05), 2), "to", round(quantile(df3.data$G, 0.95), 2)),
-                      "Tm_at_0.1mM" = mean(df3.data$Tm_at_0.1mM),
-                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df3.data$Tm_at_0.1mM, 0.05), 2), "to", round(quantile(df3.data$Tm_at_0.1mM, 0.95), 2)))
+                      "dH" = round(mean(df3.data$dH), digits = 2),
+                      "CI95.dH" = paste(round(quantile(df3.data$dH, 0.025), 2), "to", round(quantile(df3.data$dH, 0.975), 2)),
+                      "dS" = round(mean(df3.data$dS), digits = 2),
+                      "CI95.dS"= paste(round(quantile(df3.data$dS, 0.025), 2), "to", round(quantile(df3.data$dS, 0.975), 2)),
+                      "dG" = round(mean(df3.data$dG), digits = 2),
+                      "CI95.dG" = paste(round(quantile(df3.data$dG, 0.025), 2), "to", round(quantile(df3.data$dG, 0.975), 2)),
+                      "Tm_at_0.1mM" = round(mean(df3.data$Tm_at_0.1mM), digits = 2),
+                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df3.data$Tm_at_0.1mM, 0.025), 2), "to", round(quantile(df3.data$Tm_at_0.1mM, 0.975), 2)))
   }
 
 
   df.final = rbind(df.1, df.2)
   df.final = rbind(df.final, df.3)
 
-  df.error = data.frame("H" = abs((min(df.final$H) - max(df.final$H))/mean(df.final$H)),
-                        "S" = abs((min(df.final$S) - max(df.final$S))/mean(df.final$S)),
-                        "G" = abs((min(df.final$G) - max(df.final$G))/mean(df.final$G)))
+  df.error = data.frame("dH" = round(100*abs((min(df.final$dH) - max(df.final$dH))/mean(df.final$dH)), digits = 1),
+                        "dS" = round(100*abs((min(df.final$dS) - max(df.final$dS))/mean(df.final$dS)), digits = 1),
+                        "dG" = round(100*abs((min(df.final$dG) - max(df.final$dG))/mean(df.final$dG)), digits = 1))
 
-  output = list(list.baselines,
+  ####Assemble output####
+
+  stime = list(stime, stime2)
+
+  names(stime) = c("all", "meltR.A")
+
+  output = list(baselines,
+                list.baselines,
                 list.meltR.A.fit,
                 df.result,
                 df.final,
                 df.error,
                 stime)
 
-  names(output) = c("List.T.ranges", "List.fits", "Fit.summaries", "Ensemble.energies", "Fractional.error.between.methods", "System.time")
+  names(output) = c("Baseline.data","List.T.ranges", "List.fits", "Fit.summaries", "Ensemble.energies", "Fractional.error.between.methods", "System.time")
 
   if(Silent){}else{
     print("Ensemble energies")
@@ -831,6 +826,10 @@ BLTrimmer = function(meltR.A.fit,
     print("Fractional error between methods")
     print(df.error)
     print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
+  }
+
+  if (Save_results == "all"){
+    write.csv(df.final, paste(file_path, "/", file_prefix, "_baseline_ensemble_analysis_results.csv", sep = ""),row.names = FALSE)
   }
 
   output = output
