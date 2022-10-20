@@ -300,7 +300,7 @@ BLTrimmer = function(meltR.A.fit,
   BL.fitter = function(BL.df){
 
     if (parallel == "none"){
-      pb = txtProgressBar(min = 1, max = nrow(baselines), initial = 1, style = 3)
+      if (Silent){}else{pb = txtProgressBar(min = 1, max = nrow(baselines), initial = 1, style = 3)}
     }
 
     #Define variables
@@ -316,7 +316,7 @@ BLTrimmer = function(meltR.A.fit,
     for (i in 1:nrow(baselines)){
       #print(i)
       if (parallel == "none"){
-        setTxtProgressBar(pb, i)
+        if (Silent){}else{ setTxtProgressBar(pb, i)}
       }
       tryCatch({
         list.df = {}
@@ -657,6 +657,7 @@ BLTrimmer = function(meltR.A.fit,
   ####Set up meltR.A####
 
   if (Silent){}else{
+    print("")
     print("Using autotrimmed baselines in meltR.A")
   }
 
@@ -664,13 +665,13 @@ BLTrimmer = function(meltR.A.fit,
   list.df.results = {}
   list.baselines = {}
 
-  pb = txtProgressBar(min = 1, max = nrow(df.best), initial = 1, style = 3)
+  if (Silent){}else{pb = txtProgressBar(min = 1, max = nrow(df.best), initial = 1, style = 3)}
 
   stime2 <- system.time({
 
   for (k in 1:nrow(df.best)){
 
-    setTxtProgressBar(pb, k)
+    if(Silent){}else{setTxtProgressBar(pb, k)}
 
     df.raw = meltR.A.fit$BLTrimmer.data[[1]]
 
