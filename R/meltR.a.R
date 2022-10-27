@@ -329,12 +329,13 @@ meltR.A = function(data_frame,
   if (length(extcoef) == 2){
     ct <- c()
     for (i in c(1:length(unique(no.background$Sample)))){
+      #print(i)
       samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
       df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
           if (is.atomic(extcoef)){
-            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[j]))
+            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
           }else{
-            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[j]))
+            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[1]))
           }
         samples[[i]]$Ct <- ct[i]
     }
