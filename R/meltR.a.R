@@ -12,7 +12,7 @@
 #'
 #'@param data_frame data_frame containing absorbance melting data
 #'@param blank The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, he identity of the blank, for example, blank = 1 or blank = "blank". If there are multiple blanks in the data, blank = list(c("Sample 1", "Blank 1"), c("Sample 2", "Blank 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.
-#'@param NucAcid A vector containing the Nucleic acid type and the sequences you are fitting for calculating extinction coefficients. Examples: c("RNA", "UUUUUU", "AAAAAA"), c("DNA", "GCTAGC"), etc... . For a custom extinction coefficient enter "Custom" followed by the molar extinction coefficients for every nucleic acid in the sample. For example, c("Custom", 10000, 20000).
+#'@param NucAcid A vector containing the Nucleic acid type and the sequences you are fitting for calculating extinction coefficients. Examples: c("RNA", "UUUUUU", "AAAAAA"), c("DNA", "GCTAGC"), etc... . For a custom extinction coefficient enter "Custom" followed by the molar extinction coefficients for every nucleic acid in the sample. For example, c("Custom", 10000, 20000). For non-absorbance melts, one can supply concentrations directly instead of extinction coefficients. For example, c("Concentration", 6.90e-06, 1.15e-05, 1.81e-05, 2.86e-05, 4.99e-05, 7.62e-05, 1.35e-04, 2.19e-04, 3.50e-04).
 #'@param wavelength The wavelength you are using in the data set in nm. Options for RNA: 300, 295, 290, 285, 280, 275, 270, 265, 260, 255, 250, 245, 240, 235, and 230 nm. Options for DNA 260 nm. Most accurate at pH 7.0.
 #'@param Mmodel The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".
 #'@param Tmodel The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".
@@ -238,41 +238,46 @@ meltR.A = function(data_frame,
 
   ####Calculate extinction coefficients####
 
-  if (NucAcid[1] == "Custom"){
-    extcoef = c(sum(as.numeric(NucAcid[2:length(NucAcid)])), as.numeric(NucAcid[2:length(NucAcid)]))
-    names(extcoef) <- c("Total", as.character(2:length(NucAcid)))
-  }else{
-    tryCatch({
+  if (NucAcid[1] == "Concentration"){
 
-      df.ext = subset(df.ext.data, Wavelength.nm == wavelength)
-      RNA = df.ext$Absorbtivity.M
-      names(RNA) = df.ext$Nucleotide
-      b <- c()
-      b <- strsplit(NucAcid[-which(NucAcid == NucAcid[1])], split = "")
-      c <- {}
-      d <- {}
-      e <- c()
-      for (i in c(1:length(b))){
-        #print(i)
-        c[[i]] <- c(1:(length(b[[i]])-1))
-        d[[i]] <- c(1:(length(b[[i]])))
-        for (j in c(1:(length(b[[i]])-1))){
-          #print(j)
-          c[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", b[[i]][j+1], sep = ""))]]
+  }else{
+    if (NucAcid[1] == "Custom"){
+      extcoef = c(sum(as.numeric(NucAcid[2:length(NucAcid)])), as.numeric(NucAcid[2:length(NucAcid)]))
+      names(extcoef) <- c("Total", as.character(2:length(NucAcid)))
+    }else{
+      tryCatch({
+
+        df.ext = subset(df.ext.data, Wavelength.nm == wavelength)
+        RNA = df.ext$Absorbtivity.M
+        names(RNA) = df.ext$Nucleotide
+        b <- c()
+        b <- strsplit(NucAcid[-which(NucAcid == NucAcid[1])], split = "")
+        c <- {}
+        d <- {}
+        e <- c()
+        for (i in c(1:length(b))){
+          #print(i)
+          c[[i]] <- c(1:(length(b[[i]])-1))
+          d[[i]] <- c(1:(length(b[[i]])))
+          for (j in c(1:(length(b[[i]])-1))){
+            #print(j)
+            c[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", b[[i]][j+1], sep = ""))]]
+          }
+          for (j in c(1:(length(b[[i]])))){
+            d[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", sep = ""))]]
+          }
+          e[i] <- 2*sum(c[[i]]) - sum(d[[i]])
         }
-        for (j in c(1:(length(b[[i]])))){
-          d[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", sep = ""))]]
+        extcoef <- list()
+        extcoef[[1]] <- sum(e)
+        for (i in c(1:length(b))){
+          extcoef[[i+1]] <- e[i]
         }
-        e[i] <- 2*sum(c[[i]]) - sum(d[[i]])
-      }
-      extcoef <- list()
-      extcoef[[1]] <- sum(e)
-      for (i in c(1:length(b))){
-        extcoef[[i+1]] <- e[i]
-      }
-      names(extcoef) <- c("Total", NucAcid[c(2:length(NucAcid))])
-    },
-             error = function(e){print("There is no nucleotide extinction coefficient at this wavelength for a nucleotide you specified in your sequence. You will need to provide your own custom extinction coefficient")})
+        names(extcoef) <- c("Total", NucAcid[c(2:length(NucAcid))])
+      },
+      error = function(e){print("There is no nucleotide extinction coefficient at this wavelength for a nucleotide you specified in your sequence. You will need to provide your own custom extinction coefficient")})
+    }
+
   }
 
   ####Remove values not in fitTs####
@@ -308,46 +313,64 @@ meltR.A = function(data_frame,
   }
 
   ####Calculate Ct for each curve####
-  samples <- {}
-  if (length(extcoef) == 3){
-    ct <- c()
+
+  if (NucAcid[1] == "Concentration"){
+    ct <- as.numeric(NucAcid[2:length(NucAcid)])
+    samples = {}
     for (i in c(1:length(unique(no.background$Sample)))){
       samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-      df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
-      for (j in c(length(df.raw$Sample):1)){
-        if (df.raw$Temperature[j] > concT){
-          if (is.atomic(extcoef)){
-            ct[i] <- (df.raw$Absorbance[j]/(extcoef[[1]]*df.raw$Pathlength[j]))
-          }else{
-            ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
+      samples[[i]]$Ct <- ct[i]
+    }
+    k <- samples[[1]]
+    if (length(samples) > 1){
+      for (i in c(2:length(samples))){
+        #print(i)
+        k <- rbind(k, samples[[i]])
+      }
+    }
+    no.background <- k
+  }else{
+    samples <- {}
+    if (length(extcoef) == 3){
+      ct <- c()
+      for (i in c(1:length(unique(no.background$Sample)))){
+        samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
+        df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
+        for (j in c(length(df.raw$Sample):1)){
+          if (df.raw$Temperature[j] > concT){
+            if (is.atomic(extcoef)){
+              ct[i] <- (df.raw$Absorbance[j]/(extcoef[[1]]*df.raw$Pathlength[j]))
+            }else{
+              ct[i] <- (df.raw$Absorbance[j]/(extcoef$Total*df.raw$Pathlength[j]))
+            }
           }
+          samples[[i]]$Ct <- ct[i]
+        }
+      }
+    }
+    if (length(extcoef) == 2){
+      ct <- c()
+      for (i in c(1:length(unique(no.background$Sample)))){
+        #print(i)
+        samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
+        df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
+        if (is.atomic(extcoef)){
+          ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
+        }else{
+          ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[1]))
         }
         samples[[i]]$Ct <- ct[i]
       }
     }
-  }
-  if (length(extcoef) == 2){
-    ct <- c()
-    for (i in c(1:length(unique(no.background$Sample)))){
-      #print(i)
-      samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-      df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
-          if (is.atomic(extcoef)){
-            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
-          }else{
-            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[1]))
-          }
-        samples[[i]]$Ct <- ct[i]
+    k <- samples[[1]]
+    if (length(samples) > 1){
+      for (i in c(2:length(samples))){
+        k <- rbind(k, samples[[i]])
+      }
     }
-  }
-  k <- samples[[1]]
-  if (length(samples) > 1){
-    for (i in c(2:length(samples))){
-      k <- rbind(k, samples[[i]])
-    }
-  }
+    no.background = k
 
-  no.background <- subset(k, Sample != blank)
+  }
 
   ####Remove outliers####
 
@@ -355,7 +378,7 @@ meltR.A = function(data_frame,
 
   }else{
     for (i in 1:length(outliers)){
-      no.background = subset(data_frame, Sample != outliers[i])
+      no.background = subset(no.background, Sample != outliers[i])
     }
   }
 

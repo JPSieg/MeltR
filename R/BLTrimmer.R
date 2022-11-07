@@ -188,16 +188,22 @@ BLTrimmer = function(meltR.A.fit,
 
   for (i in 1:length(Samples)){
     list.df.raw[[i]] = subset(meltR.A.fit$BLTrimmer.data[[1]], Sample == Samples[i])
-    list.df.raw[[i]]$Ct = exp(meltR.A.fit$Method.2.data$lnCt[i])
+    list.df.raw[[i]]$Ct = meltR.A.fit$Method.1.indvfits$Ct[i]
   }
 
   ####Calculate the fraction unfolded for each reading####
 
   for (i in 1:length(Samples)){
-    list.df.raw[[i]]$f = f(coef(meltR.A.fit$Method.3.fit)[1],
-                           coef(meltR.A.fit$Method.3.fit)[2],
-                           list.df.raw[[i]]$Temperature,
-                           list.df.raw[[i]]$Ct)
+    if (Mmodel == "Monomolecular.2State"){
+      list.df.raw[[i]]$f = f(coef(meltR.A.fit$Method.3.fit)[1],
+                             coef(meltR.A.fit$Method.3.fit)[2],
+                             list.df.raw[[i]]$Temperature)
+    }else{
+      list.df.raw[[i]]$f = f(coef(meltR.A.fit$Method.3.fit)[1],
+                             coef(meltR.A.fit$Method.3.fit)[2],
+                             list.df.raw[[i]]$Temperature,
+                             list.df.raw[[i]]$Ct)
+    }
   }
 
   ####Find the no trim range####
@@ -370,7 +376,13 @@ BLTrimmer = function(meltR.A.fit,
                             nls.control(tol = 5e-04, minFactor = 1e-10, maxiter = 50, warnOnly = TRUE))
           }
           indvfits.H[j] = coef(fit[[j]])[1]
-          indvfits.S[j] = calcS(coef(fit[[j]])[1], coef(fit[[j]])[2], a[[j]]$Ct[1])
+
+          if (Mmodel == "Monomolecular.2State"){
+            indvfits.S[j] = calcS(coef(fit[[j]])[1], coef(fit[[j]])[2])
+          }else{
+            indvfits.S[j] = calcS(coef(fit[[j]])[1], coef(fit[[j]])[2], a[[j]]$Ct[1])
+          }
+
           indvfits.Tm[j] = coef(fit[[j]])[2]
           indvfits.Ct[j] = a[[j]]$Ct[1]
           mED[j] = coef(fit[[j]])[3]
@@ -386,19 +398,28 @@ BLTrimmer = function(meltR.A.fit,
 
         ####Method 2####
 
-        lnCt = log(indvfits.Ct)
-        Tm = indvfits.Tm
-        Tm_data = data.frame(lnCt, Tm)
-        Tm_data$invT <- 1/(Tm_data$Tm + 273.15)
-        Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
-                              data = Tm_data,
-                              start = list(H = dH1[i], S = dS1[i]))
+        if (Mmodel == "Monomolecular.2State"){
+          dH2[i] = NA
+          dS2[i] = NA
+          frac.dH1.dH2.error[i] = NA
+          frac.dH1.error[i] = abs(sd(indvfits.H)/mean(indvfits.H))
+        }else{
 
-        dH2[i] = coef(Tm_vs_lnCt_fit)[1]
-        dS2[i] = coef(Tm_vs_lnCt_fit)[2]
+          lnCt = log(indvfits.Ct)
+          Tm = indvfits.Tm
+          Tm_data = data.frame(lnCt, Tm)
+          Tm_data$invT <- 1/(Tm_data$Tm + 273.15)
+          Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
+                                data = Tm_data,
+                                start = list(H = dH1[i], S = dS1[i]))
 
-        frac.dH1.error[i] = abs(sd(indvfits.H)/mean(indvfits.H))
-        frac.dH1.dH2.error[i] = abs(dH1[i] - dH2[i])/abs(mean(dH1[i], dH2[i]))
+          dH2[i] = coef(Tm_vs_lnCt_fit)[1]
+          dS2[i] = coef(Tm_vs_lnCt_fit)[2]
+
+          frac.dH1.dH2.error[i] = abs(dH1[i] - dH2[i])/abs(mean(dH1[i], dH2[i]))
+          frac.dH1.error[i] = abs(sd(indvfits.H)/mean(indvfits.H))
+        }
+
 
       },
       error = function(e){})
@@ -461,25 +482,43 @@ BLTrimmer = function(meltR.A.fit,
 
   ####Quantilize data####
 
-
   quantiles.dH1.error = quantile(baselines$frac.dH1.error, seq(0, 1, length.out = nrow(baselines)))
-  quantiles.dH1.dH2.error = quantile(baselines$frac.dH1.dH2.error, seq(0, 1, length.out = nrow(baselines)))
+
+  if (Mmodel == "Monomolecular.2State"){
+    quantiles.dH1.dH2.error = NA
+  }else{
+    quantiles.dH1.dH2.error = quantile(baselines$frac.dH1.dH2.error, seq(0, 1, length.out = nrow(baselines)))
+  }
+
 
   dH1.error.quantile = c()
   dH1.dH2.error.quantile = c()
 
   for (i in 1:nrow(baselines)) {
     dH1.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.error - baselines$frac.dH1.error[i]))]))/100
-    dH1.dH2.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.dH2.error - baselines$frac.dH1.dH2.error[i]))]))/100
+    if (Mmodel == "Monomolecular.2State"){
+      dH1.dH2.error.quantile[i] = NA
+    }else{
+      dH1.dH2.error.quantile[i] = as.numeric(gsub("%", "", names(quantiles.dH1.error)[which.min(abs(quantiles.dH1.dH2.error - baselines$frac.dH1.dH2.error[i]))]))/100
+    }
+
   }
 
-  error.distance = sqrt(dH1.dH2.error.quantile^2 + dH1.error.quantile^2)
+  if (Mmodel == "Monomolecular.2State"){
+    error.distance = NA
+  }else{
+    error.distance = sqrt(dH1.dH2.error.quantile^2 + dH1.error.quantile^2)
+  }
 
   baselines$dH1.error.quantile = dH1.error.quantile
   baselines$dH1.dH2.error.quantile = dH1.dH2.error.quantile
   baselines$error.distance =  error.distance
 
   ####Pull out top 10% of best values based on some criterion####
+
+  if (Mmodel == "Monomolecular.2State"){
+    Assess.method = 1
+  }
 
   #Method 1 agrees with method 1
 
@@ -560,96 +599,132 @@ BLTrimmer = function(meltR.A.fit,
 
     #Histogram 1 agree 2
 
-    hist(baselines$frac.dH1.dH2.error,
-         xlab = "|dH1 - dH2|/Average dH",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         main = "Method 1 dH agrees with Method 2 dH")
-    abline(v = df.best$frac.dH1.dH2.error, col = adjustcolor(color, alpha = 0.3))
+    if (Mmodel == "Monomolecular.2State"){
+      hist(0,
+           xlab = "|dH1 - dH2|/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           main = "Method 1 dH agrees with Method 2 dH")
+    }else{
+      hist(baselines$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           main = "Method 1 dH agrees with Method 2 dH")
+      abline(v = df.best$frac.dH1.dH2.error, col = adjustcolor(color, alpha = 0.3))
+    }
 
 
     #dH vrs. dH1 to dH2 error
 
-    plot(baselines$dH1 ~ baselines$frac.dH1.dH2.error,
-         xlab = "|dH1 - dH2|/Average dH",
-         ylab = "dH1 (black) or dH2 (red)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-         xlim = c(min(baselines$frac.dH1.dH2.error),
-                  max(baselines$frac.dH1.dH2.error)),
-         main = "Method 1 dH agrees with Method 2 dH")
-    par(new=T)
-    plot(baselines$dH2 ~ baselines$frac.dH1.dH2.error,
-         xlab = "|dH1 - dH2|/Average dH",
-         ylab = "dH1 (black) or dH2 (red)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "red",
-         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-         xlim = c(min(baselines$frac.dH1.dH2.error),
-                  max(baselines$frac.dH1.dH2.error)))
-    par(new=T)
-    plot(df.best$dH1 ~ df.best$frac.dH1.dH2.error,
-         xlab = "|dH1 - dH2|/Average dH",
-         ylab = "dH1 (black) or dH2 (red)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
-         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-         xlim = c(min(baselines$frac.dH1.dH2.error),
-                  max(baselines$frac.dH1.dH2.error)))
-    par(new=T)
-    plot(df.best$dH2 ~ df.best$frac.dH1.dH2.error,
-         xlab = "|dH1 - dH2|/Average dH",
-         ylab = "dH1 (black) or dH2 (red)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
-         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-         xlim = c(min(baselines$frac.dH1.dH2.error),
-                  max(baselines$frac.dH1.dH2.error)))
+    if (Mmodel == "Monomolecular.2State"){
+      plot(0 ~ 1,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "dH1 (black) or dH2 (red)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           main = "Method 1 dH agrees with Method 2 dH")
+    }else{
+      plot(baselines$dH1 ~ baselines$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "dH1 (black) or dH2 (red)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)),
+           main = "Method 1 dH agrees with Method 2 dH")
+      par(new=T)
+      plot(baselines$dH2 ~ baselines$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "dH1 (black) or dH2 (red)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "red",
+           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)))
+      par(new=T)
+      plot(df.best$dH1 ~ df.best$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "dH1 (black) or dH2 (red)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
+           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)))
+      par(new=T)
+      plot(df.best$dH2 ~ df.best$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "dH1 (black) or dH2 (red)",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
+           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)))
+    }
+
+
 
     #dH1 to dH2 error quantile verseus dH1 error quantile
 
-    plot(baselines$dH1.error.quantile ~ baselines$dH1.dH2.error.quantile,
-         xlab = "Quantile |dH1 - dH2|/Average dH",
-         ylab = "Quantile SD(dH1)/Average dH",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         ylim = c(0,1),
-         xlim = c(0,1),
-         main = "Error distance")
-    par(new=T)
-    plot(df.best$dH1.error.quantile ~ df.best$dH1.dH2.error.quantile,
-         xlab = "Quantile |dH1 - dH2|/Average dH",
-         ylab = "Quantile SD(dH1)/Average dH",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
-         ylim = c(0,1),
-         xlim = c(0,1))
-    for (i in 1:nrow(df.best)){
-      segments(x0 = 0,
-               y0 = 0,
-               x1 = df.best$dH1.dH2.error.quantile[i],
-               y1 = df.best$dH1.error.quantile[i],
-               col = adjustcolor(color, alpha = 0.3))
+    if (Mmodel == "Monomolecular.2State"){
+      plot(0 ~ 1,
+           xlab = "Quantile |dH1 - dH2|/Average dH",
+           ylab = "Quantile SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           main = "Error distance")
+    }else{
+      plot(baselines$dH1.error.quantile ~ baselines$dH1.dH2.error.quantile,
+           xlab = "Quantile |dH1 - dH2|/Average dH",
+           ylab = "Quantile SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           ylim = c(0,1),
+           xlim = c(0,1),
+           main = "Error distance")
+      par(new=T)
+      plot(df.best$dH1.error.quantile ~ df.best$dH1.dH2.error.quantile,
+           xlab = "Quantile |dH1 - dH2|/Average dH",
+           ylab = "Quantile SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
+           ylim = c(0,1),
+           xlim = c(0,1))
+      for (i in 1:nrow(df.best)){
+        segments(x0 = 0,
+                 y0 = 0,
+                 x1 = df.best$dH1.dH2.error.quantile[i],
+                 y1 = df.best$dH1.error.quantile[i],
+                 col = adjustcolor(color, alpha = 0.3))
+      }
     }
+
+
 
     #dH1 error verseus dH1 to dH2 error
 
-    plot(baselines$frac.dH1.error ~ baselines$frac.dH1.dH2.error,
-         xlab = "|dH1 - dH2|/Average dH",
-         ylab = "SD(dH1)/Average dH",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         ylim = c(min(baselines$frac.dH1.error),
-                  max(baselines$frac.dH1.error)),
-         xlim = c(min(baselines$frac.dH1.dH2.error),
-                  max(baselines$frac.dH1.dH2.error)),
-         main = "Error distance")
-    par(new=T)
-    plot(df.best$frac.dH1.error ~ df.best$frac.dH1.dH2.error,
-         xlab = "|dH1 - dH2|/Average dH",
-         ylab = "SD(dH1)/Average dH",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
-         ylim = c(min(baselines$frac.dH1.error),
-                  max(baselines$frac.dH1.error)),
-         xlim = c(min(baselines$frac.dH1.dH2.error),
-                  max(baselines$frac.dH1.dH2.error)))
+    if (Mmodel == "Monomolecular.2State"){
+      plot(0 ~ 1,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           main = "Error distance")
+    }else{
+      plot(baselines$frac.dH1.error ~ baselines$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           ylim = c(min(baselines$frac.dH1.error),
+                    max(baselines$frac.dH1.error)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)),
+           main = "Error distance")
+      par(new=T)
+      plot(df.best$frac.dH1.error ~ df.best$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           ylab = "SD(dH1)/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
+           ylim = c(min(baselines$frac.dH1.error),
+                    max(baselines$frac.dH1.error)),
+           xlim = c(min(baselines$frac.dH1.dH2.error),
+                    max(baselines$frac.dH1.dH2.error)))
+    }
+
     dev.off()
 
   }
@@ -730,7 +805,7 @@ BLTrimmer = function(meltR.A.fit,
   df.result = list.df.results[[1]]
 
   for (i in 2:length(list.meltR.A.fit)){
-    df.result = bind_rows(df.result, list.df.results[[i]])
+    df.result = rbind(df.result, list.df.results[[i]])
   }
 
   df1.data = subset(df.result, Method == "1 individual fits")

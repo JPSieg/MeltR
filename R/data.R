@@ -68,3 +68,53 @@
 #'   \item{\code{Absorbance}}{ The absorbance at 260 nm}
 #'}
 "df.FAM.C.BHQ1.data"
+
+# This goes in R/data.R
+
+#' @title df.test.data
+#' @description Modeled absorbance melting curves for a data sets used in the testing protocols.
+#' @format A data frame with 14661 rows and 5 variables:
+#' \describe{
+#'   \item{\code{Sample}}{ The sample melted in different cuvettes. Sample 1 is a buffer blank and other samples contain different concentrations of RNA}
+#'   \item{\code{Temperature}}{ The temperature where the absorbance was recorded, in degrees Celcius}
+#'   \item{\code{Pathlength}}{ The pathlength of the cuvette for each sample in cm}
+#'   \item{\code{Absorbance}}{ The absorbance at 260 nm}
+#'   \item{\code{DS}}{ The data set. DS1: A monomolecular 2 state helix with no blanks.  DS2: A Heteroduplex 2 state helix with no blanks. DS3: A Homoduplex 2 state helix with no blanks. DS4: A Monomolecular 2 state helix with 1 blank. DS5: A Heteroduplex 2 state helix with 1 blank. DS6: A Homoduplex 2 state helix with 1 blank. DS7: A Monomolecular 2 state helix with 3 blanks. DS8: A Heteroduplex 2 state helix with 3 blanks.  DS9: A Homoduplex 2 state helix with 3 blanks.}
+#'}
+"df.test.data"
+
+# This goes in R/data.R
+
+#' @title df.test.parameters
+#' @description A data frame describing variables to run the meltR.A testing protocol.
+#' @format A data frame with 3888 rows and 9 variables:
+#' \describe{
+#'   \item{\code{blank}}{The method used to blank the data set}
+#'   \item{\code{methods}}{The methods to use in the data set}
+#'   \item{\code{Mmodel}}{The molecular model}
+#'   \item{\code{NucAcid}}{The nucleic acid or concentrations}
+#'   \item{\code{outliers}}{The outliers to remove}
+#'   \item{\code{Tm_method}}{The method to determine the Tm in method 2}
+#'   \item{\code{Wavelength}}{The wavelength to use for extinction coefficient calculation}
+#'   \item{\code{fitTs}}{What baseline trimming to use}
+#'   \item{\code{DS}}{The data set to use}
+#'}
+"df.test.parameters"
+
+# This goes in R/data.R
+
+#' @title df.test.results
+#' @description The expected results from the testing protocol if everything is working.
+#' @format A data frame with 10368 rows and 9 variables:
+#' \describe{
+#'   \item{\code{Method}}{The meltR.A method}
+#'   \item{\code{dH}}{The enthalpy in kcal/mol}
+#'   \item{\code{SE.dH}}{The error in the enthalpy in kcal/mol}
+#'   \item{\code{dS}}{The entropy in cal/mol/K}
+#'   \item{\code{SE.dS}}{The error in the entropy in cal/mol/K}
+#'   \item{\code{dG}}{The Gibbs free energy at 37C in kcal/mol}
+#'   \item{\code{SE.dG}}{The error in the Gibbs free energy at 37C in kcal/mol}
+#'   \item{\code{Tm_at_0.1mM}}{An expectation maximized Tm at Ct = 0.1 mM in Celcius}
+#'   \item{\code{SE.Tm_at_0.1mM}}{The error in the expectation maximized Tm at Ct = 0.1 mM in Celcius}
+#'}
+"df.test.results"
