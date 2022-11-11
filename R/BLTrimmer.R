@@ -12,8 +12,8 @@
 #'@param range.step.fixed. Temperature difference between each range that is generated using the fixed method.
 #'@param no.trim.range Determines the range where the absorbance data will not be trimmed. By default, no.trim.range = c(0.2, 0.8), meaning that the data will not be trimmed at a mode fraction double stranded greater than 0.2 and less than 0.8. Determined using the global fit from the input object created by meltR.A.
 #'@param quantile.threshold Threshold for assessing the best baseline combinations
-#'@param parallel Set to "on" if you want to use multiple cores to fit baselines. You will need to run library(doParallel) to load doParallel and its dependencies. You will also need to specify the number of cores in the n.cores argument, which should not exceed the number of cores your computer has. There will be no benefit for running in parallel mode for a single core machine. Default = "none".
-#'@param n.core How many cores do you want to designate for this task.
+#'@param parallel This is argument is not exposed to end users. Contact Jacob Sieg if you are interested. to "on" if you want to use multiple cores to fit baselines. You will need to run library(doParallel) to load doParallel and its dependencies. You will also need to specify the number of cores in the n.cores argument, which should not exceed the number of cores your computer has. There will be no benefit for running in parallel mode for a single core machine. Default = "none".
+#'@param n.core Associated with n.core and not exposed to end users. Contact Jacob Sieg if you are interested. How many cores do you want to designate for this task.
 #'@param Save_results "all" to save results to the disk or "none" to not save results to the disk.
 #'@param file_path A path to the folder you want your results saved in.
 #'@param file_prefix Prefix that you want on the saved files.
@@ -34,7 +34,7 @@ BLTrimmer = function(meltR.A.fit,
                      file_path = getwd(),
                      file_prefix = "BLTrimmer",
                      Silent = FALSE){
-  ####Potential arguments for parrellel computing on multicore machines####
+  ####Potential arguments for parallel computing on multicore machines####
 
   parallel = "none" #This will keep the parallel code from running on accident
   n.core = 1
@@ -816,7 +816,7 @@ BLTrimmer = function(meltR.A.fit,
 
   if (Trim.method == "fixed"){
     df.1 = data.frame("Method" = "1 individual fits",
-                      "H" = round(mean(df1.data$dH), digits = 2),
+                      "dH" = round(mean(df1.data$dH), digits = 2),
                       "SE.dH" = round(sd(df1.data$dH), digits = 2),
                       "dS" = round(mean(df1.data$dS), digits = 2),
                       "SE.dS"= round(sd(df1.data$dS), digits = 2),

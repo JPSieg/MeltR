@@ -118,3 +118,29 @@
 #'   \item{\code{SE.Tm_at_0.1mM}}{The error in the expectation maximized Tm at Ct = 0.1 mM in Celcius}
 #'}
 "df.test.results"
+
+# This goes in R/data.R
+
+#' @title df.BLtrimmer.test.parameters
+#' @description A data frame describing variables to run the BLtrimmer testing protocol.
+#' @format A data frame with 30 rows and 3 variables:
+#' \describe{
+#'   \item{\code{Trim.method}}{The method used to generate trimmed baselines}
+#'   \item{\code{Assess.method}}{The method used to assess baseline combinations}
+#'   \item{\code{quantile.threshold}}{The quantile threshold for baseline combinations to be passed to the results}
+#'}
+"df.test.parameters"
+
+# This goes in R/data.R
+
+#' @title df.BLtrimmer.test.results
+#' @description The expected results from the testing protocol if everything is working.
+#' @format A data frame with 90 rows and 5 variables:
+#' \describe{
+#'   \item{\code{Method}}{The meltR.A method}
+#'   \item{\code{dH}}{The enthalpy in kcal/mol}
+#'   \item{\code{dS}}{The entropy in cal/mol/K}
+#'   \item{\code{dG}}{The Gibbs free energy at 37C in kcal/mol}
+#'   \item{\code{Tm_at_0.1mM}}{An expectation maximized Tm at Ct = 0.1 mM in Celcius}
+#'}
+"df.BLtrimmer.test.results"

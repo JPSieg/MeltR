@@ -17,11 +17,22 @@ A data frame with 3888 rows and 9 variables:
 \item{\code{fitTs}}{What baseline trimming to use}
 \item{\code{DS}}{The data set to use}
 }
+
+A data frame with 30 rows and 3 variables:
+\describe{
+\item{\code{Trim.method}}{The method used to generate trimmed baselines}
+\item{\code{Assess.method}}{The method used to assess baseline combinations}
+\item{\code{quantile.threshold}}{The quantile threshold for baseline combinations to be passed to the results}
+}
 }
 \usage{
+df.test.parameters
+
 df.test.parameters
 }
 \description{
 A data frame describing variables to run the meltR.A testing protocol.
+
+A data frame describing variables to run the BLtrimmer testing protocol.
 }
 \keyword{datasets}

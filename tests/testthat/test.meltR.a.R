@@ -1,4 +1,3 @@
-devtools::load_all()
 
 df.set = df.test.data
 df = df.test.parameters

@@ -1,43 +1,42 @@
-#'Fit absorbance melting curves to obtain thermodynamic parameters
+#'Fits melting curves to obtain thermodynamic parameters
 #'
-#'Automates the trivial but time-consuming tasks associated with non-linear regression.
+#'Automates the trivial but time-consuming tasks associated with non-linear regression analysis of melting curves.
 #'Calculates extinction coefficients, subtracts out the baseline buffer readings, and
 #'calculates the strand concentration, Ct, in each sample. Then uses three non-linear regression
 #'methods to calculate thermodynamic parameters. Method 1 fits each melting curve individually
-#'then reports the average H and S from all of the curves. Method 2 calculates the Tm for each
+#'then reports the average dH and dS from all of the curves. Method 2 calculates the Tm for each
 #'melting curve, and calculates thermodynamic parameters by fitting the relationship between Tm
 #'and Ct. Method 3 calculates thermodynamic parameters with a global fit, where H and S are constant
-#'between isotherms and the baslines are allowed to float. Also includes an algorithm that
-#'optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
+#'between isotherms and the baselines are allowed to float.
 #'
-#'@param data_frame data_frame containing absorbance melting data
-#'@param blank The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, he identity of the blank, for example, blank = 1 or blank = "blank". If there are multiple blanks in the data, blank = list(c("Sample 1", "Blank 1"), c("Sample 2", "Blank 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.
+#'@param data_frame data_frame containing absorbance melting data. Requires Sample, Pathlength, Temperature, and Absorbance columns.
+#'@param blank The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, the identity of the blank, for example, blank = 1 or blank = "blank". If there are multiple blanks in the data, blank = list(c("Sample 1", "Blank 1"), c("Sample 2", "Blank 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using.
 #'@param NucAcid A vector containing the Nucleic acid type and the sequences you are fitting for calculating extinction coefficients. Examples: c("RNA", "UUUUUU", "AAAAAA"), c("DNA", "GCTAGC"), etc... . For a custom extinction coefficient enter "Custom" followed by the molar extinction coefficients for every nucleic acid in the sample. For example, c("Custom", 10000, 20000). For non-absorbance melts, one can supply concentrations directly instead of extinction coefficients. For example, c("Concentration", 6.90e-06, 1.15e-05, 1.81e-05, 2.86e-05, 4.99e-05, 7.62e-05, 1.35e-04, 2.19e-04, 3.50e-04).
 #'@param wavelength The wavelength you are using in the data set in nm. Options for RNA: 300, 295, 290, 285, 280, 275, 270, 265, 260, 255, 250, 245, 240, 235, and 230 nm. Options for DNA 260 nm. Most accurate at pH 7.0.
 #'@param Mmodel The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".
 #'@param Tmodel The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".
-#'@param concT The temperature used to calculate the NucAcid concentration. Default = 90.
-#'@param outliers A vector containing the identifiers of the outlier samples that you want to remove.
-#'@param fitTs Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit.
-#'@param methods what methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Can be true or false. Note, method 1 must be set to TRUE or the subsequent steps will not work.
+#'@param concT The temperature used to calculate the concentration with Beers law. Default = 90.
+#'@param outliers A vector containing the identifiers of the outlier samples that you want to remove. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using.
+#'@param fitTs Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit. The list should not include vectors for blanks.
+#'@param methods What methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Note, method 1 must be set to TRUE or the subsequent steps will not work. Set to c(TRUE, FALSE, FALSE) to only use method 1.
 #'@param Tm_method either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.
-#'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.
+#'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formatted tables of parameters, "some" to save ".csv" formatted tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
 #'@param auto.trimmed Ignore this argument unless you are writing auto baseline trimmers
 #'@param Silent TRUE to not print data in your console. Default = FALSE.
-#'@return A list of data opject containing raw data, data, transformation, fit objects, and statistics from the fits plotting, exporting, and advanced analysis.
+#'@return A meltR.A fit object containing a list of data objects containing raw data, data, transformation, fit objects, and statistics from the fits plotting, exporting, and advanced analysis.
 #' \itemize{
 #'   \item 1. Summary - A data frame containing the thermodynamic parameters from each method.
 #'   \item 2. Method.1.indvfits - A data frame containing the thermodynamic parameters from the individual fits.
-#'   \item 3. Range - A data frame containing fractional error between Method 1, 2, and 3 for each thermodynamic parameter.
-#'   \item 4. Derivatives.data - A data frame containing the first and second derivatives for each sample containing RNA.
+#'   \item 3. Range - A data frame containing %error between Method 1, 2, and 3 for each thermodynamic parameter.
+#'   \item 4. Derivatives.data - A data frame containing the first and second derivatives for each sample.
 #'   \item 5. Method.1.data - A data frame containing the raw data from method 1 and the model.
-#'   \item 6. Method.1.fit - A list of nls objects containing the fits obtained from fitting melting curves individually. Fit statistics can be extracted here.
+#'   \item 6. Method.1.fit - A list of nls objects containing the fits obtained from fitting melting curves individually. Fit statistics, such as residuals and covariance, can be extracted here.
 #'   \item 7. Method.2.data - A data frame containing the raw data from method 2 and the model.
-#'   \item 8. Method.2.fit - A nls object containing the fit obtained from fitting the relationship of Tm and Ct.
+#'   \item 8. Method.2.fit - A nls object containing the fit obtained from fitting the relationship of Tm and Ct. Fit statistics, such as residuals and covariance, can be extracted here.
 #'   \item 9. Method.3.data - A data frame containing the raw data from method 3 and the model.
-#'   \item 10. Method.3.fit - A nls object containing the fit obtained from fitting the raw data.
+#'   \item 10. Method.3.fit - A nls object containing the fit obtained from fitting the raw data. Fit statistics, such as residuals and covariance, can be extracted here.
 #' }
 #' @export
 meltR.A = function(data_frame,
@@ -95,8 +94,8 @@ meltR.A = function(data_frame,
       calcG = function(H, Tm){H - (310*((H/(273.15 + Tm))))}
       calcG.SE = function(H, Tm, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*(H/(273.15 + Tm)))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
       calcTM = function(H, S, Ct){(H/(S/1000)) - 273.15}
-      calcTM.SE = function(H, S, SE.H, SE.S, Ct){
-        ((H/(S/1000)) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2)
+      calcTM.SE = function(H, S, SE.H, SE.S, Ct, covar){
+        ((H/(S/1000)) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2 - (2*(covar/(H*(S/1000)))))
       }
     }
   }
@@ -123,7 +122,7 @@ meltR.A = function(data_frame,
       calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) }
       calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
       calcTM = function(H, S, Ct){NA}
-      calcTM.SE = function(H, S, SE.H, SE.S, Ct){
+      calcTM.SE = function(H, S, SE.H, SE.S, Ct, covar){
         NA
       }
     }
@@ -154,8 +153,8 @@ meltR.A = function(data_frame,
       calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct)))) }
       calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
       calcTM = function(H, S, Ct){(H/((S/1000) - 0.0019872*log(4/Ct))) - 273.15}
-      calcTM.SE = function(H, S, SE.H, SE.S, Ct){
-        ((H/((S/1000) - 0.0019872*log(4/Ct))) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2)
+      calcTM.SE = function(H, S, SE.H, SE.S, Ct, covar){
+        ((H/((S/1000) - 0.0019872*log(4/Ct))) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2 - (2*(covar/(H*S/1000))))
       }
     }
   }
@@ -185,8 +184,8 @@ meltR.A = function(data_frame,
       calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct)))) }
       calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2)}
       calcTM = function(H, S, Ct){(H/((S/1000) - 0.0019872*log(1/Ct))) - 273.15}
-      calcTM.SE = function(H, S, SE.H, SE.S, Ct){
-        ((H/((S/1000) - 0.0019872*log(1/Ct))) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2)
+      calcTM.SE = function(H, S, SE.H, SE.S, Ct, covar){
+        ((H/((S/1000) - 0.0019872*log(1/Ct))) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2 - (2*(covar/(H*S/1000))))
       }
     }
   }
@@ -791,15 +790,50 @@ meltR.A = function(data_frame,
     row.names(comparison) <- c(1:3)
   }
 
+  ####Expectation maximized Tm calculation####
+
   Tm_at_0.1mM = c()
   SE.Tm_at_0.1mM = c()
 
   for (i in 1:nrow(comparison)){
-    Tm_at_0.1mM[i] =  round(calcTM(H = comparison$H[i], S = comparison$S[i],
+
+    if (i == 1){
+      df.covar = indvfits
+
+      udH = df.covar$dH - mean(df.covar$dH)
+      udS = (df.covar$dS - mean(df.covar$dS))/1000
+      sigma = sum(udH*udS)/nrow(df.covar)
+      dH = mean(df.covar$dH)
+      dS = mean(df.covar$dS)
+      SE.dH = sd(df.covar$dH)
+      SE.dS = sd(df.covar$dS)
+
+    }
+    if (i == 2){
+      if (Mmodel == "Monomolecular.2State"){
+        SE.dH = NA
+        SE.dS = NA
+      }else{
+        sigma = summary(Tm_vs_lnCt_fit)$cov.unscaled[1,2]*(summary(Tm_vs_lnCt_fit)$sigma^2)
+        dH = coef(Tm_vs_lnCt_fit)[1]
+        dS = 1000*coef(Tm_vs_lnCt_fit)[2]
+        SE.dH = coef(summary(Tm_vs_lnCt_fit))[1,2]
+        SE.dS = 1000*coef(summary(Tm_vs_lnCt_fit))[2,2]
+      }
+    }
+    if (i == 3){
+      sigma = summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)
+      dH = coef(gfit)[1]
+      dS = 1000*coef(gfit)[2]
+      SE.dH = coef(summary(gfit))[1,2]
+      SE.dS = 1000*coef(summary(gfit))[2,2]
+    }
+
+    Tm_at_0.1mM[i] =  round(calcTM(H = dH, S = dS,
                              Ct = 10^-4), digits = 2)
-    SE.Tm_at_0.1mM[i] = round(calcTM.SE(H = comparison$H[i], S = comparison$S[i],
-                            SE.H = comparison$SE.H[i], SE.S = comparison$SE.S[i],
-                            Ct = 10^-4), digits = 2)
+    SE.Tm_at_0.1mM[i] = round(calcTM.SE(H = dH, S = dS,
+                            SE.H = SE.dH, SE.S = SE.dS,
+                            Ct = 10^-4, covar = sigma), digits = 2)
   }
 
   comparison$Tm_at_0.1mM = Tm_at_0.1mM
@@ -878,7 +912,7 @@ meltR.A = function(data_frame,
   if (Silent){}else{
     print("Individual curves")
     print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
-    print(indvfits)
+    print(indvfits[order(indvfits$Ct),])
     print("Summary")
     print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
     print(comparison)

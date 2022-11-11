@@ -2,7 +2,7 @@
 % Please edit documentation in R/meltR.a.R
 \name{meltR.A}
 \alias{meltR.A}
-\title{Fit absorbance melting curves to obtain thermodynamic parameters}
+\title{Fits melting curves to obtain thermodynamic parameters}
 \usage{
 meltR.A(
   data_frame,
@@ -24,21 +24,21 @@ meltR.A(
 )
 }
 \arguments{
-\item{data_frame}{data_frame containing absorbance melting data}
+\item{data_frame}{data_frame containing absorbance melting data. Requires Sample, Pathlength, Temperature, and Absorbance columns.}
 
-\item{blank}{The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, he identity of the blank, for example, blank = 1 or blank = "blank". If there are multiple blanks in the data, blank = list(c("Sample 1", "Blank 1"), c("Sample 2", "Blank 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using, in your R console.}
+\item{blank}{The blank sample for background subtraction, or a list of blanks to apply to different samples for background subtraction. "none" to turn off background subtraction. If there is a single blank in the data set, the identity of the blank, for example, blank = 1 or blank = "blank". If there are multiple blanks in the data, blank = list(c("Sample 1", "Blank 1"), c("Sample 2", "Blank 2")) and so on. Sample identifiers should be what they are in the data frame. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using.}
 
 \item{NucAcid}{A vector containing the Nucleic acid type and the sequences you are fitting for calculating extinction coefficients. Examples: c("RNA", "UUUUUU", "AAAAAA"), c("DNA", "GCTAGC"), etc... . For a custom extinction coefficient enter "Custom" followed by the molar extinction coefficients for every nucleic acid in the sample. For example, c("Custom", 10000, 20000). For non-absorbance melts, one can supply concentrations directly instead of extinction coefficients. For example, c("Concentration", 6.90e-06, 1.15e-05, 1.81e-05, 2.86e-05, 4.99e-05, 7.62e-05, 1.35e-04, 2.19e-04, 3.50e-04).}
 
 \item{wavelength}{The wavelength you are using in the data set in nm. Options for RNA: 300, 295, 290, 285, 280, 275, 270, 265, 260, 255, 250, 245, 240, 235, and 230 nm. Options for DNA 260 nm. Most accurate at pH 7.0.}
 
-\item{concT}{The temperature used to calculate the NucAcid concentration. Default = 90.}
+\item{concT}{The temperature used to calculate the concentration with Beers law. Default = 90.}
 
-\item{outliers}{A vector containing the identifiers of the outlier samples that you want to remove.}
+\item{outliers}{A vector containing the identifiers of the outlier samples that you want to remove. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using.}
 
-\item{fitTs}{Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit.}
+\item{fitTs}{Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit. The list should not include vectors for blanks.}
 
-\item{methods}{what methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Can be true or false. Note, method 1 must be set to TRUE or the subsequent steps will not work.}
+\item{methods}{What methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Note, method 1 must be set to TRUE or the subsequent steps will not work. Set to c(TRUE, FALSE, FALSE) to only use method 1.}
 
 \item{Tm_method}{either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.}
 
@@ -46,7 +46,7 @@ meltR.A(
 
 \item{Tmodel}{The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".}
 
-\item{Save_results}{What results to save. Options: "all" to save PDF plots and ".csv" formated tables of parameters, "some" to save ".csv" formated tables of parameters, or "none" to save nothing.}
+\item{Save_results}{What results to save. Options: "all" to save PDF plots and ".csv" formatted tables of parameters, "some" to save ".csv" formatted tables of parameters, or "none" to save nothing.}
 
 \item{file_prefix}{Prefix that you want on the saved files.}
 
@@ -57,28 +57,27 @@ meltR.A(
 \item{Silent}{TRUE to not print data in your console. Default = FALSE.}
 }
 \value{
-A list of data opject containing raw data, data, transformation, fit objects, and statistics from the fits plotting, exporting, and advanced analysis.
+A meltR.A fit object containing a list of data objects containing raw data, data, transformation, fit objects, and statistics from the fits plotting, exporting, and advanced analysis.
 \itemize{
 \item 1. Summary - A data frame containing the thermodynamic parameters from each method.
 \item 2. Method.1.indvfits - A data frame containing the thermodynamic parameters from the individual fits.
-\item 3. Range - A data frame containing fractional error between Method 1, 2, and 3 for each thermodynamic parameter.
-\item 4. Derivatives.data - A data frame containing the first and second derivatives for each sample containing RNA.
+\item 3. Range - A data frame containing \%error between Method 1, 2, and 3 for each thermodynamic parameter.
+\item 4. Derivatives.data - A data frame containing the first and second derivatives for each sample.
 \item 5. Method.1.data - A data frame containing the raw data from method 1 and the model.
-\item 6. Method.1.fit - A list of nls objects containing the fits obtained from fitting melting curves individually. Fit statistics can be extracted here.
+\item 6. Method.1.fit - A list of nls objects containing the fits obtained from fitting melting curves individually. Fit statistics, such as residuals and covariance, can be extracted here.
 \item 7. Method.2.data - A data frame containing the raw data from method 2 and the model.
-\item 8. Method.2.fit - A nls object containing the fit obtained from fitting the relationship of Tm and Ct.
+\item 8. Method.2.fit - A nls object containing the fit obtained from fitting the relationship of Tm and Ct. Fit statistics, such as residuals and covariance, can be extracted here.
 \item 9. Method.3.data - A data frame containing the raw data from method 3 and the model.
-\item 10. Method.3.fit - A nls object containing the fit obtained from fitting the raw data.
+\item 10. Method.3.fit - A nls object containing the fit obtained from fitting the raw data. Fit statistics, such as residuals and covariance, can be extracted here.
 }
 }
 \description{
-Automates the trivial but time-consuming tasks associated with non-linear regression.
+Automates the trivial but time-consuming tasks associated with non-linear regression analysis of melting curves.
 Calculates extinction coefficients, subtracts out the baseline buffer readings, and
 calculates the strand concentration, Ct, in each sample. Then uses three non-linear regression
 methods to calculate thermodynamic parameters. Method 1 fits each melting curve individually
-then reports the average H and S from all of the curves. Method 2 calculates the Tm for each
+then reports the average dH and dS from all of the curves. Method 2 calculates the Tm for each
 melting curve, and calculates thermodynamic parameters by fitting the relationship between Tm
 and Ct. Method 3 calculates thermodynamic parameters with a global fit, where H and S are constant
-between isotherms and the baslines are allowed to float. Also includes an algorithm that
-optimizes the mole ratio of fluorophore labeled strands to quencher labeled strands.
+between isotherms and the baselines are allowed to float.
 }
