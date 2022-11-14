@@ -51,7 +51,5 @@ https://github.com/JPSieg/MeltR/blob/master/Manual.pdf
 
 #4 Video tutorials
 
-
-
-[BLTrimmer_baseline_ensemble_analysis.pdf](https://github.com/JPSieg/MeltR/files/10007382/BLTrimmer_baseline_ensemble_analysis.pdf)
-[Non-two_state_baseline_ensemble_analysis.pdf](https://github.com/JPSieg/MeltR/files/10007383/Non-two_state_baseline_ensemble_analysis.pdf)
+![BLTrimmer_baseline_ensemble_analysis](https://user-images.githubusercontent.com/63312483/201776066-03f6889b-403b-47d3-bf8b-e6bd9a52bd4e.svg)
+![Non-two_state_baseline_ensemble_analysis](https://user-images.githubusercontent.com/63312483/201776071-a4d0e88b-9021-4795-a446-4b74bcfaec46.svg)
