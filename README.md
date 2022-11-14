@@ -50,3 +50,8 @@ The manual, which contains theory and step-by-step instructions for running Melt
 https://github.com/JPSieg/MeltR/blob/master/Manual.pdf
 
 #4 Video tutorials
+
+
+
+[BLTrimmer_baseline_ensemble_analysis.pdf](https://github.com/JPSieg/MeltR/files/10007382/BLTrimmer_baseline_ensemble_analysis.pdf)
+[Non-two_state_baseline_ensemble_analysis.pdf](https://github.com/JPSieg/MeltR/files/10007383/Non-two_state_baseline_ensemble_analysis.pdf)
