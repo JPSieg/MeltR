@@ -50,4 +50,3 @@ The manual, which contains theory and step-by-step instructions for running Melt
 https://github.com/JPSieg/MeltR/blob/master/Manual.pdf
 
 #4 Video tutorials
-
