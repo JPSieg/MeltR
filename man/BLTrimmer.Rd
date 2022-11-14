@@ -18,6 +18,7 @@ BLTrimmer(
   Save_results = "none",
   file_path = getwd(),
   file_prefix = "BLTrimmer",
+  memory.light = TRUE,
   Silent = FALSE
 )
 }
@@ -46,6 +47,8 @@ BLTrimmer(
 
 \item{file_prefix}{Prefix that you want on the saved files.}
 
+\item{memory.light}{Keeps the BLTrimmer from blowing up memory usage. If TRUE, only passes the objects that the BLtrimmer needs to run to the memory. If FALSE passes a much more extensive number of statistics to the memory.}
+
 \item{Silent}{Set to TRUE to not print results}
 
 \item{range.step.fixed.}{Temperature difference between each range that is generated using the fixed method.}
@@ -55,7 +58,16 @@ BLTrimmer(
 \item{n.core}{Associated with n.core and not exposed to end users. Contact Jacob Sieg if you are interested. How many cores do you want to designate for this task.}
 }
 \value{
-A list of data frames containing parameters from the fits and data for plotting the results with ggplot2.
+A BLTrimmer fit object containing a list of data objects for advanced analysis. Set memory.light = FALSE to get the full object.
+\itemize{
+\item 1. Baseline.data - A data frame containing the temperature range for each sample with the dH and dS for methods 1 and 2. Also contains error between each method. This object is not returned when memory.light = TRUE.
+\item 2. List.T.ranges - A list containing the temperature range for each sample and baseline combination tested. This object is not returned when memory.light = TRUE.
+\item 3. List.fits - A list containing the meltR.A fit object for each baseline combination that was passed to the optimum baseline ensemble. This object is not returned when memory.light = TRUE.
+\item 4. Fit.summaries - A data frame containing thermodynamic parameters from a meltR.A fit object for each baseline combination that was passed to the optimum baseline ensemble. This object is not returned when memory.light = TRUE.
+\item 5. Ensemble.energies - A data frame containing the thermodynamic parameters from an analysis of the optimum ensemble energies. This object is returned when memory.light = TRUE.
+\item 6. Fractional.error.between.methods - A data frame containing percent error between methods from an analysis of the optimum ensemble energies. This object is returned when memory.light = TRUE.
+\item 7. System.time - A list containing the system time used by the BLTrimmer run. The first element is how long the fast analysis of many baseline combinations took. The second element is how long the fitting of the optimum baseline ensemble by meltR.A took. This object is returned when memory.light = TRUE.
+}
 }
 \description{
 Automates absorbance data baseline trimming and testing. Generates random permutations of trimmed baseline combinations, fits the data using Method 1 and Method 2, compares the enthalpy difference, and chooses an optimum set of trimmed absorbance melting curves.

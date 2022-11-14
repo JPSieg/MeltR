@@ -262,7 +262,7 @@ meltR.A = function(data_frame,
             #print(j)
             c[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", b[[i]][j+1], sep = ""))]]
           }
-          for (j in c(1:(length(b[[i]])))){
+          for (j in c(2:(length(b[[i]])))){
             d[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", sep = ""))]]
           }
           e[i] <- 2*sum(c[[i]]) - sum(d[[i]])
@@ -814,19 +814,35 @@ meltR.A = function(data_frame,
         SE.dH = NA
         SE.dS = NA
       }else{
+        if (methods[2] == F){
+          sigma = NA
+          dH = NA
+          dS = NA
+          SE.dH = NA
+          SE.dS = NA
+        }else{
         sigma = summary(Tm_vs_lnCt_fit)$cov.unscaled[1,2]*(summary(Tm_vs_lnCt_fit)$sigma^2)
         dH = coef(Tm_vs_lnCt_fit)[1]
         dS = 1000*coef(Tm_vs_lnCt_fit)[2]
         SE.dH = coef(summary(Tm_vs_lnCt_fit))[1,2]
         SE.dS = 1000*coef(summary(Tm_vs_lnCt_fit))[2,2]
       }
+      }
     }
     if (i == 3){
-      sigma = summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)
-      dH = coef(gfit)[1]
-      dS = 1000*coef(gfit)[2]
-      SE.dH = coef(summary(gfit))[1,2]
-      SE.dS = 1000*coef(summary(gfit))[2,2]
+      if (methods[2] == F){
+        sigma = NA
+        dH = NA
+        dS = NA
+        SE.dH = NA
+        SE.dS = NA
+      }else{
+        sigma = summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)
+        dH = coef(gfit)[1]
+        dS = 1000*coef(gfit)[2]
+        SE.dH = coef(summary(gfit))[1,2]
+        SE.dS = 1000*coef(summary(gfit))[2,2]
+      }
     }
 
     Tm_at_0.1mM[i] =  round(calcTM(H = dH, S = dS,

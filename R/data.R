@@ -19,7 +19,7 @@
 # This goes in R/data.R
 
 #' @title df.abs.data
-#' @description Absorbance melting curves for a heteroduplex helix composed of CGAAAGGU/ACCUUUCG. Samples contain strands at equamolar concentrations in 1 M NaCl 20 mM MOPS 0.01 mM EDTA 0.001% SDS pH 7.0.
+#' @description Absorbance melting curves for a heteroduplex helix composed of CGAAAGGU/ACCUUUCG. Samples contain strands at equal-molar concentrations in 1 M NaCl 20 mM MOPS 0.01 mM EDTA 0.001% SDS pH 7.0.
 #' @format A data frame with 1800 rows and 4 variables:
 #' \describe{
 #'   \item{\code{Sample}}{ The sample melted in different cuvettes. Sample 1 is a buffer blank and other samples contain different concentrations of RNA}
@@ -28,6 +28,19 @@
 #'   \item{\code{Absorbance}}{ The absorbance at 260 nm}
 #'}
 "df.abs.data"
+
+# This goes in R/data.R
+
+#' @title df.abs.non2S
+#' @description Absorbance melting curves for a heteroduplex helix composed of CGCGUUAUAU/AUAUUUCGCG. Samples contain strands at equal-molar concentrations in 1 M NaCl 20 mM MOPS 0.01 mM EDTA 0.001% SDS pH 7.0.
+#' @format A data frame with 1448 rows and 4 variables:
+#' \describe{
+#'   \item{\code{Sample}}{ The sample melted in different cuvettes. Sample 1 is a buffer blank and other samples contain different concentrations of RNA}
+#'   \item{\code{Pathlength}}{ The pathlength of the cuvette for each sample in cm}
+#'   \item{\code{Temperature}}{ The temperature where the absorbance was recorded, in degrees Celcius}
+#'   \item{\code{Absorbance}}{ The absorbance at 260 nm}
+#'}
+"df.abs.non2S"
 
 # This goes in R/data.R
 

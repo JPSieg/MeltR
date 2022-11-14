@@ -17,8 +17,18 @@
 #'@param Save_results "all" to save results to the disk or "none" to not save results to the disk.
 #'@param file_path A path to the folder you want your results saved in.
 #'@param file_prefix Prefix that you want on the saved files.
+#'@param memory.light Keeps the BLTrimmer from blowing up memory usage. If TRUE, only passes the objects that the BLtrimmer needs to run to the memory. If FALSE passes a much more extensive number of statistics to the memory.
 #'@param Silent Set to TRUE to not print results
-#'@return A list of data frames containing parameters from the fits and data for plotting the results with ggplot2.
+#'@return  A BLTrimmer fit object containing a list of data objects for advanced analysis. Set memory.light = FALSE to get the full object.
+#' \itemize{
+#'   \item 1. Baseline.data - A data frame containing the temperature range for each sample with the dH and dS for methods 1 and 2. Also contains error between each method. This object is not returned when memory.light = TRUE.
+#'   \item 2. List.T.ranges - A list containing the temperature range for each sample and baseline combination tested. This object is not returned when memory.light = TRUE.
+#'   \item 3. List.fits - A list containing the meltR.A fit object for each baseline combination that was passed to the optimum baseline ensemble. This object is not returned when memory.light = TRUE.
+#'   \item 4. Fit.summaries - A data frame containing thermodynamic parameters from a meltR.A fit object for each baseline combination that was passed to the optimum baseline ensemble. This object is not returned when memory.light = TRUE.
+#'   \item 5. Ensemble.energies - A data frame containing the thermodynamic parameters from an analysis of the optimum ensemble energies. This object is returned when memory.light = TRUE.
+#'   \item 6. Fractional.error.between.methods - A data frame containing percent error between methods from an analysis of the optimum ensemble energies. This object is returned when memory.light = TRUE.
+#'   \item 7. System.time - A list containing the system time used by the BLTrimmer run. The first element is how long the fast analysis of many baseline combinations took. The second element is how long the fitting of the optimum baseline ensemble by meltR.A took. This object is returned when memory.light = TRUE.
+#'   }
 #' @export
 BLTrimmer = function(meltR.A.fit,
                      Trim.method = "floating",
@@ -33,6 +43,7 @@ BLTrimmer = function(meltR.A.fit,
                      Save_results = "none",
                      file_path = getwd(),
                      file_prefix = "BLTrimmer",
+                     memory.light = TRUE,
                      Silent = FALSE){
   ####Potential arguments for parallel computing on multicore machines####
 
@@ -792,14 +803,16 @@ BLTrimmer = function(meltR.A.fit,
                           Tmodel = meltR.A.fit$meltR.A.settings[[8]],
                           auto.trimmed = fitstart,
                           Silent = TRUE)
-
-    list.meltR.A.fit[[k]] = meltR.A.fit
-    list.df.results[[k]] = meltR.A.fit$Summary
-    list.baselines[[k]] = list.T.range
-
-
+    if (memory.light){
+      list.meltR.A.fit[[k]] = NA
+      list.df.results[[k]] = meltR.A.fit$Summary
+      list.baselines[[k]] = NA
+    }else{
+      list.meltR.A.fit[[k]] = meltR.A.fit
+      list.df.results[[k]] = meltR.A.fit$Summary
+      list.baselines[[k]] = list.T.range
+    }
   }
-
   })
 
   df.result = list.df.results[[1]]
@@ -885,6 +898,13 @@ BLTrimmer = function(meltR.A.fit,
   stime = list(stime, stime2)
 
   names(stime) = c("all", "meltR.A")
+
+  if (memory.light){
+    baselines = NA
+    list.baselines = NA
+    list.meltR.A.fit = NA
+    df.result = NA
+  }
 
   output = list(baselines,
                 list.baselines,

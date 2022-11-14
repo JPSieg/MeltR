@@ -29,7 +29,7 @@ calc.extcoeff = function(NucAcid, wavelength = 260){
       for (j in c(1:(length(b[[i]])-1))){
         c[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", b[[i]][j+1], sep = ""))]]
       }
-      for (j in c(1:(length(b[[i]])))){
+      for (j in c(2:(length(b[[i]])))){
         d[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", sep = ""))]]
       }
       e[i] <- 2*sum(c[[i]]) - sum(d[[i]])

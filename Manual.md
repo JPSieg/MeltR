@@ -10,7 +10,7 @@ Jacob P. Sieg\textsuperscript{[1],[2]}, Philip C. Bevilacqua\textsuperscript{[1]
 
 \textsuperscript{[3]}Department of Biochemistry and Molecular Biology, Pennsylvania State University, University Park, PA 16802.
 
-Last update, 05/16/2022
+Last update, 11/14/2022
 
 # 1 Overview
 
@@ -33,19 +33,12 @@ install.packages("devtools")
 devtools::install_github("JPSieg/MeltR")
 ```
 
-Most of MeltR is written entirely in base R and requires no other dependencies. However, if you want to use the BLTrimmer (see section 4.2.7) in parallel mode, you will need to install "doParallel" and its dependencies. In your R console:
-
-```{r}
-install.packages("doParallel")
-```
-
-Lastly, Rstudio, the tidyverse, and ggrepel, are recommended software and packages for running MeltR. You can find instructions for installing Rstudio here: "https://www.rstudio.com/products/rstudio/download/". The free version is excellent. Tidyverse and ggrepel can be installed from your R console.
+MeltR is written entirely in base R and requires no other dependencies. However, Rstudio, the tidyverse, and ggrepel, are recommended software and packages for running MeltR. You can find instructions for installing Rstudio here: "https://www.rstudio.com/products/rstudio/download/". The free version is excellent. Tidyverse and ggrepel can be installed from your R console.
 
 ```{r}
 install.packages("tidyverse")
 install.packages("ggrepel")
 ```
-
 
 # 3 Theory
 
@@ -53,27 +46,40 @@ install.packages("ggrepel")
 
 MeltR can obtains thermodynamic parameters from fluorescence binding isotherms for heteroduplex DNA and RNA using the non-linear regression function in base R, "nls". In this strategy, a quencher labeled strand is titrated into different wells in a qPCR plate containing a constant concentration of fluorophore labeled strand. The fluorophore labeled strand binds to the quencher labeled strand, reducing the fluorescence emission (E) and resulting in an apparent fluorescence binding isotherm, where the shape of the curve is determined by Equation 1.
 
-$$E = F_{max} + (F_{min} - F_{max})*F(K_{D}, [A]_{T}, [B]_{T}) \qquad (1)$$
+\begin{equation} \label{eqn}
+E = F_{max} + (F_{min} - F_{max})*F(K_{D}, [A]_{T}, [B]_{T})
+	\end{equation}
 
-Where F\textsubscript{max} is the fluorescence emission of unbound fluorophore labeled strand (A), F\textsubscript{min</min> is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and f(K\textsubscript{D}, [A]\textsubscript{T}, [B]\textsubscript{T}) is the mole fraction of the bound fluorophore labeled strand (AB) to the total fluorophore labeled strand. 
+Where F\textsubscript{max} is the fluorescence emission of unbound fluorophore labeled strand (A), F\textsubscript{min</min> is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and f(K\textsubscript{D}, [A]\textsubscript{T}, [B]\textsubscript{T}) is the mole fraction of the bound fluorophore labeled strand (AB) to the total fluorophore labeled strand.
 
-$$ f(K_{D}, [A]_{T}, [B]_{T}) = \frac{[AB]}{[A]_{T}} \qquad (2) $$
+\begin{equation} \label{eqn}
+f(K_{D}, [A]_{T}, [B]_{T}) = \frac{[AB]}{[A]_{T}}
+	\end{equation}
 
 f(K\textsubscript{D}, [A]\textsubscript{T}, [B]\textsubscript{T})  is a function of the total fluorophore labeled strand ([A]\textsubscript{T}) and the total quenceher labeled strand ([B]\textsubscript{T}), and the K\textsubscript{D} is given by the the expression:
 
-$$K_{D} = \frac{[A][B]}{[AB]} \qquad (3) $$
+\begin{equation} \label{eqn}
+K_{D} = \frac{[A][B]}{[AB]}
+	\end{equation}
 
 F(K\textsubscript{D}, [A]\textsubscript{T}, [B]\textsubscript{T}) can be determined by solving the K\textsubscript{D} expression to obtain:
 
-$$F(K_{D}, [A]_{T}, [B]_{T})  = \frac{(K_{D}+[A]_{T}+[B]_{T}) - \sqrt{{(K_{D}+[A]_{T}+B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (4) $$
+
+\begin{equation} \label{eqn}
+F(K_{D}, [A]_{T}, [B]_{T})  = \frac{(K_{D}+[A]_{T}+[B]_{T}) - \sqrt{{(K_{D}+[A]_{T}+B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}
+	\end{equation}
 
 Thus, the K\textsubscript{D} at each temperature was determined by fitting isotherms at each temperature to Equation 5, obtained by plugging Equation 4 into Equation 1.
 
-$$E = F_{max} + (F_{min} - F_{max})\frac{(K_{D}+[A]_{T}+[B]_{T}) - \sqrt{{(K_{D}+[A]_{T}+B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (5) $$
+\begin{equation} \label{eqn}
+E = F_{max} + (F_{min} - F_{max})\frac{(K_{D}+[A]_{T}+[B]_{T}) - \sqrt{{(K_{D}+[A]_{T}+B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}
+	\end{equation}
 
 Thermodynamic parameters for helix formation were extracted by the Van't Hoff relationship (Equation 6) between the K\textsubscript{D} and the temperature using the two methods described below.
 
-$$ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} \qquad (6) $$
+\begin{equation} \label{eqn}
+ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} 
+	\end{equation}
 
 The dS is the entropy of helix formation, the dH is enthalpy of helix formation, R is the gas constant, and T is the temperature in Kelvin. For a single experiment, all samples should be diluted from the same fluorophore and quencher stocks, so that MeltR can deal with systematic uncertainty in strand concentrations. 
 
@@ -99,41 +105,57 @@ We have determined that the accuracy of fit results is highly dependent on error
 
 MeltR uses a fluorescence binding isotherm from a temperature where the K\textsubscript{D} is more than 10 times less than the fluorophore labeled strand concentration. Under these conditions, the shape of the curve will be independent of the K\textsubscript{D} , and the isotherm can be used as a Job plot. For example, at a 200 nM predicted fluorophore labeled strand concentration, the shape of the binding curve will be independent of K\textsubscript{D}  if the K\textsubscript{D}  is less than 10 nM. The curve will resemble a hockey stick (Figure 1A) composed of two straight lines. The first line, where [A]\textsubscript{T} > [B]\textsubscript{T}, will decrease as the [B]\textsubscript{T} is increased and the fluorophore labeled strand is saturated. The second line, where [A]\textsubscript{T} < [B]T\textsubscript{T}, will be horizontal as the [B]\textsubscript{T} is increased because the fluorophore labeled strand is saturated. The intersection of the first and second line will occur at:
 
-$$ [A]_{T} = [B]_{T}  \qquad (7)$$
+\begin{equation} \label{eqn}
+[A]_{T} = [B]_{T}
+	\end{equation}
 
 ![Job plot used by the concentration algorithm. Data are modeled with a KD of 0.1 nM and a FAM-RNA strand concentration of 250 nM. (A) Isotherms resemble a job plot, where the intersection of Line 1 and Line 2 can be used to determine X. (B) The same modeled data with the concentration algorithm starting at X = 1 and ending at X = 0.8.](https://user-images.githubusercontent.com/63312483/166508109-8337d818-6eed-4b08-a33c-92794a14a95a.svg)
 
 The absolute concentration of [A]\textsubscript{T} and [B]\textsubscript{T} cannot be known with precicion. However, the mole ratio of the error (X) in the fluorophore and quencher stocks can be estimated from this data point at Equation 8.
 
-$$ \frac{[A]_{T-estimated}}{X} = [B]_{T}  \qquad (8)$$
+\begin{equation} \label{eqn}
+\frac{[A]_{T-estimated}}{X} = [B]_{T}
+	\end{equation}
 
 Where [A]\textsubscript{T-estimated} is the estimated total A concentration, or the predicted concentration based on of the stock, and X is given by Equation 9 based on the actual concentration determined from the experiment.
 
-$$ X = \frac{[A]_{T}}{[B]_{T}}  \qquad (9)$$
+\begin{equation} \label{eqn}
+X = \frac{[A]_{T}}{[B]_{T}}
+	\end{equation}
 
 MeltR fits an overdetermined isotherm to a binding curve (selected by the user but by default the isotherm collected at the lowest temperature) to a modified version of Equation 5 to determine X (Figure 1 B).
 
-$$E = F_{max} + (F_{min} - F_{max})*\frac{(K_{D}+[A]_{T-estimated}+[B]_{T}X) - \sqrt{{(K_{D}+[A]_{T-estimated}+B]_{T}X)}^2 - 4[A]_{T-estimated}[B]_{T}X}}{2[A]_{T-estimated}}  \qquad (10)$$
+\begin{equation} \label{eqn}
+\resizebox{\hsize}{!}{$E = F_{max} + (F_{min} - F_{max})*\frac{(K_{D}+[A]_{T-estimated}+[B]_{T}X) - \sqrt{{(K_{D}+[A]_{T-estimated}+B]_{T}X)}^2 - 4[A]_{T-estimated}[B]_{T}X}}{2[A]_{T-estimated}}$}
+	\end{equation}
 
 By default, the fit to determine X allows X and K\textsubscript{D} to float. The user should also use an argument called "low_K", to set the Kd in the optimization fit to several K\textsubscript{D} that are more than 10 times less than the fluorophore labeled strand concentrations, as described in Section 4.1.3. The user should then inspect X from several iterations of the optimization algorithm set to different "low_K" values to make sure it is similar to the iteration that allows the K\textsubscript{D} to float.
 
 [A]\textsubscript{T} is then corrected with Equation 11.
 
-$$ [A]_{T}  = \frac{[A]_{T-estimated}}{X}  \qquad (11)$$
+\begin{equation} \label{eqn}
+[A]_{T}  = \frac{[A]_{T-estimated}}{X}
+	\end{equation}
 
 ### 3.1.3 Method 1 Van't Hoff plot
 
 Method 1 fits K\textsubscript{D}s that were passed from the preprocessing steps to Equation 6. Initial estimates for the dH and dS of helix formation are provided by the user in kcal as a list using the "vh_start" argument. The default is -70 kcal/mol and -0.180 kcal/mol/K for the enthalpy and entropy respectively, and will work for most helices. The free energy of helix formation at 37 <span>&#176;</span>C (dG) was calculated from the dH and dS values provided by the fit (Equation 12).
 
-$$ dG = dH - 310.15*dS \qquad (12) $$
+\begin{equation} \label{eqn}
+dG = dH - 310.15*dS \qquad (12)
+	\end{equation}
 
 The standard error of the dG was propagated from the standard error of dH and the dS from the fit, and the covariation between the two values.
 
-$$ SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dS}}{dS})}^2 + 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (13) $$
+\begin{equation} \label{eqn}
+SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dS}}{dS})}^2 + 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}
+	\end{equation}
 
 Helix formation energies are traditionally reported in terms of the association constant.
 
-$$ K = \frac{[AB]}{[A][B]} = frac{1}{K_{D}} \qquad (14) $$
+\begin{equation} \label{eqn}
+K = \frac{[AB]}{[A][B]} = frac{1}{K_{D}}
+	\end{equation}
 
 The dHs and dSs reported by MeltR are also reported in terms of the association constant, which is obtained by multiplying helix formation energies from fitting K\textsubscript{D} by negative one. 
 
@@ -141,7 +163,9 @@ The dHs and dSs reported by MeltR are also reported in terms of the association 
 
 Method 2 globally fits fluorescence data that were passed from the preprocessing to Equation 15, obtained by plugging Equation 6 into Equation 5. F\textsubscript{max} and F\textsubscript{min} is allowed to float between temperatures and dH and dS are fixed between temperatures. Starting values for F\textsubscript{max}, F\textsubscript{min}, dH, and dS are obtained from the results for individual fits. 
 
-$$E = F_{max} + (F_{min} - F_{max})*\frac{(\exp{(\frac{dS}{R} - \frac{dH}{RT})}+[A]_{T}+[B]_{T}) - \sqrt{{(\exp{(\frac{dS}{R} - \frac{dH}{RT})}+[A]_{T}+B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}} \qquad (15) $$
+\begin{equation} \label{eqn}
+\resizebox{\hsize}{!}{$E = F_{max} + (F_{min} - F_{max})*\frac{(\exp{(\frac{dS}{R} - \frac{dH}{RT})}+[A]_{T}+[B]_{T}) - \sqrt{{(\exp{(\frac{dS}{R} - \frac{dH}{RT})}+[A]_{T}+B]_{T})}^2 - 4[A]_{T}[B]_{T}}}{2[A]_{T}}$}
+	\end{equation}
 
 The dG and the error in the dG were calculated as in method 1.
 
@@ -167,11 +191,17 @@ MeltR performs the following data preprocessing steps before fitting:
 
 6.) Initial parameter estimates are calculated for each curve. The initial values for slopes and intercepts of the baselines are estimated by fitting absorbance values that are greater than the 75th quantile for the uper baselines, and fitting aborbance values that are lower than the 25th quantile for the lower baseline, to y = mx + b. Initial values for the enthalpy are determined using the T\textsubscript{0.5} and T\textsubscript{0.75} (in Kelvin) from first and second derivative curves. MeltR uses equation 16, equation 17, and equation 18, for heteroduplex, homoduplex, and monomolecular self-structured DNA and RNA melting curves.   
 
-$$ dH = -0.007*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (16)$$
+\begin{equation} \label{eqn}
+dH = -0.007*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}})
+	\end{equation}
 
-$$dH = -0.0044*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (17)$$
+\begin{equation} \label{eqn}
+dH = -0.0044*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}})
+	\end{equation}
 
-$$dH = -0.0032*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}}) \qquad (18)$$
+\begin{equation} \label{eqn}
+dH = -0.0032*(\frac{1}{T_{0.5}} - \frac{1}{T_{0.75}})
+	\end{equation}
 
 The initial T\textsubscript{m} is estimated from the T\textsubscript{0.5}, determined in step 5.
 
@@ -179,113 +209,209 @@ The initial T\textsubscript{m} is estimated from the T\textsubscript{0.5}, deter
 
 Thermo-dynamic parameters for helix formation are obtained using a Van't Hoff model:
 
-$$lnK = \frac{dS}{R} - \frac{dH}{RT}\qquad (19)$$
+\begin{equation} \label{eqn}
+lnK = \frac{dS}{R} - \frac{dH}{RT}
+	\end{equation}
 
 where dS is the entropy change, dH is the enthalpy change, R is the gas constant in kcal/mol, T is the temperature in Kelvin, and K is the equillibrium constant given by Equation 20, Equation 21, and Equation 22 for heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively.
 
-$$K = \frac{[AB]}{[A][B]} \qquad (20)$$
+\begin{equation} \label{eqn}
+K = \frac{[AB]}{[A][B]}
+	\end{equation}
 
-$$K = \frac{[AA]}{[A]^2} \qquad (21)$$
+\begin{equation} \label{eqn}
+K = \frac{[AA]}{[A]^2}
+	\end{equation}
 
-$$K = \frac{[F]}{[U]}\qquad (22)$$
+\begin{equation} \label{eqn}
+K = \frac{[F]}{[U]}
+	\end{equation}
 
 For Equation 20 and Equation 21, [A] and [B] are the concentration of different strands, [AB] is the concentration of strand A in a duplex with strand B, and [AA] is the concentration of a self complementary strand A in a duplex with another self complementary strand A. For Equation 22, [F] is the concentration of a monomolecular self-structured RNA in the folded state and [U] is the concentration of a monomolecular self-structured RNA in the unfolded state.
 
 MeltR uses three methods based on the Van't Hoff equation to calculate thermodynamic parameters: (1) fitting melting curves individually, (2) fitting the thermodenaturation point as a function of temperature, and (3) Global fitting melting curves.
 
-#### 3.2.3 Method 1 fitting melting curves individually
+### 3.2.3 Method 1 fitting melting curves individually
 
 Method 1 fits the absorption as a function of temperature for each sample individually. Base lines are modeled as y= mx + b for the absorbance of the unfolded-single stranded and folded-duplex states (Equation 23). 
 
-$$A = mT + b\qquad (23)$$
+\begin{equation} \label{eqn}
+A = mT + b
+	\end{equation}
 
 The absorption of each sample as a function of temperature is also a function of the fraction of RNA in the folded-duplex state (DS), as a function of temperature f(T), given by Equation 24. SS represents the RNA in the single-stranded state.
 
-$$A = (m_{DS}T + b_{DS})f(T) + (m_{SS}T + b_{SS})(1-f(T)) \qquad (24)$$
+\begin{equation} \label{eqn}
+A = (m_{DS}T + b_{DS})f(T) + (m_{SS}T + b_{SS})(1-f(T))
+	\end{equation}
 
 f(T) is variable, calculated by the analytic solution of the binding constant. MeltR uses Equation 25 for heteroduplexes, Equation 26 for homoduplexes, and Equation 27 monomolecular self-structured RNA.
 
-$$f(T) = \frac{\frac{2}{K(T)*Ct} + 2 - \sqrt{(\frac{2}{K(T)*Ct} + 2)^2 - 4}}{2} \qquad (25)$$
+\begin{equation} \label{eqn}
+f(T) = \frac{\frac{2}{K(T)*Ct} + 2 - \sqrt{(\frac{2}{K(T)*Ct} + 2)^2 - 4}}{2}
+	\end{equation}
 
-$$f(T) = \frac{\frac{1}{2*K(T)*Ct} + 2 - \sqrt{(\frac{1}{2*K(T)*Ct} + 2)^2 - 4}}{2} \qquad (26)$$
+\begin{equation} \label{eqn}
+f(T) = \frac{\frac{1}{2*K(T)*Ct} + 2 - \sqrt{(\frac{1}{2*K(T)*Ct} + 2)^2 - 4}}{2}
+	\end{equation}
 
-$$f(T) = \frac{K(T)}{1 + K(T)} \qquad (27)$$
+\begin{equation} \label{eqn}
+f(T) = \frac{K(T)}{1 + K(T)}
+	\end{equation}
 
 Where C\textsubscript{t} is the total strand concentration. K(T) is the equilibrium constant as a function of temperature, given by Equation 28 for heteroduplexes, Equation 29 for homoduplexes, and Equation 30 for monomolecular self-structured RNA.
 
-$$ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}\qquad (28) $$
+\begin{equation} \label{eqn}
+K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}
+	\end{equation}
 
-$$ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))} \qquad (29)  $$
+\begin{equation} \label{eqn}
+K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}
+	\end{equation}
 
-$$ K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))} \qquad (30) $$
+\begin{equation} \label{eqn}
+K(T) = \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}
+	\end{equation}
 
 Note, K(T) is in terms of T\textsubscript{m} and C\textsubscript{t}, instead of the dS, to increase the ease of estimating initial parameters for non-linear regression and to increase the robustness of the nls algorithm. Briefly, the dS is replaced with T\textsubscript{m} and C\textsubscript{t} by solving Equation 19 for the dS at the T\textsubscript{m}, where f(T) = 0.5.
 
 Thus, method 1 fits absorbtion versus temperature for each sample to equations 31, 32, and 33 to determine thermodynamic prameters for heteroduplexes, homoduplexes, and monomolecular self-structured RNA respectively.
 
-$$E = (m_{DS}T + b_{DS})\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}*Ct} + 2)^2 - 4}}{2} + (m_{SS}T + b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}*Ct} + 2)^2 - 4}}{2})\qquad (31)$$
+\begin{equation} \label{eqn}
+\resizebox{\hsize}{!}{$E = (m_{DS}T + b_{DS})\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}*Ct} + 2)^2 - 4}}{2} + (m_{SS}T + b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{4}{Ct}))}*Ct} + 2)^2 - 4}}{2})$}
+	\end{equation}
 
-$$E = (m_{DS}T + b_{DS})\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}*Ct} + 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}*Ct} + 2)^2 - 4}}{2} + (m_{SS}T + b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}*Ct} + 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}*Ct} + 2)^2 - 4}}{2}) \qquad (32)$$
+\begin{equation} \label{eqn}
+\resizebox{\hsize}{!}{$E = (m_{DS}T + b_{DS})\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}*Ct} + 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}*Ct} + 2)^2 - 4}}{2} + (m_{SS}T + b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}*Ct} + 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}) + ln(\frac{1}{Ct}))}*Ct} + 2)^2 - 4}}{2})$}
+	\end{equation}
 
-$$E = (m_{DS}T + b_{DS})\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 + \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}} + (m_{SS}T + b_{SS})(1-\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 + \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}})\qquad (33)$$
+\begin{equation} \label{eqn}
+\resizebox{\hsize}{!}{$E = (m_{DS}T + b_{DS})\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 + \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}} + (m_{SS}T + b_{SS})(1-\frac{\exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}}{1 + \exp{(\frac{dH}{R}(\frac{1}{T_{m}} - \frac{1}{T}))}})$}
+	\end{equation}
 
 Free energy at 37 <span>&#176;</span>C (dG) is calculated from the dH and entropy (dS) of helix formation 
 
-$$ dG = dH - 310.15*dS \qquad (34) $$
+\begin{equation} \label{eqn}
+dG = dH - 310.15*dS
+	\end{equation}
 
 The dS of helix formation is calculated from the dH and the Tm.
 
 For heteroduplexes:
 
-$$ dS = \frac{dH}{Tm} + Rln(\frac{4}{Ct}) \qquad (35) $$
+\begin{equation} \label{eqn}
+dS = \frac{dH}{Tm} + Rln(\frac{4}{Ct})
+	\end{equation}
 
 For homoduplexes:
 
-$$ dS = \frac{dH}{Tm} + Rln(\frac{1}{Ct}) \qquad (36) $$
+\begin{equation} \label{eqn}
+dS = \frac{dH}{Tm} + Rln(\frac{1}{Ct})
+	\end{equation}
 
 For monomolecular self-structured RNA/DNA:
 
-$$ dS = \frac{dH}{Tm} \qquad (37) $$
+\begin{equation} \label{eqn}
+dS = \frac{dH}{Tm}
+	\end{equation}
 
 Error in the dS and dG is calculated by propagating error in the fit terms dH and T\textsubscript{m}.
 
-$$ SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 + {(\frac{SE_{Tm}}{Tm})}^2 - 2\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (38) $$
+\begin{equation} \label{eqn}
+SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 + {(\frac{SE_{Tm}}{Tm})}^2 - 2\frac{Covar_{dH, Tm}}{dH*Tm}}
+	\end{equation}
 
-$$ SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dH}}{dH})}^2 + {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15\frac{Covar_{dH, Tm}}{dH*Tm}} \qquad (39) $$
+\begin{equation} \label{eqn}
+SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dH}}{dH})}^2 + {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15\frac{Covar_{dH, Tm}}{dH*Tm}}
+	\end{equation}
 
 ### 3.2.4 Method 2 fitting the T\textsubscript{m} as a function of C\textsubscript{t}
 
 Method 2 fits the relationship between 1/T\textsubscript{m} and the total strand concentration C\textsubscript{t}. To avoid inaccuracies in T\textsubscript{m} determination from first derivative plots or covariation with the dH terms in method 1, T\textsubscript{m}s were determined for Method 2 using a semi-quantitative method. Slopes and intercepts from method 1 were used to calculate f(T) at each experimental temperature using the absorbance. 
 
-$$ f(T) = \frac{A -(m_{SS}T + b_{SS})}{(m_{DS}T + b_{DS}) + (m_{SS}T + b_{SS})}\qquad (40)$$
+\begin{equation} \label{eqn}
+ f(T) = \frac{A -(m_{SS}T + b_{SS})}{(m_{DS}T + b_{DS}) + (m_{SS}T + b_{SS})}
+	\end{equation}
 
 F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T in {0.4 to 0.6}) was fit with y = mT + b, and solved using y = 0.5 to accurately determine the melting temperature for each C\textsubscript{t}. To determine thermodynamic parameters, the relationship between 1/T\textsubscript{m} and the total strand concentration was then fit to Equations 41, and 42, for heteroduplexes and homoduplexes respectively. The T\textsubscript{m} of monomolecular, self-structured RNA is independent of C\textsubscript{t} so Method 2 cannot be used.
 
-$$ \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} + \frac{dS}{dH} - R*ln(4) \qquad (41)$$
+\begin{equation} \label{eqn}
+\frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} + \frac{dS}{dH} - R*ln(4)
+	\end{equation}
 
-$$ \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} + \frac{dS}{dH}  \qquad (42)$$
+\begin{equation} \label{eqn}
+\frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} + \frac{dS}{dH}
+	\end{equation}
 
 Free energy at 37 <span>&#176;</span>C (dG) is calculated from the dH and entropy (dS) of helix formation directly from the fit.
 
-$$ dG = dH - 310.15*dS \qquad (43) $$
+\begin{equation} \label{eqn}
+dG = dH - 310.15*dS
+	\end{equation}
 
 Error in the dG is calculated by propagating error in the fit terms dH and dS.
 
-$$ SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dS}}{dS})}^2 - 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}} \qquad (44) $$
+\begin{equation} \label{eqn}
+SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dS}}{dS})}^2 - 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}
+	\end{equation}
 
 ### 3.2.5 Method 3 Global fitting
 
 Method 3 fits all curves to Equations 45, 46, and 47, simultaneously in a global fit, for heteroduplexes, homoduplexes, and mono-molecular self-structured RNA/DNA respectively. In this global fit, Equations 31, 32, and 33, are rearranged to be in terms of the dS instead of the Tm. 
 
-$$E = (m_{DS}T + b_{DS})\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2} + (m_{SS}T + b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2})\qquad (45)$$
+\begin{equation} \label{eqn}
+\resizebox{\hsize}{!}{$E = (m_{DS}T + b_{DS})\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2} + (m_{SS}T + b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2})$}
+	\end{equation}
 
-$$E = (m_{DS}T + b_{DS})\frac{\frac{1}{2\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2} + (m_{SS}T + b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2})\qquad (46)$$
+\begin{equation} \label{eqn}
+\resizebox{\hsize}{!}{$E = (m_{DS}T + b_{DS})\frac{\frac{1}{2\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2} + (m_{SS}T + b_{SS})(1-\frac{\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{1}{2*\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2})$}
+	\end{equation}
 
-$$E = (m_{DS}T + b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 +\exp{(\frac{dS}{R} - \frac{dH}{RT})}} + (m_{SS}T + b_{SS})(1-\frac{\exp{(\frac{dS}{R} - \frac{dH}{RT})}}{1 + \exp{(\frac{dS}{R} - \frac{dH}{RT})}})\qquad (47)$$
+\begin{equation} \label{eqn}
+E = (m_{DS}T + b_{DS})\frac{\exp{(\frac{H}{R*Tm} - \frac{1}{Tm})}}{1 +\exp{(\frac{dS}{R} - \frac{dH}{RT})}} + (m_{SS}T + b_{SS})(1-\frac{\exp{(\frac{dS}{R} - \frac{dH}{RT})}}{1 + \exp{(\frac{dS}{R} - \frac{dH}{RT})}})
+	\end{equation}
 
 The baselines are allowed to vary but dHs and dSs are constrained to a single value for all curves. For global fitting, the slopes and intercepts of the fits from Method 1 are used as initial parameter estimates for the slopes and intercepts of the global fit, and the average of the dHs and dSs from Method 1 are used as initial parameter estimates for the dH and dS.
 
 The dG and error in the dG is calculated using the same equations as Method 2.
+
+### 3.2.6 Autobaseline trimming using the BLTrimmer
+
+MeltR provides an automated baseline trimming function (Figure 2A), “BLtrimmer”, which works on three principles:
+
+1. Many combinations of trimmed baselines are generated and fit.
+2. The best baseline combinations produce the most internally consistent folding thermodynamic parameter estimates.
+3. Thermodynamic parameter from the best combinations should be treated as an ensemble of equally feasible estimates.
+
+Thus, the BLTrimmer function explores the dependence of fit parameters on baseline trimming, starting from an existing meltR.A fit object. The BLTrimmer uses three steps: Rapid testing of baseline combinations, assessment, and a slower treatment of an ensemble of baselines that produce internally consistent thermodynamic energies.
+
+Baseline testing: For the first step, the BLtrimmer generates and then fits a large number of baseline combinations. The user can generate baseline combinations using a fixed or a floating baseline trim. The fixed method uses the same baseline length for each sample to test how baseline length effects the subsequent thermodynamic parameters. The floating method allows different samples to have different baseline lengths. The floating method generates a large number of possible baseline combinations. Thus, the user can only test a small subset of these baseline combinations using a reasonable amount of computational time. Thus, a randomly selected subset of baseline combinations are tested using a fast, lightweight fit. The BLTrimmer fits each sample using Method 1, using the global fit from the meltR.A object as initial guesses for the non-linear regression step. Using these good initial guesses reduces the time the nls algorithm needs to find a solution. Next, the BLTrimmer fits each sample using Method 2. dH values from each method and baseline combination are then passed to the assessment step.
+
+Baseline assessment: The user can choose 1 of 3 assessment methods to identify the baseline combinations that produce the most internally consistent thermodynamic parameters. Assessment Method 1 tests how well the dH values from each sample agree with each other. The normalized standard deviation SE\textsubscript{dH1}' is calculated for each baseline combination, where SE\textsubscript{dH1} and u\textsubscript{dH1} are the standard deviation and mean dH, respectively from the samples in Method 1.
+
+\begin{equation} \label{eqn}
+SE_{dH1}' =  \frac{|SE_{dH1}|}{|u_{dH1}|}
+	\end{equation}
+
+SE\textsubscript{dH1}' is then ranked into quantiles on a scale from 0 to 1. For example, if a baseline combination has the 100th smallest SE\textsubscript{dH1}' in a set of 1000 baseline combinations, its quantile (Q\textsubscript{dH1}) is 0.1. Then, baseline combinations with Q\textsubscript{dH1} values smaller than a user specified value are passed to the ensemble analysis.
+
+Assessment Method 2 tests how well the dH values from Method 1 and 2 to agree using equation 49, where dH2 is produced by Method 2.
+
+\begin{equation} \label{eqn}
+SE_{dH1,2}' =  2\frac{|SE_{dH1} - dH2|}{|u_{dH1} + dH2|}
+	\end{equation}
+
+SE\textsubscript{dH1,2}' is then ranked into quantiles on a scale from 0 to 1 to produce Q\textsubscript{dH1,2} values and baseline combinations. Q\textsubscript{dH1,2} values smaller than a user specified value are passed to the ensemble analysis.
+
+Assessment Method 3 combines assessment methods 1 and 2 using a statistic called the error distance (Q\textsubscript{D}).
+
+\begin{equation} \label{eqn}
+SE_{D} = \sqrt{{Q_{dH1}}^2 - {Q_{dH1,2}}^2}
+	\end{equation}
+
+SE\textsubscript{D} (equation 50) is then ranked into quantiles on a scale from 0 to 1 to produce  Q\textsubscript{D} values and baseline combinations. Q\textsubscript{D} values smaller than a user specified value are passed to the ensemble analysis.
+
+Ensemble analysis: Baselines that pass the assessment criterion are treated as an ensemble of equally feasible baseline combinations. Each baseline combination is passed to meltR.A and fit, which takes considerably longer than the lightweight analysis in the testing step because initial guesses are predicted for each trim using the protocol described for meltR.A. The average of resulting thermodynamic parameters are reported with 95% confidence intervals.
 
 # 4 Running MeltR
 
@@ -885,122 +1011,69 @@ Which will produce:
 
 Fitting manually trimmed baselines reduces the fractional error between the methods from 15% to 9% in terms of the enthalpy.
 
-Next, the "fit" from meltR.A can be fit using the "BLTrimmer".
+### 4.2.8 Auto-trimming baselines using the BLtrimmer 
+
+Manually trimming baselines is time consuming, idiosyncratic, and can result in biases. MeltR provides a function called the baseline trimmer that automates baseline trimming by analyzing an ensemble of baseline combinations For more information, please read section 3.2.6. This section will focus on running the BLTrimmer.
+
+The first thing the BLTrimmer needs is a preliminary meltR.A fit object used to identify the core of the melt region that is not trimmed.
 
 ```{r}
-BLTrimmer(fit)
+fit = meltR.A(data_frame = df.abs.data,
+        blank = 1,
+        NucAcid = helix,
+        Mmodel = "Heteroduplex.2State")
 ```
 
-Which will yeild something like this:
+We can then run this fit through the BLTrimmer. This will take a minute. 
 
 ```{r}
-[1] "You are trying to test 100 baseline combinations"
-[1] "Do you think this is possible?"
-[1] "Fitting 100 combinations of 5 different baselines per sample"
-  |=========================================================================| 100%[1] "Testing baselines took 4.00400000000036 seconds"
-[1] "Using autotrimmed baselines in MeltR"
-[1] "Individual curves"
-  Sample           Ct     H       S     G   Tm
-1      2 2.913343e-06 -65.8 -0.1802  -9.9 42.6
-2      3 4.853010e-06 -59.2 -0.1588  -9.9 45.2
-3      4 7.650852e-06 -63.7 -0.1735  -9.9 45.7
-4      5 1.207087e-05 -67.4 -0.1852 -10.0 47.2
-5      6 2.107938e-05 -43.1 -0.1090  -9.3 50.5
-6      7 3.220452e-05 -72.6 -0.2010 -10.3 50.6
-7      8 5.691051e-05 -66.8 -0.1836  -9.9 51.7
-8      9 9.246535e-05 -71.9 -0.1987 -10.3 53.9
-9     10 1.480195e-04 -70.0 -0.1926 -10.3 55.8
-[1] "Summary"
-              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
-1  1 individual fits -64.5  9.0 -175.8 28.2 -10.0  0.3    54.49795     11.5865784
-2 2 Tm versus ln[Ct] -65.4  3.6 -179.2 11.0  -9.9  0.1    53.42931      4.4052573
-3       3 Global fit -68.2  0.4 -187.3  1.2 -10.1  0.0    54.17182      0.4705376
-[1] "fractional error between methods"
-           H          S    G
-1 0.05603231 0.06361792 0.02
-[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
+?BLTrimmer
+BLTrimmer(fit, Save_results = "all")
 ```
 
-In this example, the BLTrimmer reduces the fractional error between methods from 9% to 5.6%. Note, your answer when you run this code will be different, because the BLTrimmer tests 100 random baseline combinations. By, default, there are n.ranges^n.samples = 5^9 baseline combinations (5 different trimmed baselines per sample and 9 samples). If you want to get a more similar answer, you will need to do a more exaustive testing of baseline combinations. For example,
+The raw output will yield something like this:
 
 ```{r}
-BLTrimmer(fit, n.combinations = 1000)
 [1] "You are trying to test 1000 baseline combinations"
 [1] "Do you think this is possible?"
 [1] "Fitting 1000 combinations of 5 different baselines per sample"
-  |========================================================================| 100%[1] "Testing baselines took 36.1050000000005 seconds"
-[1] "Using autotrimmed baselines in MeltR"
-[1] "Individual curves"
-  Sample           Ct     H       S     G   Tm
-1      2 2.913343e-06 -65.8 -0.1802  -9.9 42.6
-2      3 4.853010e-06 -59.2 -0.1588  -9.9 45.2
-3      4 7.650852e-06 -65.5 -0.1792  -9.9 45.8
-4      5 1.207087e-05 -66.5 -0.1822  -9.9 47.2
-5      6 2.107938e-05 -43.1 -0.1090  -9.3 50.5
-6      7 3.220452e-05 -72.3 -0.1998 -10.3 50.8
-7      8 5.691051e-05 -69.3 -0.1911 -10.1 51.9
-8      9 9.246535e-05 -71.7 -0.1980 -10.2 53.7
-9     10 1.480195e-04 -70.0 -0.1926 -10.3 55.8
-[1] "Summary"
-              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
-1  1 individual fits -64.8  9.1 -176.8 28.3 -10.0  0.3    54.35821     11.5749687
-2 2 Tm versus ln[Ct] -65.4  3.4 -179.0 10.6  -9.9  0.1    53.75580      4.2359722
-3       3 Global fit -65.8  0.5 -180.0  1.4 -10.0  0.0    54.11935      0.5884726
-[1] "fractional error between methods"
-           H          S          G
-1 0.01530612 0.01791713 0.01003344
+  |===========================================================================| 100%[1]
+[1] "Using autotrimmed baselines in meltR.A"
+  |===========================================================================| 100%[1]
+  "Ensemble energies"
+              Method     dH          CI95.dH      dS            CI95.dS     dG
+1  1 individual fits -68.60 -70.02 to -67.32 -188.21 -192.62 to -184.28 -10.23
+2 2 Tm versus ln[Ct] -67.99 -69.96 to -66.05 -186.32 -192.43 to -180.33 -10.20
+3       3 Global fit -67.93 -70.11 to -66.03 -186.08 -192.85 to -180.09 -10.22
+           CI95.dG  Tm_at_0.1mM CI95.Tm_at_0.1mM
+1 -10.29 to -10.16        54.68   54.43 to 54.96
+2   -10.3 to -10.1        54.69   54.51 to 54.93
+3 -10.32 to -10.12        54.79   54.55 to 55.14
+[1] "Fractional error between methods"
+  dH  dS  dG
+1  1 1.1 0.3
 [1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
 ```
 
-Note, that this produces a different answer, that is more reproducible, but requires more computational time, in this case 36.1 seconds. If you have a multicore machine, you can test baselines in parallel. First, you must install the "doParallel" package and its dependencies, and load them into your memory.
+This produces thermodynamic parameters from analyzing an ensemble of 250 optimum trimmed baseline combination. The results are saved as a csv and a PDF. This ensemble is shown in Figure 11. Note that the distribution of the "Method 1 dH agrees with Method 2 dH" plot peaks below 5% indicating that the sequence approximates a two-state melting transition.
+
+![BLTrimmer outputs for assessing the quality of the results are written as a PDF file. Blue lines and points represent the 25% of baseline combinations that produce parameters that exhibit the best consistency across the data set. Each point comes from fitting a combination of baselines with Method 1 or 2. Results from 100 baseline combinations are plotted.](https://user-images.githubusercontent.com/63312483/201776066-03f6889b-403b-47d3-bf8b-e6bd9a52bd4e.svg)
+
+We can test the BLTrimmer on a non-two-state folding sequence and see what happens to the distribution.
 
 ```{r}
-install.packages("doParallel")
-library(doParallel)
+?df.abs.non2S
+fit = meltR.A(data_frame = df.abs.non2S,
+              NucAcid = c("RNA", "CGCGUUAUAU", "AUAUUUCGCG"),
+              Mmodel = "Heteroduplex.2State")
+BLTrimmer(fit, Save_results = "all", file_prefix = "Non-two_state")
 ```
 
-Now, you can turn on the parallelization and specify the number of cores.
+Now the distribution for the "Method 1 dH agrees with Method 2 dH" plot peaks above 15% indicating that this is a non-two-state melting transition (Figure 12).
 
-!!!!!Warning. Copying and pasting this code into your console could hurt your computer. Make sure you know how many cores your computer has and make sure you know how many cores can be designated to run this task!!!!!
+![BLTrimmer analysis of a non-two-state melting transition. Blue lines and points represent the 25% of baseline combinations that produce parameters that exhibit the best consistency across the data set. Each point comes from fitting a combination of baselines with Method 1 or 2. Results from 100 baseline combinations are plotted.](https://user-images.githubusercontent.com/63312483/201776071-a4d0e88b-9021-4795-a446-4b74bcfaec46.svg)
 
-```{r}
-BLTrimmer(fit, n.combinations = 1000,
-          parallel = "on", n.core = 3,
-          Save_results = "all")
-[1] "You are trying to test 1000 baseline combinations"
-[1] "Do you think this is possible?"
-[1] "Fitting 1000 combinations of 5 different baselines per sample"
-[1] "Testing baselines took 13.3319999999994 seconds"
-[1] "Using autotrimmed baselines in MeltR"
-[1] "Individual curves"
-  Sample           Ct     H       S     G   Tm
-1      2 2.913343e-06 -65.8 -0.1802  -9.9 42.6
-2      3 4.853010e-06 -59.2 -0.1588  -9.9 45.2
-3      4 7.650852e-06 -65.0 -0.1777  -9.9 45.9
-4      5 1.207087e-05 -66.5 -0.1822  -9.9 47.2
-5      6 2.107938e-05 -43.1 -0.1090  -9.3 50.5
-6      7 3.220452e-05 -72.3 -0.1998 -10.3 50.8
-7      8 5.691051e-05 -68.4 -0.1880 -10.1 52.1
-8      9 9.246535e-05 -68.8 -0.1892 -10.1 53.8
-9     10 1.480195e-04 -70.9 -0.1951 -10.4 55.9
-[1] "Summary"
-              Method     H SE.H      S SE.S     G SE.G Tm_at_0.1mM SE.Tm_at_0.1mM
-1  1 individual fits -64.4  8.9 -175.6 27.6 -10.0  0.3    54.32267     11.3692822
-2 2 Tm versus ln[Ct] -65.6  3.5 -179.8 10.7  -9.9  0.1    53.44949      4.2719888
-3       3 Global fit -66.7  0.3 -182.7  1.0 -10.0  0.0    54.19970      0.3839714
-[1] "fractional error between methods"
-          H          S          G
-1 0.0350788 0.03958372 0.01003344
-[1] "dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius"
-```
-
-Note, this obtained a similar answer to running the code with no parallelization but required 13.6 seconds instead of 36.1 seconds.
-
-Lastly, we can check the quality of the BLTrimmer results using some precanned outputs which are generated by setting  Save_results = "all". See section 4.2.4 for details on saving results.
-
-The BLTrimmer produces, three precanned plots. The first is a histogram of the difference in enthalpies obtained by method 1 and method 2 obtained by fitting all of the baseline  (Figure 11A). The peak of this distribution is occurring at about 6% enthalpy error, indicating that the helices are likely two state. The second is the enthalpy produced by methods 1 and 2 versus the fractional error between the two methods (Figure 11B). The enthalpies should converge on a single enthalpy value, plus or minus 1 kcal/mol, at low fractional error values. The third is a depiction of the trimmed baselines, where the blue points are the no trim range, red points are the baselines that are fit, and black points are points that are removed from the data set by the BLTrimmer (Figure 11C). The baselines produced by this example make sense.
-
-![Precanned outputs of the BL trimmer. Enthalpy units are in kcal/mol.](https://user-images.githubusercontent.com/63312483/174105426-b532f249-bb05-4082-aa04-40da939a6467.png)
+The BLTrimmer has many parameters for customizing your own baseline trimming protocol. However, if you change the recommended default parameters, you should check to make sure that baselines are not being trimmed to cause the appearence of two-state folding. The data set provided df.abs.data is provided as a positive control. 
 
 ### 4.2.8 Advanced plotting meltR.A outputs using the "tidyverse"
 
@@ -1053,7 +1126,10 @@ MeltR.fit$Range
 
 ```{r}
 MeltR.fit$Derivatives.data
-ggplot(MeltR.fit$Derivatives.data, aes(x = Temperature, y = dA.dT/(Pathlength*Ct), color = factor(Sample)))+
+ggplot(MeltR.fit$Derivatives.data,
+  aes(x = Temperature,
+      y = dA.dT/(Pathlength*Ct),
+      color = factor(Sample)))+
   geom_point() +
   theme_classic()
 ```
@@ -1062,7 +1138,10 @@ ggplot(MeltR.fit$Derivatives.data, aes(x = Temperature, y = dA.dT/(Pathlength*Ct
 
 ```{r}
 MeltR.fit$Method.1.data
-ggplot(MeltR.fit$Method.1.data, aes(x = Temperature, color = factor(Sample), group = factor(Sample)))+
+ggplot(MeltR.fit$Method.1.data,
+    aes(x = Temperature,
+        color = factor(Sample),
+        group = factor(Sample))) +
   geom_point(mapping = aes(y = Absorbance/(Pathlength*Ct))) +
   geom_line(mapping = aes(y = Model/(Pathlength*Ct)), color = "black") +
   theme_classic()
@@ -1092,7 +1171,10 @@ MeltR.fit$Method.2.fit
 
 ```{r}
 MeltR.fit$Method.3.data
-ggplot(MeltR.fit$Method.3.data, aes(x = Temperature, color = factor(Sample), group = factor(Sample)))+
+ggplot(MeltR.fit$Method.3.data,
+  aes(x = Temperature, 
+      color = factor(Sample), 
+      group = factor(Sample)))+
   geom_point(mapping = aes(y = Absorbance/(Pathlength*Ct))) +
   geom_line(mapping = aes(y = Model/(Pathlength*Ct)), color = "black") +
   theme_classic()
