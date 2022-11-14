@@ -338,6 +338,27 @@ The baselines are allowed to vary but dHs and dSs are constrained to a single va
 
 The dG and error in the dG is calculated using the same equations as Method 2.
 
+### 3.2.6 Automated baseline trimming with the BLTrimmer
+
+The BLTrimmer function explores the dependence of fit parameters on baseline trimming, starting from an existing meltR.A fit object. The BLTrimmer uses three steps: Rapid testing of baseline combinations, assessment, and a slower treatment of an ensemble of baselines that produce internally consistent thermodynamic energies.
+
+Baseline testing. For the first step, the BLtrimmer generates and then fits a large number of baseline combinations. The user can generate baseline combinations using a fixed or a floating baseline trim. The fixed method uses the same baseline length for each sample to test how baseline length effects the subsequent thermodynamic parameters. The floating method allows different samples to have different baseline lengths. The floating method generates a large number of possible baseline combinations. Thus, the user can only test a small subset of these baseline combinations using a reasonable amount of computational time. Thus, a randomly selected subset of baseline combinations are tested using a fast, lightweight fit. The BLTrimmer fits each sample using Method 1, using the global fit from the meltR.A object as initial guesses for the non-linear regression step. Using these good initial guesses reduces the time the nls algorithm needs to find a solution. Next, the BLTrimmer fits each sample using Method 2. ΔH° values from each method and baseline combination are then passed to the assessment step.
+
+The user can choose 1 of 3 assessment methods to identify the baseline combinations that produce the most internally consistent thermodynamic parameters. Assessment Method 1 tests how well the ΔH° values from each sample agree with each other. The normalized standard deviation (SE<sub>dH1</sub>') is calculated for each baseline combination, where (SE<sub>dH1</sub>) and (u<sub>dH1</sub>) are the standard deviation and mean ΔH° from the samples in Method 1, respectively.
+
+
+
+ is then ranked into quantiles on a scale from 0 to 1. For example, if a baseline combination has the 100th smallest  in a set of 1000 baseline combinations, its quantile ( is 0.1. Then, baseline combinations.  values smaller than a user specified value are passed to the ensemble analysis.
+ 
+ 
+Assessment Method 2 tests how well the ΔH° values from Method 1 and 2 to agree using equation 23, where ΔH°2 is produced by Method 2.
+
+is then ranked into quantiles on a scale from 0 to 1 to produce  values and baseline combinations.  values smaller than a user specified value are passed to the ensemble analysis.
+
+Assessment Method 3 combines assessment methods 1 and 2 using a statistic called the error distance.
+
+Baselines that pass the assessment criterion are treated as an ensemble of equally feasible baseline combinations. Each baseline combination is passed to meltR.A and fit, which takes considerably longer than the lightweight analysis in the testing step because initial guesses are predicted for each trim using the protocol described for meltR.A. The average of resulting thermodynamic parameters are reported with 95% confidence intervals.
+
 # 4 Running MeltR
 
 In this section, we cover how to use MeltR in your R console. If you have not already, read section 3 to understand the theory underlying the results of MeltR. Section 4 will cover MeltR usage and how to avoid pitfalls. The most common error with MeltR is a user attempting to fit data that is inconsistent with the underlying model, either a fluorescence isotherm or a absorbance melting curve with a non-standard shape or specifying an incorrect molecular model. In the case of data with a non-standard shape, the aberrant data will need to be filtered out data set prior to fitting the set with MeltR. While MeltR has no dependencies other than base R 4.1.3, data wrangling and plotting functions in the "tidyverse" package<sup>[4]</sup> are highly recommended, along with the "ggrepel" package<sup>[5]</sup>, for data quality checks and filtering. To begin, open a new R session in the proper directory. Load relevant packages into your memory.
