@@ -20,7 +20,11 @@ MeltR was inspired by Meltwin.<sup>[1]</sup> MeltR and Meltwin have the same uti
 
 The core of MeltR is the “meltR.A” function for fitting absorbance melting curves and the “meltR.F” function for fitting fluorescence binding isotherms.
 
-The creators of MeltR are interested in improving MeltR by adding new molecular models. Areas of interest include multistate models and models to describe G-quadruplex RNA. Please email Jacob Sieg at jus841@psu.edu for suggestions.  
+The creators of MeltR are interested in improving MeltR by adding new molecular models. Areas of interest include multistate models and models to describe G-quadruplex RNA. Please email Jacob Sieg at jus841@psu.edu for suggestions.
+
+Please cite our papers if you use MeltR. If you use MeltR to fit absorbance melting curves, a paper hopefully is forthcoming. If you use MeltR to fit fluorescence binding isotherms please cite:
+
+Sieg, J. P.; McKinley, L. N.; Huot, M. J.; Yennawar, N. H.; Bevilacqua, P. C. The Metabolome Weakens RNA Thermodynamic Stability and Strengthens RNA Chemical Stability. Biochemistry 2022. https://doi.org/10.1021/acs.biochem.2c00488.
 
 # 2 MeltR installation
 
@@ -42,7 +46,6 @@ install.packages("tidyverse")
 install.packages("ggrepel")
 ```
 
-
 # 3 Manual
 
 The manual, which contains theory and step-by-step instructions for running MeltR, can be downloaded at this address:
@@ -51,5 +54,4 @@ https://github.com/JPSieg/MeltR/blob/master/Manual.pdf
 
 #4 Video tutorials
 
-![BLTrimmer_baseline_ensemble_analysis](https://user-images.githubusercontent.com/63312483/201776066-03f6889b-403b-47d3-bf8b-e6bd9a52bd4e.svg)
-![Non-two_state_baseline_ensemble_analysis](https://user-images.githubusercontent.com/63312483/201776071-a4d0e88b-9021-4795-a446-4b74bcfaec46.svg)
+
