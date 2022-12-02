@@ -19,7 +19,8 @@
 #'@param outliers A vector containing the identifiers of the outlier samples that you want to remove. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using.
 #'@param fitTs Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit. The list should not include vectors for blanks.
 #'@param methods What methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Note, method 1 must be set to TRUE or the subsequent steps will not work. Set to c(TRUE, FALSE, FALSE) to only use method 1.
-#'@param Tm_method either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.
+#'@param Tm_method Either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.
+#'@param Weight_Tm_M2 If you use the "nls" method for Tm method, this option can turn on an off weighted non-linear regression for method 2. If TRUE, method 2 will use the port algorithm to weight the regression in method 2 to standard errors in the Tm determined with method 1. Set to FALSE if you do not want to weight the regression.
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formatted tables of parameters, "some" to save ".csv" formatted tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
@@ -48,6 +49,7 @@ meltR.A = function(data_frame,
                    fitTs = NULL,
                    methods = c(TRUE, TRUE, TRUE),
                    Tm_method = "nls",
+                   Weight_Tm_M2 = F,
                    Mmodel,
                    Tmodel = "VantHoff",
                    Save_results = "none",
@@ -90,12 +92,11 @@ meltR.A = function(data_frame,
         return(model)
       }
       calcS = function(H, Tm){ (H/(273.15 + Tm)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
       calcG = function(H, Tm){H - (310*((H/(273.15 + Tm))))}
-      calcG.SE = function(H, Tm, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*(H/(273.15 + Tm)))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
-      calcTM = function(H, S, Ct){(H/(S/1000)) - 273.15}
+      calcTM = function(H, S, Ct){(H/(S)) - 273.15}
       calcTM.SE = function(H, S, SE.H, SE.S, Ct, covar){
-        ((H/(S/1000)) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2 - (2*(covar/(H*(S/1000)))))
+        C = 0.0019872*log(1)
+        x = sqrt((SE.H/(S-C))^2 + (H*SE.S/(S - C)^2)^2 - 2*H*covar/((S-C)^3))
       }
     }
   }
@@ -120,7 +121,6 @@ meltR.A = function(data_frame,
         return(model)
       }
       calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
       calcTM = function(H, S, Ct){NA}
       calcTM.SE = function(H, S, SE.H, SE.S, Ct, covar){
         NA
@@ -149,12 +149,11 @@ meltR.A = function(data_frame,
         return(model)
       }
       calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) + (0.0019872*log(4/Ct)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm)))) }
       calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct)))) }
-      calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(4/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2) }
-      calcTM = function(H, S, Ct){(H/((S/1000) - 0.0019872*log(4/Ct))) - 273.15}
+      calcTM = function(H, S, Ct){(H/((S) - 0.0019872*log(4/Ct))) - 273.15}
       calcTM.SE = function(H, S, SE.H, SE.S, Ct, covar){
-        ((H/((S/1000) - 0.0019872*log(4/Ct))) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2 - (2*(covar/(H*S/1000))))
+        C = 0.0019872*log(4/Ct)
+        x = sqrt((SE.H/(S-C))^2 + (H*SE.S/(S - C)^2)^2 - 2*H*covar/((S-C)^3))
       }
     }
   }
@@ -180,15 +179,15 @@ meltR.A = function(data_frame,
         return(model)
       }
       calcS = function(H, Tm, Ct){ (H/(273.15 + Tm)) + (0.0019872*log(1/Ct)) }
-      calcS.SE = function(H, Tm, SE.H, SE.Tm, covar){ abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))}
       calcG = function(H, Tm, Ct){ H - (310.15*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct)))) }
-      calcG.SE = function(H, Tm, Ct, SE.H, SE.Tm, covar){ sqrt((SE.H)^2 + (abs(310*((H/(273.15 + Tm)) + (0.0019872*log(1/Ct))))*(abs(H/(273.13 + Tm))*sqrt((SE.H/H)^2 + (SE.Tm/Tm)^2 - (2*(covar/(H*Tm))))))^2)}
-      calcTM = function(H, S, Ct){(H/((S/1000) - 0.0019872*log(1/Ct))) - 273.15}
+      calcTM = function(H, S, Ct){(H/((S) - 0.0019872*log(1/Ct))) - 273.15}
       calcTM.SE = function(H, S, SE.H, SE.S, Ct, covar){
-        ((H/((S/1000) - 0.0019872*log(1/Ct))) - 273.15)*sqrt((SE.H/H)^2 + (SE.S/S)^2 - (2*(covar/(H*S/1000))))
+        C = 0.0019872*log(1/Ct)
+        x = sqrt((SE.H/(S-C))^2 + (H*SE.S/(S - C)^2)^2 - 2*H*covar/((S-C)^3))
       }
     }
   }
+
   ####Subtract out the blank####
 
   if (is.list(blank)){ #routine for multiple blanks in a data set
@@ -245,34 +244,7 @@ meltR.A = function(data_frame,
       names(extcoef) <- c("Total", as.character(2:length(NucAcid)))
     }else{
       tryCatch({
-
-        df.ext = subset(df.ext.data, Wavelength.nm == wavelength)
-        RNA = df.ext$Absorbtivity.M
-        names(RNA) = df.ext$Nucleotide
-        b <- c()
-        b <- strsplit(NucAcid[-which(NucAcid == NucAcid[1])], split = "")
-        c <- {}
-        d <- {}
-        e <- c()
-        for (i in c(1:length(b))){
-          #print(i)
-          c[[i]] <- c(1:(length(b[[i]])-1))
-          d[[i]] <- c(1:(length(b[[i]])))
-          for (j in c(1:(length(b[[i]])-1))){
-            #print(j)
-            c[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", b[[i]][j+1], sep = ""))]]
-          }
-          for (j in c(2:(length(b[[i]])))){
-            d[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", sep = ""))]]
-          }
-          e[i] <- 2*sum(c[[i]]) - sum(d[[i]])
-        }
-        extcoef <- list()
-        extcoef[[1]] <- sum(e)
-        for (i in c(1:length(b))){
-          extcoef[[i+1]] <- e[i]
-        }
-        names(extcoef) <- c("Total", NucAcid[c(2:length(NucAcid))])
+        extcoef = MeltR::calc.extcoeff(NucAcid, wavelength, T)
       },
       error = function(e){print("There is no nucleotide extinction coefficient at this wavelength for a nucleotide you specified in your sequence. You will need to provide your own custom extinction coefficient")})
     }
@@ -382,6 +354,7 @@ meltR.A = function(data_frame,
   }
 
   ####Calculate starting thermo parameters for nls####
+
   first.derive <- {}
   T0.5 <- c()
   T0.75 <- c()
@@ -450,7 +423,9 @@ meltR.A = function(data_frame,
     uppbl_fit[[i]] <- lm(Absorbance ~ Temperature, data = upperbl)
     lowbl_fit[[i]] <- lm(Absorbance ~ Temperature, data = lowbl)
   }
+
   ####Method 1 fit each curve individually####
+
   if (methods[1] == TRUE){
     a <-{}
     fit <- {}
@@ -458,6 +433,7 @@ meltR.A = function(data_frame,
     indvfits.S <- c()
     indvfits.G <- c()
     indvfits.Tm <- c()
+    indvfits.SE.Tm <- c()
     bED <- c()
     mED <- c()
     bSS <- c()
@@ -513,6 +489,7 @@ meltR.A = function(data_frame,
           indvfits.G[i] <- calcG(coef(fit[[i]])[1], coef(fit[[i]])[2], a[[i]]$Ct[1])
         }
         indvfits.Tm[i] <- coef(fit[[i]])[2]
+        indvfits.SE.Tm[i] <- coef(summary(fit[[i]]))[2,2]
       }, error = function(e){print(paste("There was a problem fitting Sample", a[[i]]$Sample[1], "with method 1") )})
     }
     indvfits <- data.frame("Sample" = unique(no.background$Sample),
@@ -559,6 +536,8 @@ meltR.A = function(data_frame,
   }
   ####Method 2 Tm vs Ct####
   if (methods[2] == TRUE){
+
+    #Decide what Tm_method to use
     if (Tm_method == "lm"){
 
       a <- {}
@@ -581,6 +560,7 @@ meltR.A = function(data_frame,
         lnCt[i] <- log(a[[i]]$Ct[1])
       }
       Tm_data <- data.frame("lnCt" = lnCt, "Tm" = Tm)
+      Weight_Tm_M2 = FALSE
     }
     if (Tm_method == "nls"){
       lnCt = log(indvfits$Ct)
@@ -591,15 +571,29 @@ meltR.A = function(data_frame,
       lnCt = log(indvfits$Ct)
       Tm = T0.5
       Tm_data = data.frame(lnCt, Tm)
+      Weight_Tm_M2 = FALSE
     }
 
     Tm_data$invT <- 1/(Tm_data$Tm + 273.15)
     if (Mmodel != "Monomolecular.2State"){
       if (Mmodel != "Monomolecular.3State"){
         Tm.model = TmModel
-        Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
-                              data = Tm_data,
-                              start = list(H = -70, S = -0.17))
+        if (Weight_Tm_M2){ #Weighted non-linear regression
+
+          propagated.weights = indvfits.SE.Tm/((Tm_data$Tm+273.15)^2) #Propagate Tm SE
+          Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
+                                data = Tm_data,
+                                weights = 1/propagated.weights,
+                                start = list(H = mean(indvfits$H), S = mean(indvfits$S)),
+                                control = nls.control(warnOnly = TRUE))
+
+        }else{
+          Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
+                                data = Tm_data,
+                                start = list(H = mean(indvfits$H), S = mean(indvfits$S)),
+                                control = nls.control(warnOnly = TRUE))
+        }
+
         Tm_vs_lnCt <- list(round(coef(Tm_vs_lnCt_fit)[1], 2), round(summary(Tm_vs_lnCt_fit)$coefficients[1,2], 2),
                            round(1000*coef(Tm_vs_lnCt_fit)[2], 2), round(1000*summary(Tm_vs_lnCt_fit)$coefficients[2,2], 2),
                            round(coef(Tm_vs_lnCt_fit)[1] - (310.15*coef(Tm_vs_lnCt_fit)[2]), 2), round(sqrt((summary(Tm_vs_lnCt_fit)$coefficients[1,2])^2 + (310*summary(Tm_vs_lnCt_fit)$coefficients[2,2])^2 - 2*310*summary(Tm_vs_lnCt_fit)$cov.unscaled[1,2]*(summary(Tm_vs_lnCt_fit)$sigma^2)),2))
@@ -608,10 +602,23 @@ meltR.A = function(data_frame,
         if (Save_results == "all"){
           pdf(paste(file_path, "/", file_prefix, "_method_2_plot.pdf", sep = ""),
               width = 3, height = 3, pointsize = 0.25)
-          plot(x = Tm_data$lnCt, y = Tm_data$invT,
-               xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]",
-               cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-          lines(x = Tm_data$lnCt, predict(Tm_vs_lnCt_fit), col = "red")
+
+          if (Weight_Tm_M2){
+            plot(x = Tm_data$lnCt, y = Tm_data$invT,
+                 xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]",
+                 cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+                 ylim = c(min(Tm_data$invT) - max(propagated.weights), max(Tm_data$invT) + max(propagated.weights)))
+            arrows(x = Tm_data$lnCt, x0 = Tm_data$lnCt, length = 0.05,
+                   y = Tm_data$invT - propagated.weights, y0 = Tm_data$invT + propagated.weights,
+                   code = 3, lwd=2, angle = 90)
+            lines(x = Tm_data$lnCt, predict(Tm_vs_lnCt_fit), col = "red")
+          }else{
+            plot(x = Tm_data$lnCt, y = Tm_data$invT,
+                 xlab = "ln[ Ct (M) ]", ylab = "1/[ Temperature (K) ]",
+                 cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
+            lines(x = Tm_data$lnCt, predict(Tm_vs_lnCt_fit), col = "red")
+          }
+
           dev.off()
         }
       }else{
@@ -678,34 +685,34 @@ meltR.A = function(data_frame,
       for (i in c(1:length(unique(gfit_data$Sample)))){
         a <- subset(gfit_data, Sample == unique(gfit_data$Sample)[i])
         if (Mmodel == "Monomolecular.2State"){
-          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+          lines(c(floor(min(a$Temperature)):ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
                                                          S = coef(gfit)[2],
                                                          mED = coef(gfit)[i + 2],
                                                          bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
                                                          mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
                                                          bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                         Temperature = c(5:ceiling(max(a$Temperature)))),
+                                                         Temperature = c(floor(min(a$Temperature)):ceiling(max(a$Temperature)))),
                 col = "red")
         }
         if (Mmodel == "Heteroduplex.2State"){
-          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+          lines(c(floor(min(a$Temperature)):ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
                                                          S = coef(gfit)[2],
                                                          mED = coef(gfit)[i + 2],
                                                          bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
                                                          mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
                                                          bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                         Temperature = c(5:ceiling(max(a$Temperature))),
+                                                         Temperature = c(floor(min(a$Temperature)):ceiling(max(a$Temperature))),
                                                          Ct = a$Ct[1]),
                 col = "red")
         }
         if (Mmodel == "Homoduplex.2State"){
-          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+          lines(c(floor(min(a$Temperature)):ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
                                                          S = coef(gfit)[2],
                                                          mED = coef(gfit)[i + 2],
                                                          bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
                                                          mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
                                                          bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                         Temperature = c(5:ceiling(max(a$Temperature))),
+                                                         Temperature = c(floor(min(a$Temperature)):ceiling(max(a$Temperature))),
                                                          Ct = a$Ct[1]),
                 col = "red")
         }
@@ -719,34 +726,34 @@ meltR.A = function(data_frame,
       for (i in c(1:length(unique(gfit_data$Sample)))){
         a <- subset(gfit_data, Sample == unique(gfit_data$Sample)[i])
         if (Mmodel == "Monomolecular.2State"){
-          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+          lines(c(floor(min(a$Temperature)):ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
                                                          S = coef(gfit)[2],
                                                          mED = coef(gfit)[i + 2],
                                                          bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
                                                          mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
                                                          bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                         Temperature = c(5:ceiling(max(a$Temperature))))/(a$Pathlength[1]*a$Ct[1]),
+                                                         Temperature = c(floor(min(a$Temperature)):ceiling(max(a$Temperature))))/(a$Pathlength[1]*a$Ct[1]),
                 col = "red")
         }
         if (Mmodel == "Heteroduplex.2State"){
-          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+          lines(c(floor(min(a$Temperature)):ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
                                                          S = coef(gfit)[2],
                                                          mED = coef(gfit)[i + 2],
                                                          bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
                                                          mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
                                                          bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                         Temperature = c(5:ceiling(max(a$Temperature))),
+                                                         Temperature = c(floor(min(a$Temperature)):ceiling(max(a$Temperature))),
                                                          Ct = a$Ct[1])/(a$Pathlength[1]*a$Ct[1]),
                 col = "red")
         }
         if (Mmodel == "Homoduplex.2State"){
-          lines(c(5:ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+          lines(c(floor(min(a$Temperature)):ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
                                                          S = coef(gfit)[2],
                                                          mED = coef(gfit)[i + 2],
                                                          bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
                                                          mESS = coef(gfit)[i + 2 + 2*length(unique(gfit_data$Sample))],
                                                          bESS = coef(gfit)[i + 2 + 3*length(unique(gfit_data$Sample))],
-                                                         Temperature = c(5:ceiling(max(a$Temperature))),
+                                                         Temperature = c(floor(min(a$Temperature)):ceiling(max(a$Temperature))),
                                                          Ct = a$Ct[1])/(a$Pathlength[1]*a$Ct[1]),
                 col = "red")
         }
@@ -804,9 +811,9 @@ meltR.A = function(data_frame,
       udS = (df.covar$dS - mean(df.covar$dS))/1000
       sigma = sum(udH*udS)/nrow(df.covar)
       dH = mean(df.covar$dH)
-      dS = mean(df.covar$dS)
+      dS = mean(df.covar$dS)/1000
       SE.dH = sd(df.covar$dH)
-      SE.dS = sd(df.covar$dS)
+      SE.dS = sd(df.covar$dS)/1000
 
     }
     if (i == 2){
@@ -823,9 +830,9 @@ meltR.A = function(data_frame,
         }else{
         sigma = summary(Tm_vs_lnCt_fit)$cov.unscaled[1,2]*(summary(Tm_vs_lnCt_fit)$sigma^2)
         dH = coef(Tm_vs_lnCt_fit)[1]
-        dS = 1000*coef(Tm_vs_lnCt_fit)[2]
+        dS = coef(Tm_vs_lnCt_fit)[2]
         SE.dH = coef(summary(Tm_vs_lnCt_fit))[1,2]
-        SE.dS = 1000*coef(summary(Tm_vs_lnCt_fit))[2,2]
+        SE.dS = coef(summary(Tm_vs_lnCt_fit))[2,2]
       }
       }
     }
@@ -839,9 +846,9 @@ meltR.A = function(data_frame,
       }else{
         sigma = summary(gfit)$cov.unscaled[1,2]*(summary(gfit)$sigma^2)
         dH = coef(gfit)[1]
-        dS = 1000*coef(gfit)[2]
+        dS = coef(gfit)[2]
         SE.dH = coef(summary(gfit))[1,2]
-        SE.dS = 1000*coef(summary(gfit))[2,2]
+        SE.dS = coef(summary(gfit))[2,2]
       }
     }
 
@@ -911,17 +918,18 @@ meltR.A = function(data_frame,
 
   ####Make a list of MeltR A settings####
 
-  settings = list(data_frame,
-                  blank,
-                  NucAcid,
-                  concT,
-                  fitTs,
-                  methods,
-                  Mmodel,
-                  Tmodel,
-                  Save_results,
-                  file_prefix,
-                  file_path)
+  settings = list(data_frame, #1
+                  blank, #2
+                  NucAcid, #3
+                  concT, #4
+                  fitTs, #5
+                  methods, #6
+                  Mmodel, #7
+                  Tmodel, #8
+                  Save_results, #9
+                  file_prefix, #10
+                  file_path, #11
+                  Weight_Tm_M2) #12
 
   ####Assemble final output####
 

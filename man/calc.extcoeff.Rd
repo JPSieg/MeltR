@@ -2,19 +2,23 @@
 % Please edit documentation in R/Calc_exctinction_coef.R
 \name{calc.extcoeff}
 \alias{calc.extcoeff}
-\title{Calculates extinction coefficents}
+\title{Calculates extinction coefficients}
 \usage{
-calc.extcoeff(NucAcid, wavelength = 260)
+calc.extcoeff(NucAcid, wavelength = 260, silent = F)
 }
 \arguments{
 \item{NucAcid}{A vector containing RNA or DNA sequences. Example "c("RNA", "ACCUUUCG", "CGAAAGGU")"}
+
+\item{wavelength}{The wavelength the data was collected at}
+
+\item{silent}{To print the extinction coefficient once it is calculated}
 }
 \value{
-A data frame containing the information in the .ct file
+A vector containing the extinction coefficient
 }
 \description{
-Calculates the extinnction coefficient for a DNA or RNA sequences using the
-nearest neigbor method. Also calculates the sum of all the extinction
+Calculates the extinction coefficient for a DNA or RNA sequences using the
+nearest neighbor method. Also calculates the sum of all the extinction
 coefficients in the input vector. Nearest neighbor parameters are from:
 }
 \details{
