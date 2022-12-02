@@ -14,6 +14,7 @@ meltR.A(
   fitTs = NULL,
   methods = c(TRUE, TRUE, TRUE),
   Tm_method = "nls",
+  Weight_Tm_M2 = F,
   Mmodel,
   Tmodel = "VantHoff",
   Save_results = "none",
@@ -40,7 +41,9 @@ meltR.A(
 
 \item{methods}{What methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Note, method 1 must be set to TRUE or the subsequent steps will not work. Set to c(TRUE, FALSE, FALSE) to only use method 1.}
 
-\item{Tm_method}{either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.}
+\item{Tm_method}{Either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.}
+
+\item{Weight_Tm_M2}{If you use the "nls" method for Tm method, this option can turn on an off weighted non-linear regression for method 2. If TRUE, method 2 will use the port algorithm to weight the regression in method 2 to standard errors in the Tm determined with method 1. Set to FALSE if you do not want to weight the regression.}
 
 \item{Mmodel}{The molecular model you want to fit. Options: "Monomolecular.2State", "Monomolecular.3State", "Heteroduplex.2State", "Homoduplex.2State".}
 

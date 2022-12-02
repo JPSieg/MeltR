@@ -35,11 +35,11 @@ BLTrimmer = function(meltR.A.fit,
                      Assess.method = 3,
                      n.combinations = 1000,
                      n.ranges.float = 5,
-                     range.step.float = 5,
+                     range.step.float = 6,
                      n.ranges.fixed = 40,
                      range.step.fixed = 0.5,
-                     no.trim.range = c(0.1, 0.9),
-                     quantile.threshold = 0.25,
+                     no.trim.range = c(0.15, 0.85),
+                     quantile.threshold = 0.1,
                      Save_results = "none",
                      file_path = getwd(),
                      file_prefix = "BLTrimmer",
@@ -357,6 +357,7 @@ BLTrimmer = function(meltR.A.fit,
         indvfits.H <- c()
         indvfits.S <- c()
         indvfits.Tm = c()
+        indvfits.SE.Tm = c()
         indvfits.Ct = c()
         Ind.model = Model
         mED = c()
@@ -395,6 +396,7 @@ BLTrimmer = function(meltR.A.fit,
           }
 
           indvfits.Tm[j] = coef(fit[[j]])[2]
+          indvfits.SE.Tm[j] = coef(summary(fit[[j]]))[2,2]
           indvfits.Ct[j] = a[[j]]$Ct[1]
           mED[j] = coef(fit[[j]])[3]
           bED[j] = coef(fit[[j]])[4]
@@ -416,13 +418,27 @@ BLTrimmer = function(meltR.A.fit,
           frac.dH1.error[i] = abs(sd(indvfits.H)/mean(indvfits.H))
         }else{
 
+          Weight_Tm_M2 = meltR.A.fit$meltR.A.settings[[12]]
+
           lnCt = log(indvfits.Ct)
           Tm = indvfits.Tm
           Tm_data = data.frame(lnCt, Tm)
           Tm_data$invT <- 1/(Tm_data$Tm + 273.15)
-          Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
-                                data = Tm_data,
-                                start = list(H = dH1[i], S = dS1[i]))
+          if (Weight_Tm_M2){ #Weighted non-linear regression
+
+            propagated.weights = indvfits.SE.Tm/((Tm_data$Tm+273.15)^2) #Propagate Tm SE
+            Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
+                                  data = Tm_data,
+                                  weights = 1/propagated.weights,
+                                  start = list(H = mean(indvfits.H), S = mean(indvfits.S)),
+                                  control = nls.control(warnOnly = TRUE))
+
+          }else{
+            Tm_vs_lnCt_fit <- nls(invT ~ TmModel(H, S, lnCt),
+                                  data = Tm_data,
+                                  start = list(H = mean(indvfits.H), S = mean(indvfits.S)),
+                                  control = nls.control(warnOnly = TRUE))
+          }
 
           dH2[i] = coef(Tm_vs_lnCt_fit)[1]
           dS2[i] = coef(Tm_vs_lnCt_fit)[2]
@@ -493,12 +509,12 @@ BLTrimmer = function(meltR.A.fit,
 
   ####Quantilize data####
 
-  quantiles.dH1.error = quantile(baselines$frac.dH1.error, seq(0, 1, length.out = nrow(baselines)))
+  quantiles.dH1.error = quantile(baselines$frac.dH1.error, seq(0, 1, length.out = nrow(baselines)), na.rm = T)
 
   if (Mmodel == "Monomolecular.2State"){
     quantiles.dH1.dH2.error = NA
   }else{
-    quantiles.dH1.dH2.error = quantile(baselines$frac.dH1.dH2.error, seq(0, 1, length.out = nrow(baselines)))
+    quantiles.dH1.dH2.error = quantile(baselines$frac.dH1.dH2.error, seq(0, 1, length.out = nrow(baselines)), na.rm = T)
   }
 
 
@@ -584,29 +600,38 @@ BLTrimmer = function(meltR.A.fit,
     hist(baselines$frac.dH1.error,
          xlab = "SD(dH1)/Average dH",
          cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         main = "Standard deviation of Method 1 dH")
-    abline(v = df.best$frac.dH1.error, col = adjustcolor(color, alpha = 0.3))
+         main = "Assess method 1\nIndividual fits agree",
+         xlim = c(0, max(baselines$frac.dH1.error, na.rm = T) + 0.01),
+         ylim = c(0, n.combinations))
+    par(new=T)
+    hist(df.best$frac.dH1.error,
+         xlab = "SD(dH1)/Average dH",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+         main = "Assess method 1\nIndividual fits agree",
+         xlim = c(0, max(baselines$frac.dH1.error, na.rm = T) + 0.01),
+         ylim = c(0, n.combinations),
+         col = color)
 
     #dH1 error vrs. dH1 error
 
     plot(baselines$dH1 ~ baselines$frac.dH1.error,
          xlab = "SD(dH1)/Average dH",
-         ylab = "dH1 (black)",
+         ylab = "dH1 (black) or dH2 (red)",
          cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-         ylim = c(min(c(baselines$dH1), na.rm = TRUE),
-                  max(c(baselines$dH1), na.rm = TRUE)),
-         xlim = c(min(c(baselines$frac.dH1.error), na.rm = TRUE),
-                  max(c(baselines$frac.dH1.error), na.rm = TRUE)),
-         main = "Standard deviation of Method 1 dH")
-    par(new=T)
-    plot(df.best$dH1 ~ df.best$frac.dH1.error,
-         xlab = "SD(dH1)/Average dH",
-         ylab = "dH1 (black)",
-         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
-         ylim = c(min(c(baselines$dH1), na.rm = TRUE),
-                  max(c(baselines$dH1), na.rm = TRUE)),
+         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
          xlim = c(min(c(baselines$frac.dH1.error), na.rm = TRUE),
                   max(c(baselines$frac.dH1.error), na.rm = TRUE)))
+    par(new=T)
+    plot(baselines$dH2 ~ baselines$frac.dH1.error,
+         xlab = "SD(dH1)/Average dH",
+         ylab = "dH1 (black) or dH2 (red)",
+         cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = "red",
+         ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
+                  max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
+         xlim = c(min(c(baselines$frac.dH1.error), na.rm = TRUE),
+                  max(c(baselines$frac.dH1.error), na.rm = TRUE)))
+
 
     #Histogram 1 agree 2
 
@@ -614,13 +639,22 @@ BLTrimmer = function(meltR.A.fit,
       hist(0,
            xlab = "|dH1 - dH2|/Average dH",
            cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           main = "Method 1 dH agrees with Method 2 dH")
+           main = "Assess method 2\n meltR.A methods 1 & 2 agree")
     }else{
       hist(baselines$frac.dH1.dH2.error,
            xlab = "|dH1 - dH2|/Average dH",
            cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           main = "Method 1 dH agrees with Method 2 dH")
-      abline(v = df.best$frac.dH1.dH2.error, col = adjustcolor(color, alpha = 0.3))
+           main = "Assess method 2\n meltR.A methods 1 & 2 agree",
+           xlim = c(0, max(baselines$frac.dH1.dH2.error, na.rm = T) + 0.01),
+           ylim = c(0, n.combinations))
+      par(new=T)
+      hist(df.best$frac.dH1.dH2.error,
+           xlab = "|dH1 - dH2|/Average dH",
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
+           main = "Assess method 2\n meltR.A methods 1 & 2 agree",
+           xlim = c(0, max(baselines$frac.dH1.dH2.error, na.rm = T) + 0.01),
+           ylim = c(0, n.combinations),
+           col = color)
     }
 
 
@@ -630,8 +664,7 @@ BLTrimmer = function(meltR.A.fit,
       plot(0 ~ 1,
            xlab = "|dH1 - dH2|/Average dH",
            ylab = "dH1 (black) or dH2 (red)",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           main = "Method 1 dH agrees with Method 2 dH")
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     }else{
       plot(baselines$dH1 ~ baselines$frac.dH1.dH2.error,
            xlab = "|dH1 - dH2|/Average dH",
@@ -640,8 +673,7 @@ BLTrimmer = function(meltR.A.fit,
            ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
                     max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
            xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)),
-           main = "Method 1 dH agrees with Method 2 dH")
+                    max(baselines$frac.dH1.dH2.error)))
       par(new=T)
       plot(baselines$dH2 ~ baselines$frac.dH1.dH2.error,
            xlab = "|dH1 - dH2|/Average dH",
@@ -651,27 +683,7 @@ BLTrimmer = function(meltR.A.fit,
                     max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
            xlim = c(min(baselines$frac.dH1.dH2.error),
                     max(baselines$frac.dH1.dH2.error)))
-      par(new=T)
-      plot(df.best$dH1 ~ df.best$frac.dH1.dH2.error,
-           xlab = "|dH1 - dH2|/Average dH",
-           ylab = "dH1 (black) or dH2 (red)",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
-           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-           xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)))
-      par(new=T)
-      plot(df.best$dH2 ~ df.best$frac.dH1.dH2.error,
-           xlab = "|dH1 - dH2|/Average dH",
-           ylab = "dH1 (black) or dH2 (red)",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8, col = adjustcolor(color),
-           ylim = c(min(c(baselines$dH1, baselines$dH2), na.rm = TRUE),
-                    max(c(baselines$dH1, baselines$dH2), na.rm = TRUE)),
-           xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)))
     }
-
-
 
     #dH1 to dH2 error quantile verseus dH1 error quantile
 
@@ -680,7 +692,7 @@ BLTrimmer = function(meltR.A.fit,
            xlab = "Quantile |dH1 - dH2|/Average dH",
            ylab = "Quantile SD(dH1)/Average dH",
            cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           main = "Error distance")
+           main = "Assess method 3 error distance\n Combine assess methods 1 & 2")
     }else{
       plot(baselines$dH1.error.quantile ~ baselines$dH1.dH2.error.quantile,
            xlab = "Quantile |dH1 - dH2|/Average dH",
@@ -688,7 +700,7 @@ BLTrimmer = function(meltR.A.fit,
            cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
            ylim = c(0,1),
            xlim = c(0,1),
-           main = "Error distance")
+           main = "Assess method 3 error distance\n Combine assess methods 1 & 2")
       par(new=T)
       plot(df.best$dH1.error.quantile ~ df.best$dH1.dH2.error.quantile,
            xlab = "Quantile |dH1 - dH2|/Average dH",
@@ -705,16 +717,13 @@ BLTrimmer = function(meltR.A.fit,
       }
     }
 
-
-
     #dH1 error verseus dH1 to dH2 error
 
     if (Mmodel == "Monomolecular.2State"){
       plot(0 ~ 1,
            xlab = "|dH1 - dH2|/Average dH",
            ylab = "SD(dH1)/Average dH",
-           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
-           main = "Error distance")
+           cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
     }else{
       plot(baselines$frac.dH1.error ~ baselines$frac.dH1.dH2.error,
            xlab = "|dH1 - dH2|/Average dH",
@@ -723,8 +732,7 @@ BLTrimmer = function(meltR.A.fit,
            ylim = c(min(baselines$frac.dH1.error),
                     max(baselines$frac.dH1.error)),
            xlim = c(min(baselines$frac.dH1.dH2.error),
-                    max(baselines$frac.dH1.dH2.error)),
-           main = "Error distance")
+                    max(baselines$frac.dH1.dH2.error)))
       par(new=T)
       plot(df.best$frac.dH1.error ~ df.best$frac.dH1.dH2.error,
            xlab = "|dH1 - dH2|/Average dH",
@@ -801,6 +809,7 @@ BLTrimmer = function(meltR.A.fit,
                           methods = meltR.A.fit$meltR.A.settings[[6]],
                           Mmodel = meltR.A.fit$meltR.A.settings[[7]],
                           Tmodel = meltR.A.fit$meltR.A.settings[[8]],
+                          Weight_Tm_M2 = meltR.A.fit$meltR.A.settings[[12]],
                           auto.trimmed = fitstart,
                           Silent = TRUE)
     if (memory.light){
@@ -858,31 +867,31 @@ BLTrimmer = function(meltR.A.fit,
   }else{
     df.1 = data.frame("Method" = "1 individual fits",
                       "dH" = round(mean(df1.data$dH), digits = 2),
-                      "CI95.dH" = paste(round(quantile(df1.data$dH, 0.025), 2), "to", round(quantile(df1.data$dH, 0.975), 2)),
+                      "CI95.dH" = paste(round(quantile(df1.data$dH, 0.025, na.rm = T), 2), "to", round(quantile(df1.data$dH, 0.975, na.rm = T), 2)),
                       "dS" = round(mean(df1.data$dS), digits = 2),
-                      "CI95.dS"= paste(round(quantile(df1.data$dS, 0.025), 2), "to", round(quantile(df1.data$dS, 0.975), 2)),
+                      "CI95.dS"= paste(round(quantile(df1.data$dS, 0.025, na.rm = T), 2), "to", round(quantile(df1.data$dS, 0.975, na.rm = T), 2)),
                       "dG" = round(mean(df1.data$dG), digits = 2),
-                      "CI95.dG" = paste(round(quantile(df1.data$dG, 0.025), 2), "to", round(quantile(df1.data$dG, 0.975), 2)),
+                      "CI95.dG" = paste(round(quantile(df1.data$dG, 0.025, na.rm = T), 2), "to", round(quantile(df1.data$dG, 0.975, na.rm = T), 2)),
                       "Tm_at_0.1mM" = round(mean(df1.data$Tm_at_0.1mM), digits = 2),
-                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df1.data$Tm_at_0.1mM, 0.025), 2), "to", round(quantile(df1.data$Tm_at_0.1mM, 0.975), 2)))
+                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df1.data$Tm_at_0.1mM, 0.025, na.rm = T), 2), "to", round(quantile(df1.data$Tm_at_0.1mM, 0.975, na.rm = T), 2)))
     df.2 = data.frame("Method" = "2 Tm versus ln[Ct]",
                       "dH" = round(mean(df2.data$dH), digits = 2),
-                      "CI95.dH" = paste(round(quantile(df2.data$dH, 0.025), 2), "to", round(quantile(df2.data$dH, 0.975), 2)),
+                      "CI95.dH" = paste(round(quantile(df2.data$dH, 0.025, na.rm = T), 2), "to", round(quantile(df2.data$dH, 0.975, na.rm = T), 2)),
                       "dS" = round(mean(df2.data$dS), digits = 2),
-                      "CI95.dS"= paste(round(quantile(df2.data$dS, 0.025), 2), "to", round(quantile(df2.data$dS, 0.975), 2)),
+                      "CI95.dS"= paste(round(quantile(df2.data$dS, 0.025, na.rm = T), 2), "to", round(quantile(df2.data$dS, 0.975, na.rm = T), 2)),
                       "dG" = round(mean(df2.data$dG), digits = 2),
-                      "CI95.dG" = paste(round(quantile(df2.data$dG, 0.025), 2), "to", round(quantile(df2.data$dG, 0.975), 2)),
+                      "CI95.dG" = paste(round(quantile(df2.data$dG, 0.025, na.rm = T), 2), "to", round(quantile(df2.data$dG, 0.975, na.rm = T), 2)),
                       "Tm_at_0.1mM" = round(mean(df2.data$Tm_at_0.1mM), digits = 2),
-                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df2.data$Tm_at_0.1mM, 0.025), 2), "to", round(quantile(df2.data$Tm_at_0.1mM, 0.975), 2)))
+                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df2.data$Tm_at_0.1mM, 0.025, na.rm = T), 2), "to", round(quantile(df2.data$Tm_at_0.1mM, 0.975, na.rm = T), 2)))
     df.3 = data.frame("Method" = "3 Global fit",
                       "dH" = round(mean(df3.data$dH), digits = 2),
-                      "CI95.dH" = paste(round(quantile(df3.data$dH, 0.025), 2), "to", round(quantile(df3.data$dH, 0.975), 2)),
+                      "CI95.dH" = paste(round(quantile(df3.data$dH, 0.025, na.rm = T), 2), "to", round(quantile(df3.data$dH, 0.975, na.rm = T), 2)),
                       "dS" = round(mean(df3.data$dS), digits = 2),
-                      "CI95.dS"= paste(round(quantile(df3.data$dS, 0.025), 2), "to", round(quantile(df3.data$dS, 0.975), 2)),
+                      "CI95.dS"= paste(round(quantile(df3.data$dS, 0.025, na.rm = T), 2), "to", round(quantile(df3.data$dS, 0.975, na.rm = T), 2)),
                       "dG" = round(mean(df3.data$dG), digits = 2),
-                      "CI95.dG" = paste(round(quantile(df3.data$dG, 0.025), 2), "to", round(quantile(df3.data$dG, 0.975), 2)),
+                      "CI95.dG" = paste(round(quantile(df3.data$dG, 0.025, na.rm = T), 2), "to", round(quantile(df3.data$dG, 0.975, na.rm = T), 2)),
                       "Tm_at_0.1mM" = round(mean(df3.data$Tm_at_0.1mM), digits = 2),
-                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df3.data$Tm_at_0.1mM, 0.025), 2), "to", round(quantile(df3.data$Tm_at_0.1mM, 0.975), 2)))
+                      "CI95.Tm_at_0.1mM" = paste(round(quantile(df3.data$Tm_at_0.1mM, 0.025, na.rm = T), 2), "to", round(quantile(df3.data$Tm_at_0.1mM, 0.975, na.rm = T), 2)))
   }
 
 
