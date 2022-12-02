@@ -16,7 +16,7 @@ Last update, 12/02/2022
 
 MeltR is a R package, written by Jacob Sieg, that fits nucleic acid folding data to molecular models to obtain thermodynamic parameters. MeltR automates the trivial but time-consuming tasks associated with fitting nucleic acids thermodenaturation data, leading to facile conversion of raw data into useful thermodynamic parameters.
 
-MeltR was inspired by Meltwin.\textsuperscript{[1]} MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R console, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) MeltR can be run on any oporating system that is compatible with R. (5) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
+MeltR was inspired by Meltwin.\textsuperscript{[1]} MeltR and Meltwin have the same utility: easy and consistent fitting to obtain thermodynamic parameters. The main drawback of MeltR is that it is ran from your R console, whereas Meltwin has a graphical-user-interface. However, the MeltR syntax is not complicated, and MeltR has other advantages: (1) A current versions of MeltR can be downloaded from GitHub by entering two lines of code in your R console, whereas Meltwin has been out of support for years. (2) MeltR supports fitting fluorescence binding isotherms to obtain thermodynamic parameters. (3) MeltR can be ran in bulk. (4) MeltR can be run on any operating system that is compatible with R. (5) Anecdotally, MeltR is more robust than Meltwin and requires less input from the user.
 
 The core of MeltR is the “meltR.A” function for fitting absorbance melting curves and the “meltR.F” function for fitting fluorescence binding isotherms.
 
@@ -50,7 +50,7 @@ MeltR can obtains thermodynamic parameters from fluorescence binding isotherms f
 E = F_{max} + (F_{min} - F_{max})*F(K_{D}, [A]_{T}, [B]_{T})
 	\end{equation}
 
-Where F\textsubscript{max} is the fluorescence emission of unbound fluorophore labeled strand (A), F\textsubscript{min</min> is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and f(K\textsubscript{D}, [A]\textsubscript{T}, [B]\textsubscript{T}) is the mole fraction of the bound fluorophore labeled strand (AB) to the total fluorophore labeled strand.
+Where F\textsubscript{max} is the fluorescence emission of unbound fluorophore labeled strand (A), F\textsubscript{min} is the fluorescence emission of the fluorophore labeled strand completely bound to a quencher labeled strand (B), and f(K\textsubscript{D}, [A]\textsubscript{T}, [B]\textsubscript{T}) is the mole fraction of the bound fluorophore labeled strand (AB) to the total fluorophore labeled strand.
 
 \begin{equation} \label{eqn}
 f(K_{D}, [A]_{T}, [B]_{T}) = \frac{[AB]}{[A]_{T}}
@@ -81,7 +81,7 @@ Thermodynamic parameters for helix formation were extracted by the Van't Hoff re
 ln(K_{D}) = \frac{dS}{R} - \frac{dH}{RT} 
 	\end{equation}
 
-The dS is the entropy of helix formation, the dH is enthalpy of helix formation, R is the gas constant, and T is the temperature in Kelvin. For a single experiment, all samples should be diluted from the same fluorophore and quencher stocks, so that MeltR can deal with systematic uncertainty in strand concentrations. 
+The dS is the entropy of helix formation, the dH is the enthalpy of helix formation, R is the gas constant, and T is the temperature in Kelvin. For a single experiment, all samples should be diluted from the same fluorophore and quencher stocks, so that MeltR can deal with systematic uncertainty in strand concentrations. 
 
 ### 3.1.1 Fluorescence data preprocessing
 
@@ -148,13 +148,13 @@ dG = dH - 310.15*dS \qquad (12)
 The standard error of the dG was propagated from the standard error of dH and the dS from the fit, and the covariation between the two values.
 
 \begin{equation} \label{eqn}
-SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dS}}{dS})}^2 + 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}
+SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15* SE_{dS})}^2 + 2* 310.15* Covar_{dH,dS}}
 	\end{equation}
 
 Helix formation energies are traditionally reported in terms of the association constant.
 
 \begin{equation} \label{eqn}
-K = \frac{[AB]}{[A][B]} = frac{1}{K_{D}}
+K = \frac{[AB]}{[A][B]} = \frac{1}{K_{D}}
 	\end{equation}
 
 The dHs and dSs reported by MeltR are also reported in terms of the association constant, which is obtained by multiplying helix formation energies from fitting K\textsubscript{D} by negative one. 
@@ -315,25 +315,11 @@ For monomolecular self-structured RNA/DNA:
 dS = \frac{dH}{Tm}
 	\end{equation}
 
-Error in the dS and dG is calculated by propagating error in the fit terms dH and T\textsubscript{m}.
-
-\begin{equation} \label{eqn}
-SE_{dS} = |dS|\sqrt{ {(\frac{SE_{dH}}{dH})}^2 + {(\frac{SE_{Tm}}{Tm})}^2 - 2\frac{Covar_{dH, Tm}}{dH*Tm}}
-	\end{equation}
-
-\begin{equation} \label{eqn}
-SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dH}}{dH})}^2 + {(310.15*\frac{SE_{Tm}}{Tm})}^2 - 2*310.15\frac{Covar_{dH, Tm}}{dH*Tm}}
-	\end{equation}
+The mean and the standard deviations are reported for thermodynamic parameters.
 
 ### 3.2.4 Method 2 fitting the T\textsubscript{m} as a function of C\textsubscript{t}
 
-Method 2 fits the relationship between 1/T\textsubscript{m} and the total strand concentration C\textsubscript{t}. To avoid inaccuracies in T\textsubscript{m} determination from first derivative plots or covariation with the dH terms in method 1, T\textsubscript{m}s were determined for Method 2 using a semi-quantitative method. Slopes and intercepts from method 1 were used to calculate f(T) at each experimental temperature using the absorbance. 
-
-\begin{equation} \label{eqn}
- f(T) = \frac{A -(m_{SS}T + b_{SS})}{(m_{DS}T + b_{DS}) + (m_{SS}T + b_{SS})}
-	\end{equation}
-
-F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T in {0.4 to 0.6}) was fit with y = mT + b, and solved using y = 0.5 to accurately determine the melting temperature for each C\textsubscript{t}. To determine thermodynamic parameters, the relationship between 1/T\textsubscript{m} and the total strand concentration was then fit to Equations 41, and 42, for heteroduplexes and homoduplexes respectively. The T\textsubscript{m} of monomolecular, self-structured RNA is independent of C\textsubscript{t} so Method 2 cannot be used.
+Method 2 uses nls to fit the relationship between 1/T\textsubscript{m} and C\textsubscript{t} to Equation 38 and 39 for heteroduplexes and homoduplexes, respectively. The T\textsubscript{m} of monomolecular, self-structured RNA is independent of C\textsubscript{t}, so Method 2 cannot be used, and MeltR automatically turns Method 2 off.
 
 \begin{equation} \label{eqn}
 \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} + \frac{dS}{dH} - R*ln(4)
@@ -342,6 +328,22 @@ F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T in {0.4 to 0.
 \begin{equation} \label{eqn}
 \frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} + \frac{dS}{dH}
 	\end{equation}
+	
+The T\textsubscript{m} for each sample calculated from method 1 is used for method 2 by default. The propagated error in the T\textsubscript{m} from the method 1 fits can be used as weights, propagated from the method 1 fits using Equation 40. The weighted
+regression can be turned turned of by the user but the default setting is to perform a non-weighted regression for method 2.
+
+\begin{equation} \label{eqn}
+Weight = \frac{{T_{m}}^2}{SE_{T_{m}}}
+	\end{equation}
+	
+MeltR can use two other T\textsubscript{m} determination methods and neither can use a weighted regression. The first uses the linear baseline parameters from Method 1 to calculate the f(T) using Equation 41.
+
+\begin{equation} \label{eqn}
+ f(T) = \frac{A -(m_{SS}T + b_{SS})}{(m_{DS}T + b_{DS}) + (m_{SS}T + b_{SS})}
+	\end{equation}
+
+F(T) is approimatelty linear in the range of 0.4 to 0.6. Thus, F(T in {0.4 to 0.6}) was fit with y = mT + b, and solved using y = 0.5 to accurately determine the melting temperature for each C\textsubscript{t}. Alternatively, Method 2 can use the T\textsubscript{m} estimated using polynomial regression followed by the first derivative analysis (step 5 of data processing)
+
 
 Free energy at 37 <span>&#176;</span>C (dG) is calculated from the dH and entropy (dS) of helix formation directly from the fit.
 
@@ -352,12 +354,12 @@ dG = dH - 310.15*dS
 Error in the dG is calculated by propagating error in the fit terms dH and dS.
 
 \begin{equation} \label{eqn}
-SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15*\frac{SE_{dS}}{dS})}^2 - 2*310.15*\frac{Covar_{dH, dS}}{dH*dS}}
+SE_{dG} = \sqrt{ {SE_{dH}}^2 + {(310.15* SE_{dS})}^2 - 2*310.15*Covar_{dH, dS}}
 	\end{equation}
 
 ### 3.2.5 Method 3 Global fitting
 
-Method 3 fits all curves to Equations 45, 46, and 47, simultaneously in a global fit, for heteroduplexes, homoduplexes, and mono-molecular self-structured RNA/DNA respectively. In this global fit, Equations 31, 32, and 33, are rearranged to be in terms of the dS instead of the Tm. 
+Method 3 fits all curves to Equations 44, 45, and 46, simultaneously in a global fit, for heteroduplexes, homoduplexes, and mono-molecular self-structured RNA/DNA respectively. In this global fit, Equations 31, 32, and 33, are rearranged to be in terms of the dS instead of the Tm. 
 
 \begin{equation} \label{eqn}
 \resizebox{\hsize}{!}{$E = (m_{DS}T + b_{DS})\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2} + (m_{SS}T + b_{SS})(1-\frac{\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2 - \sqrt{(\frac{2}{\exp{(\frac{dS}{R} - \frac{dH}{RT})}*Ct} + 2)^2 - 4}}{2})$}
@@ -375,9 +377,31 @@ The baselines are allowed to vary but dHs and dSs are constrained to a single va
 
 The dG and error in the dG is calculated using the same equations as Method 2.
 
-### 3.2.6 Autobaseline trimming using the BLTrimmer
+### 3.2.6 T\textsubscript{m} at 0.1 mM
 
-MeltR provides an automated baseline trimming function (Figure 2A), “BLtrimmer”, which works on three principles:
+The T\textsubscript{m} at 0.1 mM is not a true thermodynamic parameter and included in the output for historical reasons. It is an expectation maximized value, meaning it is estimated from a fit. The T\textsubscript{m}at 0.1 mM is calculated using Equation 47, obtained by rearranging equation 35, 36, and 37.
+
+\begin{equation} \label{eqn}
+{T_{m}}^{0.1 mM} = \frac{dH}{dS - R*lnB}
+\end{equation}
+
+B is 4/C\textsubscript{t}, 1/C\textsubscript{t}, or 1 for heteroduplexes, homoduplexes, and monomolecular self structured RNA, respectively.
+
+The propagation of error to the T\textsubscript{m} at 0.1 mM was calculated with Equation 48.
+
+\begin{equation} \label{eqn}
+SE_{{T_{m}}^{0.1 mM}} = \sqrt{ {(\frac{SE_{dH}}{dS - RlnB})}^2 + {(\frac{dH* SE_{dS}}{{(dS - RlnB)}^2})}^2 - 2\frac{dH*Covar_{dH,dS}}{{(dS - RlnB)}^3}}
+\end{equation}
+
+Covariance is estimated using Equation 49 for method 1, where the u\textsubscript{dH} and u\textsubscript{dS} represent the mean of the individual fits. Covariance is extracted from the fit for method 2 and 3.
+
+\begin{equation} \label{eqn}
+Covar_{dH,dS} = \frac{1}{N}\sum{(dH_{i} - u_{dH})(dH_{i} - u_{dH})}
+\end{equation}
+
+### 3.2.7 Autobaseline trimming using the BLTrimmer
+
+MeltR provides an automated baseline trimming function, “BLtrimmer”, which works on three principles:
 
 1. Many combinations of trimmed baselines are generated and fit.
 2. The best baseline combinations produce the most internally consistent folding thermodynamic parameter estimates.
@@ -387,7 +411,9 @@ Thus, the BLTrimmer function explores the dependence of fit parameters on baseli
 
 Baseline testing: For the first step, the BLtrimmer generates and then fits a large number of baseline combinations. The user can generate baseline combinations using a fixed or a floating baseline trim. The fixed method uses the same baseline length for each sample to test how baseline length effects the subsequent thermodynamic parameters. The floating method allows different samples to have different baseline lengths. The floating method generates a large number of possible baseline combinations. Thus, the user can only test a small subset of these baseline combinations using a reasonable amount of computational time. Thus, a randomly selected subset of baseline combinations are tested using a fast, lightweight fit. The BLTrimmer fits each sample using Method 1, using the global fit from the meltR.A object as initial guesses for the non-linear regression step. Using these good initial guesses reduces the time the nls algorithm needs to find a solution. Next, the BLTrimmer fits each sample using Method 2. dH values from each method and baseline combination are then passed to the assessment step.
 
-Baseline assessment: The user can choose 1 of 3 assessment methods to identify the baseline combinations that produce the most internally consistent thermodynamic parameters. Assessment Method 1 tests how well the dH values from each sample agree with each other. The normalized standard deviation SE\textsubscript{dH1}' is calculated for each baseline combination, where SE\textsubscript{dH1} and u\textsubscript{dH1} are the standard deviation and mean dH, respectively from the samples in Method 1.
+Baseline assessment: The user can choose 1 of 3 assessment methods to identify the baseline combinations that produce the most internally consistent thermodynamic parameters.
+
+Assessment Method 1 tests how well the dH values from each sample agree with each other. The normalized standard deviation SE\textsubscript{dH1}' is calculated for each baseline combination, where SE\textsubscript{dH1} and u\textsubscript{dH1} are the standard deviation and mean dH, respectively from the samples in Method 1.
 
 \begin{equation} \label{eqn}
 SE_{dH1}' =  \frac{|SE_{dH1}|}{|u_{dH1}|}
