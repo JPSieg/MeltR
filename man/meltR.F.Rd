@@ -48,7 +48,18 @@ meltR.F(
 \item{silent}{Set to TRUE to run in silent mode (which does not print results in the console). Good for running in loops. Default is TRUE.}
 }
 \value{
-
+A meltR.F fit object containing a list of data objects containing raw data, data, transformation, fit objects, and statistics from the fits for plotting, exporting, and advanced analysis.
+\itemize{
+\item 1. VantHoff - A data frame containing the duplex formation energies.
+\item 2. K - A data frame containing the results from fitting each isotherm individually.
+\item 3. VH_method_1_fit - A nls object containing the fit obtained from the fit obtained from the Van't Hoff plot.
+\item 4. VH_method_2_fit - A nls object containing the global fit.
+\item 5. Raw_data - The raw data passed back out of MeltR.F with no modifications.
+\item 6. First_derivative - The first derivative of each sample. Useful for qualitative comparison of data between conditions..
+\item 7. Tms - The approximate Tm of each sample obtained from the maximum of the first derivative. Useful for qualitative comparison of data between solution conditions.
+\item 8. R - The mole ratio of fluorophore and quencher labeled RNA, used in the concentration optimization algorithm. The mole ratio “R” was labeled “X” in the theory section to avoid confusion with the gas constant.
+\item 9. Fractional_error_between_methods - The amount thermodynamic parameters vary between methods.
+}
 }
 \description{
 Automates the trivial but time-consuming tasks associated with non-linear regression.

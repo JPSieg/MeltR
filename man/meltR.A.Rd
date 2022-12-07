@@ -60,7 +60,7 @@ meltR.A(
 \item{Silent}{TRUE to not print data in your console. Default = FALSE.}
 }
 \value{
-A meltR.A fit object containing a list of data objects containing raw data, data, transformation, fit objects, and statistics from the fits plotting, exporting, and advanced analysis.
+A meltR.A fit object containing a list of data objects containing raw data, data, transformation, fit objects, and statistics from the fits for plotting, exporting, and advanced analysis.
 \itemize{
 \item 1. Summary - A data frame containing the thermodynamic parameters from each method.
 \item 2. Method.1.indvfits - A data frame containing the thermodynamic parameters from the individual fits.
