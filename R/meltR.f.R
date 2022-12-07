@@ -20,7 +20,18 @@
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
 #'@param silent Set to TRUE to run in silent mode (which does not print results in the console). Good for running in loops. Default is TRUE.
-#'@return
+#'@return A meltR.F fit object containing a list of data objects containing raw data, data, transformation, fit objects, and statistics from the fits for plotting, exporting, and advanced analysis.
+#' \itemize{
+#'   \item 1. VantHoff - A data frame containing the duplex formation energies.
+#'   \item 2. K - A data frame containing the results from fitting each isotherm individually.
+#'   \item 3. VH_method_1_fit - A nls object containing the fit obtained from the fit obtained from the Van't Hoff plot.
+#'   \item 4. VH_method_2_fit - A nls object containing the global fit.
+#'   \item 5. Raw_data - The raw data passed back out of MeltR.F with no modifications.
+#'   \item 6. First_derivative - The first derivative of each sample. Useful for qualitative comparison of data between conditions..
+#'   \item 7. Tms - The approximate Tm of each sample obtained from the maximum of the first derivative. Useful for qualitative comparison of data between solution conditions.
+#'   \item 8. R - The mole ratio of fluorophore and quencher labeled RNA, used in the concentration optimization algorithm. The mole ratio “R” was labeled “X” in the theory section to avoid confusion with the gas constant.
+#'   \item 9. Fractional_error_between_methods - The amount thermodynamic parameters vary between methods.
+#' }
 #' @export
 meltR.F = function(df,
                    Kd_error_quantile = 0.25,
@@ -144,6 +155,8 @@ meltR.F = function(df,
 
   df.no.0 = subset(df, df$B >= 0.25*df$A)
 
+  list.df.no.0 = {}
+
   Well = c()
   A = c()
   B = c()
@@ -169,6 +182,8 @@ meltR.F = function(df,
     Well[i] = df.well$Well[1]
     A[i] = df.well$A[1]
     B[i] = df.well$B[1]
+    df.well$dA.dT = dE.dT(df.well$Temperature)
+    list.df.no.0[[i]] = df.well
     Tm[i] = seq(min(df.well$Temperature) + 2, max(df.well$Temperature) - 2, length.out = 1000)[which.max(dE.dT(seq(min(df.well$Temperature) + 2, max(df.well$Temperature) - 2, length.out = 1000)))]
 
 
@@ -176,6 +191,14 @@ meltR.F = function(df,
 
   Tm_summary = data.frame(Well, A, B, Tm)
   Tm_summary$invT = 1/(273.15 + Tm_summary$Tm)
+
+  #first.deriv.data
+  df.no.0 = list.df.no.0[[1]]
+  if (length(list.df.no.0) > 1){
+    for (i in 2:length(df.no.0)){
+      df.no.0 = rbind(df.no.0, list.df.no.0[[i]])
+    }
+  }
 
   ####Method 1 Fit individual isotherms####
 
@@ -322,7 +345,7 @@ meltR.F = function(df,
 
   ####Method 3 Tm versus LnCt####
 
-  #df.Tm = Tm_summary
+  df.Tm = Tm_summary
 
   #df.Tm$Ct = (10^-9)*df.Tm$B - (10^-9)*0.5*df.Tm$A
 
@@ -380,7 +403,7 @@ meltR.F = function(df,
   output[[3]] = vh_plot_fit
   output[[4]] = gfit
   output[[5]] = df
-  output[[6]] = df.Tm
+  output[[6]] = df.no.0
   output[[7]] = Tm_summary
   if (Optimize_conc == TRUE){
     output[[8]] = R
@@ -397,14 +420,14 @@ meltR.F = function(df,
     print("dH and dG are reporterd in kcal/mol and dS is in cal/mol/K. Tms are in deg Celcius")
   }
 
-  names(output) = c("VantHoff",
-                     "K",
-                     "VH_method_1_fit",
-                     "VH_method_2_fit",
-                     "Raw_data",
-                     "First_derivative",
-                     "Tms",
-                     "R",
-                     "Fractional_error_between_methods")
+  names(output) = c("VantHoff", #1
+                     "K", #2
+                     "VH_method_1_fit", #3
+                     "VH_method_2_fit", #4
+                     "Raw_data", #5
+                     "First_derivative", #6
+                     "Tms", #7
+                     "R", #8
+                     "Fractional_error_between_methods") #9
   output  = output
 }
