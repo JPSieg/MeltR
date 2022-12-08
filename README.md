@@ -52,6 +52,10 @@ The manual, which contains theory and step-by-step instructions for running Melt
 
 https://github.com/JPSieg/MeltR/blob/master/Manual.pdf
 
-#4 Video tutorials
+# 4 Video tutorials
+
+1.) Basic workflow: fitting fluorescence binding isotherms with MeltR. https://youtu.be/VNSClpCylDA
+
+2.) Basic workflow: fitting absorbance melting curves with MeltR: https://youtu.be/KkxBFuwJgbE
 
 
