@@ -303,15 +303,16 @@ meltR.A = function(data_frame,
   }else{
     samples <- {}
     if (length(extcoef) == 3){
+
       ct <- c()
       for (i in c(1:length(unique(no.background$Sample)))){
         samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
         df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
 
           if (is.atomic(extcoef)){
-            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
+            ct[i] <- 2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
           }else{
-            ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[1]))
+            ct[i] <- 2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[1]))
           }
           samples[[i]]$Ct <- ct[i]
 
@@ -781,17 +782,17 @@ meltR.A = function(data_frame,
 
   if (Mmodel == "Monomolecular.2State"){
     comparison <- rbind(indvfits.mean, Gfit_summary)
-    comparison <- cbind(data.frame("Method" = c("1 individual fits", "3 Global fit")), comparison)
+    comparison <- cbind(data.frame("Method" = c("1 Individual fits", "3 Global fit")), comparison)
     row.names(comparison) <- c(1:2)
   }
   if (Mmodel == "Heteroduplex.2State"){
     comparison <- rbind(indvfits.mean, Tm_vs_lnCt, Gfit_summary)
-    comparison <- cbind(data.frame("Method" = c("1 individual fits", "2 Tm versus ln[Ct]", "3 Global fit")), comparison)
+    comparison <- cbind(data.frame("Method" = c("1 Individual fits", "2 Tm versus ln[Ct]", "3 Global fit")), comparison)
     row.names(comparison) <- c(1:3)
   }
   if (Mmodel == "Homoduplex.2State"){
     comparison <- rbind(indvfits.mean, Tm_vs_lnCt, Gfit_summary)
-    comparison <- cbind(data.frame("Method" = c("1 individual fits", "2 Tm versus ln[Ct]", "3 Global fit")), comparison)
+    comparison <- cbind(data.frame("Method" = c("1 Individual fits", "2 Tm versus ln[Ct]", "3 Global fit")), comparison)
     row.names(comparison) <- c(1:3)
   }
 

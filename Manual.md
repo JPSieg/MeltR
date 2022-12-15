@@ -322,7 +322,7 @@ The mean and the standard deviations are reported for thermodynamic parameters.
 Method 2 uses nls to fit the relationship between 1/T\textsubscript{m} and C\textsubscript{t} to Equation 38 and 39 for heteroduplexes and homoduplexes, respectively. The T\textsubscript{m} of monomolecular, self-structured RNA is independent of C\textsubscript{t}, so Method 2 cannot be used, and MeltR automatically turns Method 2 off.
 
 \begin{equation} \label{eqn}
-\frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} + \frac{dS}{dH} - R*ln(4)
+\frac{1}{T_{m}} =  \frac{R}{dH}*lnC_{t} + \frac{dS - R*ln(4)}{dH}
 	\end{equation}
 
 \begin{equation} \label{eqn}

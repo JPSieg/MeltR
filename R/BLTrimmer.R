@@ -601,6 +601,7 @@ BLTrimmer = function(meltR.A.fit,
          xlab = "SD(dH1)/Average dH",
          cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
          main = "Assess method 1\nIndividual fits agree",
+         breaks = seq(0, max(baselines$frac.dH1.error, na.rm = T), length.out = 10),
          xlim = c(0, max(baselines$frac.dH1.error, na.rm = T) + 0.01),
          ylim = c(0, n.combinations))
     par(new=T)
@@ -608,6 +609,7 @@ BLTrimmer = function(meltR.A.fit,
          xlab = "SD(dH1)/Average dH",
          cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
          main = "Assess method 1\nIndividual fits agree",
+         breaks = seq(0, max(baselines$frac.dH1.error, na.rm = T), length.out = 10),
          xlim = c(0, max(baselines$frac.dH1.error, na.rm = T) + 0.01),
          ylim = c(0, n.combinations),
          col = color)
@@ -645,6 +647,7 @@ BLTrimmer = function(meltR.A.fit,
            xlab = "|dH1 - dH2|/Average dH",
            cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
            main = "Assess method 2\n meltR.A methods 1 & 2 agree",
+           breaks = seq(0, max(baselines$frac.dH1.dH2.error, na.rm = T), length.out = 10),
            xlim = c(0, max(baselines$frac.dH1.dH2.error, na.rm = T) + 0.01),
            ylim = c(0, n.combinations))
       par(new=T)
@@ -652,6 +655,7 @@ BLTrimmer = function(meltR.A.fit,
            xlab = "|dH1 - dH2|/Average dH",
            cex.lab = 1.5, cex.axis = 1.25, cex = 0.8,
            main = "Assess method 2\n meltR.A methods 1 & 2 agree",
+           breaks = seq(0, max(baselines$frac.dH1.dH2.error, na.rm = T), length.out = 10),
            xlim = c(0, max(baselines$frac.dH1.dH2.error, na.rm = T) + 0.01),
            ylim = c(0, n.combinations),
            col = color)
@@ -830,14 +834,14 @@ BLTrimmer = function(meltR.A.fit,
     df.result = rbind(df.result, list.df.results[[i]])
   }
 
-  df1.data = subset(df.result, Method == "1 individual fits")
+  df1.data = subset(df.result, Method == "1 Individual fits")
 
   df2.data = subset(df.result, Method == "2 Tm versus ln[Ct]")
 
   df3.data = subset(df.result, Method == "3 Global fit")
 
   if (Trim.method == "fixed"){
-    df.1 = data.frame("Method" = "1 individual fits",
+    df.1 = data.frame("Method" = "1 Individual fits",
                       "dH" = round(mean(df1.data$dH), digits = 2),
                       "SE.dH" = round(sd(df1.data$dH), digits = 2),
                       "dS" = round(mean(df1.data$dS), digits = 2),
@@ -865,7 +869,7 @@ BLTrimmer = function(meltR.A.fit,
                       "Tm_at_0.1mM" = round(mean(df3.data$Tm_at_0.1mM), digits = 2),
                       "SE.Tm_at_0.1mM" = round(sd(df3.data$Tm_at_0.1mM), digits = 2))
   }else{
-    df.1 = data.frame("Method" = "1 individual fits",
+    df.1 = data.frame("Method" = "1 Individual fits",
                       "dH" = round(mean(df1.data$dH), digits = 2),
                       "CI95.dH" = paste(round(quantile(df1.data$dH, 0.025, na.rm = T), 2), "to", round(quantile(df1.data$dH, 0.975, na.rm = T), 2)),
                       "dS" = round(mean(df1.data$dS), digits = 2),

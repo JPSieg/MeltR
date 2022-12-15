@@ -192,6 +192,10 @@ meltR.A.model = function(NucAcid = c("RNA", "CGCGCG"),
   Extinct = MeltR::calc.extcoeff(NucAcid)
   Extinct = Extinct$Total
 
+  if (Mmodel == "Heteroduplex.2State"){
+    Extinct = Extinct/2
+  }
+
   Extinct.lower = Extinct*0.6
 
 
