@@ -1,5 +1,7 @@
 # MeltR
 
+[![DOI](https://zenodo.org/badge/262172873.svg)](https://zenodo.org/badge/latestdoi/262172873)
+
 Automated fitting of RNA/DNA absorbance melting curves and fluorescence binding isotherms in R
 
 Jacob P. Sieg<sup>[1],[2]</sup>, Philip C. Bevilacqua<sup>[1],[2],[3]</sup>
