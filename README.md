@@ -32,7 +32,7 @@ MeltR is written in R. You can find instructions for installing R here: "https:/
 
 MeltR can be installed from "https://github.com/JPSieg/MeltR" by typing two lines into your R console. 
 
-Note, you may need to run R as an administrator for installing devtools and MeltR on on Windows. Likewise, on Mac, the you may need to install the Xcode from the app store to install devtools.
+Note, you may need to run R as an administrator for installing devtools and MeltR on on Windows. Likewise, on Mac, the you may need to install the Xcode toolbox from the app store to install devtools.
 
 ```{r}
 install.packages("devtools")
