@@ -932,7 +932,7 @@ BLTrimmer = function(meltR.A.fit,
   if(Silent){}else{
     print("Ensemble energies")
     print(df.final)
-    print("Fractional error between methods")
+    print("Maximum %error across methods")
     print(df.error)
     print("dH and dG are in kcal/mol and dS is in cal/mol/K. Tms are in deg Celsius")
   }

@@ -942,7 +942,7 @@ meltR.A = function(data_frame,
     range <- data.frame("dH" = round(100*abs((range(comparison$dH)[1]-range(comparison$dH)[2])/mean(comparison$dH)), digits = 1),
                         "dS" = round(100*abs((range(comparison$dS)[1]-range(comparison$dS)[2])/mean(comparison$dS)), digits = 1),
                         "dG" = round(100*abs((range(comparison$dG)[1]-range(comparison$dG)[2])/mean(comparison$dG)), digits = 1))
-    print("%error between methods")
+    print("Maximum %error across methods")
     print(range)
   }
 
