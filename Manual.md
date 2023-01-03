@@ -439,6 +439,16 @@ SE\textsubscript{D} (equation 50) is then ranked into quantiles on a scale from 
 
 Ensemble analysis: Baselines that pass the assessment criterion are treated as an ensemble of equally feasible baseline combinations. Each baseline combination is passed to meltR.A and fit, which takes considerably longer than the lightweight analysis in the testing step because initial guesses are predicted for each trim using the protocol described for meltR.A. The average of resulting thermodynamic parameters are reported with 95% confidence intervals.
 
+### 3.2.8 Maximum %error between methods 
+
+Maximum percent error, or difference, between parameters determined using different methods is calculated using a generalized formula for more than two observations in a set of numbers x.
+
+\begin{equation} \label{eqn}
+error = 100*|\frac{max(x)-max(x)}{mean(x)}|
+	\end{equation}
+
+Thus, percent error is taken by subtracting the minimum value from the maximum value and dividing by the mean. There are other formulations for calculating percent error between multiple observations, but we determined that this is the most conservative. 
+
 # 4 Running MeltR
 
 In this section, we cover how to use MeltR in your R console. If you have not already, read section 3 to understand the theory underlying the results of MeltR. Section 4 will cover MeltR usage and how to avoid pitfalls. The most common error with MeltR is a user attempting to fit data that is inconsistent with the underlying model, either a fluorescence isotherm or a absorbance melting curve with a non-standard shape or specifying an incorrect molecular model. In the case of data with a non-standard shape, the aberrant data will need to be filtered out data set prior to fitting the set with MeltR. While MeltR has no dependencies other than base R 4.1.3, data wrangling and plotting functions in the "tidyverse" package\textsuperscript{[4]} are highly recommended, along with the "ggrepel" package\textsuperscript{[5]}, for data quality checks and filtering. To begin, open a new R session in the proper directory. Load relevant packages into your memory.
