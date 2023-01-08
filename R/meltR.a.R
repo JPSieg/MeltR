@@ -17,20 +17,20 @@
 #'@param Tmodel The thermodynamic model you want to fit. Options: "VantHoff". Default = "VantHoff".
 #'@param concT The temperature used to calculate the concentration with Beers law. Default = 90.
 #'@param outliers A vector containing the identifiers of the outlier samples that you want to remove. If you need to figure out what the sample identifiers are, run unique(df$Sample), where df is the name of the R data frame you are using.
-#'@param fitTs Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves Example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example, list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit. The list should not include vectors for blanks.
+#'@param fitTs Option to only fit certain temperature ranges for melting curves. Either a vector or a list. If this is set to a vector, meltR.A will only fit temperatures in this range for all melting curves, example = c(17, 75). If set to a list of vectors, meltR.A will change what values are fit for each curve. Example = list(c(0,100), c(17,75), .... , c(0,100)). The length of this list has to be the equal to the number of samples that will be fit. The list should not include vectors for blanks.
 #'@param methods What methods do you want to use to fit data. Default = c(TRUE, TRUE, TRUE). Note, method 1 must be set to TRUE or the subsequent steps will not work. Set to c(TRUE, FALSE, FALSE) to only use method 1.
 #'@param Tm_method Either "nls" to use the Tms from the fits in Method 1, "lm" to use a numeric method based on linear regression of fraction unfolded calculated with method 1, or "polynomial" to calculate Tms using the first derivative of a polynomial that approximates each curve.
-#'@param Weight_Tm_M2 If you use the "nls" method for Tm method, this option can turn on an off weighted non-linear regression for method 2. If TRUE, method 2 will use the port algorithm to weight the regression in method 2 to standard errors in the Tm determined with method 1. Set to FALSE if you do not want to weight the regression.
+#'@param Weight_Tm_M2 If you use the "nls" method for Tm method, this option can turn on weighted non-linear regression for method 2. If TRUE, method 2 will use the port algorithm to weight the regression in method 2 to standard errors in the Tm determined with method 1. Set to FALSE by default.
 #'@param Save_results What results to save. Options: "all" to save PDF plots and ".csv" formatted tables of parameters, "some" to save ".csv" formatted tables of parameters, or "none" to save nothing.
 #'@param file_prefix Prefix that you want on the saved files.
 #'@param file_path Path to the directory you want to save results in.
 #'@param auto.trimmed Ignore this argument unless you are writing auto baseline trimmers
 #'@param Silent TRUE to not print data in your console. Default = FALSE.
-#'@return A meltR.A fit object containing a list of data objects containing raw data, data, transformation, fit objects, and statistics from the fits for plotting, exporting, and advanced analysis.
+#'@return A meltR.A fit object containing a list of data objects containing raw data, data transformations, fit objects, and statistics from the fits for plotting, exporting, and other advanced analysis.
 #' \itemize{
 #'   \item 1. Summary - A data frame containing the thermodynamic parameters from each method.
 #'   \item 2. Method.1.indvfits - A data frame containing the thermodynamic parameters from the individual fits.
-#'   \item 3. Range - A data frame containing %error between Method 1, 2, and 3 for each thermodynamic parameter.
+#'   \item 3. Range - A data frame containing maximum %error between Method 1, 2, and 3 for each thermodynamic parameter.
 #'   \item 4. Derivatives.data - A data frame containing the first and second derivatives for each sample.
 #'   \item 5. Method.1.data - A data frame containing the raw data from method 1 and the model.
 #'   \item 6. Method.1.fit - A list of nls objects containing the fits obtained from fitting melting curves individually. Fit statistics, such as residuals and covariance, can be extracted here.
