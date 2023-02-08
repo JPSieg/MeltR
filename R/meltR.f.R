@@ -202,6 +202,8 @@ meltR.F = function(df,
 
   ####Method 1 Fit individual isotherms####
 
+  l.df.fit = {}
+
   fit = {}
   Reading = c()
   temp = c()
@@ -222,6 +224,8 @@ meltR.F = function(df,
       Fmax[i] = coef(fit[[i]])[2]
       Fmin[i] = coef(fit[[i]])[3]
       Reading[i] = unique(df$Reading)[i]
+      l.df.fit[[i]] = df.reading
+      l.df.fit[[i]]$Model = predict(fit[[i]])
     }, error = function(e){
       temp[i] = df.reading$Temperature[1]
       K[i] = NA
@@ -229,7 +233,17 @@ meltR.F = function(df,
       Fmax[i] = NA
       Fmin[i] = NA
       Reading[i] = unique(df$Reading)[i]
+      l.df.fit[[i]] = df.reading
+      l.df.fit[[i]]$Model = NA
     })}
+
+  df.raw = l.df.fit[[1]]
+  if (length(l.df.fit) > 1){
+    for (i in 2:length(l.df.fit)){
+      df.raw = rbind(df.raw, l.df.fit[[i]])
+    }
+  }
+
   indvfits = data.frame("Temperature" =  temp,
                         "Reading" = Reading,
                          "K" = K,
@@ -266,6 +280,8 @@ meltR.F = function(df,
                     start = vh_start,
                     control = nls.control(warnOnly = TRUE),
                     data = indvfits.to.fit)
+  df.indvfits = indvfits.to.fit
+  df.indvfits$Model = predict(vh_plot_fit)
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_1_VH_plot.pdf", sep = ""),
         width = 3, height = 3, pointsize = 0.25)
@@ -317,6 +333,8 @@ meltR.F = function(df,
              start = gfit_start,
              data = df.gfit,
              control = nls.control(warnOnly = TRUE))
+  df.globalfit = df.gfit
+  df.globalfit$Model = predict(gfit)
 
   if (Save_results == "all"){
     pdf(paste(file_path, "/", file_prefix, "_method_2_Gfit_plot.pdf", sep = ""),
@@ -420,6 +438,10 @@ meltR.F = function(df,
     print("dH and dG are reporterd in kcal/mol and dS is in cal/mol/K. Tms are in deg Celcius")
   }
 
+  output[[10]] = df.raw
+  output[[11]] = df.indvfits
+  output[[12]] = df.globalfit
+
   names(output) = c("VantHoff", #1
                      "K", #2
                      "VH_method_1_fit", #3
@@ -428,6 +450,9 @@ meltR.F = function(df,
                      "First_derivative", #6
                      "Tms", #7
                      "R", #8
-                     "Fractional_error_between_methods") #9
+                     "Fractional_error_between_methods", #9
+                    "df.indvfits",
+                    "df.vanthoff",
+                    "df.globalfit")
   output  = output
 }
