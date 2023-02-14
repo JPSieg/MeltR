@@ -307,7 +307,7 @@ meltR.A = function(data_frame,
       ct <- c()
       for (i in c(1:length(unique(no.background$Sample)))){
         samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
-        df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
+        df.raw = subset(raw.df, Sample == unique(no.background$Sample)[i])
 
           if (is.atomic(extcoef)){
             ct[i] <- 2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
@@ -315,14 +315,15 @@ meltR.A = function(data_frame,
             ct[i] <- 2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[1]))
           }
           samples[[i]]$Ct <- ct[i]
-
+          plot(samples[[i]]$Temperature, 2*samples[[i]]$Absorbance/(samples[[i]]$Pathlength*samples[[i]]$Ct))
+          abline(h = extcoef$Total)
       }
     }
     if (length(extcoef) == 2){
       ct <- c()
       for (i in c(1:length(unique(no.background$Sample)))){
         #print(i)
-        samples[[i]] <- subset(no.background, Sample == unique(no.background$Sample)[i])
+        samples[[i]] <- subset(raw.df, Sample == unique(no.background$Sample)[i])
         df.raw = subset(data_frame, Sample == unique(no.background$Sample)[i])
         if (is.atomic(extcoef)){
           ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
@@ -500,7 +501,11 @@ meltR.A = function(data_frame,
     indvfits.mean <- list(round(mean(indvfits$H), 2), round(sd(indvfits$H), 2), round(1000*mean(indvfits$S), 2), round(1000*sd(indvfits$S), 2), round(mean(indvfits.G), 2), round(sd(indvfits.G), 2))
     names(indvfits.mean) <- c("H", "SE.H", "S", "SE.S", "G", "SE.G")
     indvfits.mean <- data.frame(indvfits.mean)
-    no.background$Ext <- no.background$Absorbance/(no.background$Pathlength*no.background$Ct)
+    if (Mmodel == "Heteroduplex.2State"){
+      no.background$Ext <- 2*no.background$Absorbance/(no.background$Pathlength*no.background$Ct)
+    }else{
+      no.background$Ext <- no.background$Absorbance/(no.background$Pathlength*no.background$Ct)
+    }
     if (Save_results == "all"){
       pdf(paste(file_path, "/", file_prefix, "_method_1_raw_fit_plot.pdf", sep = ""),
           width = 3, height = 3, pointsize = 0.25)
@@ -516,9 +521,16 @@ meltR.A = function(data_frame,
       plot(no.background$Temperature, no.background$Ext,
            xlab = Temperature ~ (degree ~ C), ylab = "Absorbtivity (1/M*cm)",
            cex.lab = 1.5, cex.axis = 1.25, cex = 0.8)
-      for (i in c(1:length(a))){
-        lines(a[[i]]$Temperature, (predict(fit[[i]])/(a[[i]]$Ct[1]*a[[i]]$Pathlength[1])), col = "red")
+      if (Mmodel == "Heteroduplex.2State"){
+        for (i in c(1:length(a))){
+          lines(a[[i]]$Temperature, (2*predict(fit[[i]])/(a[[i]]$Ct[1]*a[[i]]$Pathlength[1])), col = "red")
+        }
+      }else{
+        for (i in c(1:length(a))){
+          lines(a[[i]]$Temperature, (predict(fit[[i]])/(a[[i]]$Ct[1]*a[[i]]$Pathlength[1])), col = "red")
+        }
       }
+
       dev.off()
     }
   }
@@ -735,7 +747,7 @@ meltR.A = function(data_frame,
                 col = "red")
         }
         if (Mmodel == "Heteroduplex.2State"){
-          lines(c(floor(min(a$Temperature)):ceiling(max(a$Temperature))), GModel(H = coef(gfit)[1],
+          lines(c(floor(min(a$Temperature)):ceiling(max(a$Temperature))), 2*GModel(H = coef(gfit)[1],
                                                          S = coef(gfit)[2],
                                                          mED = coef(gfit)[i + 2],
                                                          bED = coef(gfit)[i + 2 + length(unique(gfit_data$Sample))],
