@@ -24,11 +24,17 @@ The core of MeltR is the “meltR.A” function for fitting absorbance melting c
 
 The creators of MeltR are interested in improving MeltR by adding new molecular models. Areas of interest include multistate models and models to describe G-quadruplex RNA. Please email Jacob Sieg at jus841@psu.edu for suggestions.
 
-Please cite our papers if you use MeltR. If you use MeltR to fit absorbance melting curves, a paper hopefully is forthcoming. If you use MeltR to fit fluorescence binding isotherms please cite:
+# 2 Cite MeltR
+
+If you use MeltR to fit fluorescence binding isotherms please cite:
 
 Sieg, J. P.; McKinley, L. N.; Huot, M. J.; Yennawar, N. H.; Bevilacqua, P. C. The Metabolome Weakens RNA Thermodynamic Stability and Strengthens RNA Chemical Stability. Biochemistry 2022. https://doi.org/10.1021/acs.biochem.2c00488.
 
-# 2 MeltR installation
+If you use MeltR to fit absorbance melting curves please cite:
+
+Sieg, J. P.; Arteaga, S. J.; Znosko, B. M.; Bevilacqua, P. C. MeltR Software Provides Facile Determination of Nucleic Acid Thermodynamics. Biophysical Reports 2023, 3 (2), 100101. https://doi.org/10.1016/j.bpr.2023.100101.
+
+# 3 MeltR installation
 
 MeltR is written in R. You can find instructions for installing R here: "https://www.r-project.org/"
 
@@ -48,13 +54,13 @@ install.packages("tidyverse")
 install.packages("ggrepel")
 ```
 
-# 3 Manual
+# 4 Manual
 
 The manual, which contains theory and step-by-step instructions for running MeltR, can be downloaded at this address:
 
 https://github.com/JPSieg/MeltR/blob/master/Manual.pdf
 
-# 4 Video tutorials
+# 5 Video tutorials
 
 1.) Basic workflow: fitting fluorescence binding isotherms with MeltR. https://youtu.be/VNSClpCylDA
 
