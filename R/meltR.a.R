@@ -312,11 +312,12 @@ meltR.A = function(data_frame,
           if (is.atomic(extcoef)){
             ct[i] <- 2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
           }else{
-            ct[i] <- 2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[1]))
+            ct[i] <-
+2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$[[1]]*df.raw$Pathlength[1]))
           }
           samples[[i]]$Ct <- ct[i]
           plot(samples[[i]]$Temperature, 2*samples[[i]]$Absorbance/(samples[[i]]$Pathlength*samples[[i]]$Ct))
-          abline(h = extcoef$Total)
+          abline(h = extcoef[[1]])
       }
     }
     if (length(extcoef) == 2){
@@ -328,7 +329,7 @@ meltR.A = function(data_frame,
         if (is.atomic(extcoef)){
           ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
         }else{
-          ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$Total*df.raw$Pathlength[1]))
+          ct[i] <- (df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
         }
         samples[[i]]$Ct <- ct[i]
       }
