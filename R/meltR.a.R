@@ -313,7 +313,7 @@ meltR.A = function(data_frame,
             ct[i] <- 2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
           }else{
             ct[i] <-
-2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef$[[1]]*df.raw$Pathlength[1]))
+2*(df.raw$Absorbance[which.min(abs(df.raw$Temperature - concT))]/(extcoef[[1]]*df.raw$Pathlength[1]))
           }
           samples[[i]]$Ct <- ct[i]
           plot(samples[[i]]$Temperature, 2*samples[[i]]$Absorbance/(samples[[i]]$Pathlength*samples[[i]]$Ct))
