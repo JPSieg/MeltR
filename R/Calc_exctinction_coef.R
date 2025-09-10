@@ -20,6 +20,7 @@ calc.extcoeff = function(NucAcid, wavelength = 260, silent = F){
     df.ext = subset(df.ext.data, Wavelength.nm == wavelength)
     RNA = df.ext$Absorbtivity.M
     names(RNA) = df.ext$Nucleotide
+
     b <- c()
     b <- strsplit(NucAcid[-which(NucAcid == NucAcid[1])], split = "")
     c <- {}
@@ -27,11 +28,13 @@ calc.extcoeff = function(NucAcid, wavelength = 260, silent = F){
     e <- c()
     for (i in c(1:length(b))){
       c[[i]] <- c(1:(length(b[[i]])-1))
-      d[[i]] <- c(2:(length(b[[i]])))
+      d[[i]] <- rep(0, length(b[[i]])-1)  # all zeros, was c(2:(length(b[[i]])))
+                                          # old line left a 2 at the end that was
+                                          # subtracted out
       for (j in c(1:(length(b[[i]])-1))){
         c[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", b[[i]][j+1], sep = ""))]]
       }
-      for (j in c(2:(length(b[[i]])))){
+      for (j in c(2:(length(b[[i]])-1))){ # forgot the -1, so was subtracting the 3' nucleotide
         d[[i]][j] <- RNA[[which(names(RNA) == paste(b[[i]][j], "p", sep = ""))]]
       }
       e[i] <- 2*sum(c[[i]]) - sum(d[[i]])
@@ -45,7 +48,7 @@ calc.extcoeff = function(NucAcid, wavelength = 260, silent = F){
   },
   error = function(e){print("There is no nucleotide extinction coefficient at this wavelength for a nucleotide you specified in your sequence. You will need to provide your own custom extinction coefficient")})
   output = extcoef
-
+  print(output)
   if (silent){}else{
     print(output)
   }
