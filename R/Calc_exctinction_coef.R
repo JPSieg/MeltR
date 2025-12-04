@@ -53,7 +53,7 @@ calc.extcoeff = function(NucAcid, wavelength = 260, silent = F){
         print(v_emonoNuc)
         print(v_monoNuc)
       }
-      #Subract internal mononucleotides from double the external mononucleotides
+      #Subract internal mononucleotides from double the dinucleotides
       Ext[i] = 2*sum(v_DiNuc) - sum(v_monoNuc)
     }
     #Clean up and format a list of extinction coefficients
